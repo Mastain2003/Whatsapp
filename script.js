@@ -28,7 +28,7 @@ async function sendMessage() {
           {
             "type": "image",
             "image": {
-              "link": "images.jpeg"
+              "link": "https://whatsapp.mastain.in/images.jpeg"
             }
           }
         ]
