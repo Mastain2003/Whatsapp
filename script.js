@@ -22,6 +22,17 @@ async function sendMessage() {
                         code: "en"
                     },
                     components: [
+                          {
+        "type": "header",
+        "parameters": [
+          {
+            "type": "image",
+            "image": {
+              "link": "images.jpeg"
+            }
+          }
+        ]
+      },
                         {
                             type: "body",
                             parameters: [
