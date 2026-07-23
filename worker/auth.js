@@ -4,11 +4,11 @@
 // Create random token
 export function createToken() {
 
-    const array = new Uint8Array(32);
+    const bytes = new Uint8Array(32);
 
-    crypto.getRandomValues(array);
+    crypto.getRandomValues(bytes);
 
-    return Array.from(array)
+    return Array.from(bytes)
         .map(b => b.toString(16).padStart(2, "0"))
         .join("");
 
@@ -16,38 +16,22 @@ export function createToken() {
 
 
 
-// Login handler
+// Login
 export async function handleLogin(request, env) {
 
-
-    const body =
-    await request.json();
+    const body = await request.json();
 
 
-    const username =
-    body.username;
+    const username = body.username;
+    const password = body.password;
 
 
-    const password =
-    body.password;
-
-
-
-    // Check admin credentials
-    const user =
-    await env.DB
-    .prepare(
-        "SELECT * FROM users WHERE username=? AND password=?"
-    )
-    .bind(
-        username,
-        password
-    )
-    .first();
-
-
-
-    if(!user){
+    // Temporary admin credentials
+    // Change these later to environment variables
+    if (
+        username !== "admin" ||
+        password !== "admin"
+    ) {
 
         return Response.json(
             {
@@ -63,101 +47,60 @@ export async function handleLogin(request, env) {
 
 
 
-    const token =
-    createToken();
+    const token = createToken();
 
 
-
-    // Save token
-    await env.DB
-    .prepare(
-        `
-        INSERT INTO sessions
-        (
-            token,
-            user_id,
-            created_at
-        )
-        VALUES
-        (
-            ?,
-            ?,
-            CURRENT_TIMESTAMP
-        )
-        `
-    )
-    .bind(
+    // Save token in KV
+    await env.AUTH_KV.put(
         token,
-        user.id
-    )
-    .run();
+        username,
+        {
+            expirationTtl: 86400
+        }
+    );
 
 
-
-    return Response.json({
-
-        success:true,
-
-        token:token
-
-    });
-
+    return Response.json(
+        {
+            success:true,
+            token:token
+        }
+    );
 
 }
 
 
 
 
-
-// Verify token for all APIs
+// Verify token
 export async function verifyToken(token, env) {
 
 
     if(!token){
-
         return false;
-
     }
 
 
-
-    const session =
-    await env.DB
-    .prepare(
-        `
-        SELECT *
-        FROM sessions
-        WHERE token=?
-        `
-    )
-    .bind(token)
-    .first();
+    const user =
+    await env.AUTH_KV.get(token);
 
 
-
-    return !!session;
-
+    return user !== null;
 
 }
 
 
 
 
-
-// Get token from request
+// Get token from request header
 export function getToken(request){
 
-
     const auth =
-    request.headers.get(
-        "Authorization"
-    );
+    request.headers.get("Authorization");
 
 
     if(!auth){
-
         return null;
-
     }
 
 
@@ -166,29 +109,21 @@ export function getToken(request){
         ""
     );
 
-
 }
 
 
 
 
-
-// Middleware helper
+// Check API authentication
 export async function checkAuth(request, env){
-
 
     const token =
     getToken(request);
 
 
-    const valid =
-    await verifyToken(
+    return await verifyToken(
         token,
         env
     );
-
-
-    return valid;
-
 
 }
