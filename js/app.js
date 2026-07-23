@@ -765,3 +765,50 @@ table.innerHTML+=`
 
 
 }
+async function loadCustomers(){
+
+
+let response =
+await fetch(
+API_URL + "/customers"
+);
+
+
+let data =
+await response.json();
+
+
+
+let table =
+document.getElementById("customerTable");
+
+
+table.innerHTML="";
+
+
+
+data.forEach(c=>{
+
+
+table.innerHTML += `
+
+<tr>
+
+<td>${c.name}</td>
+
+<td>${c.phone}</td>
+
+<td>${c.email}</td>
+
+</tr>
+
+`;
+
+});
+
+
+document.getElementById("customerCount").innerText =
+data.length;
+
+
+}
