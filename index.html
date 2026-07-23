@@ -21,7 +21,7 @@
             <li onclick="showPage('customers')">Customers</li>
             <li onclick="showPage('products')">Products</li>
             <li onclick="showPage('campaigns')">Campaigns</li>
-            <li>Orders</li>
+            <li onclick="showPage('orders')">Orders</li>
             <li>Reports</li>
             <li>Settings</li>
         </ul>
@@ -252,6 +252,109 @@ No Preview
 
 
 </table>
+
+
+</div>
+
+
+</div>
+        <div id="orders" style="display:none">
+
+<h2>Orders</h2>
+
+
+<div class="row">
+
+
+<div class="col-md-6">
+
+<div class="panel">
+
+<h5>Products</h5>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Price</th>
+<th></th>
+</tr>
+
+</thead>
+
+
+<tbody id="orderProductList">
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+</div>
+
+
+
+<div class="col-md-6">
+
+
+<div class="panel">
+
+<h5>Cart</h5>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Total</th>
+<th></th>
+</tr>
+
+</thead>
+
+
+<tbody id="cartList">
+
+<tr>
+<td colspan="4">
+Cart Empty
+</td>
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+<h4>
+Grand Total:
+₹<span id="cartTotal">0</span>
+</h4>
+
+
+<button 
+class="btn btn-success"
+onclick="checkout()">
+
+Checkout
+
+</button>
+
+
+</div>
+
+
+</div>
 
 
 </div>
