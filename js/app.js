@@ -769,3 +769,10 @@ async function loadCustomers() {
 
     document.getElementById("customerCount").innerText = allCustomers.length;
 }
+function logout(){
+
+    localStorage.removeItem("token");
+
+    window.location.href = "login.html";
+
+}
