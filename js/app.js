@@ -91,10 +91,10 @@ body:JSON.stringify({
 
 name:c.Name || "",
 
-Designation:c.Designation ||  "",
+designation:c.Designation ||  "",
 
-Department:c.Department || "",
-City:c.City || "",
+department:c.Department || "",
+city:c.City || "",
 phone:c.phone || "",
 
 language:"en"
