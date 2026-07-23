@@ -61,16 +61,13 @@ async function uploadExcel(){
     reader.readAsArrayBuffer(file);
 }
 function displayCustomers(customers){
-
     let table = document.getElementById("customerTable");
     table.innerHTML = "";
-
     if (!customers || customers.length === 0) {
         table.innerHTML =
         `<tr><td colspan="6">No customers found</td></tr>`;
         return;
     }
-
     customers.forEach(c => {
         table.innerHTML += `
         <tr>
@@ -86,79 +83,30 @@ function displayCustomers(customers){
             </td>
         </tr>`;
     });
-
 }
 async function deleteCustomer(id){
-
-
-if(!confirm("Delete this customer?"))
-return;
-
-
-await fetch(
-API_URL+"/customers/"+id,
-{
-method:"DELETE"
-}
-);
-
-
-loadCustomers();
-
-
-}
-function searchCustomers(){
-
-
-let text =
-document
-.getElementById("customerSearch")
-.value
-.toLowerCase();
-
-
-
-let filtered =
-allCustomers.filter(c=>{
-
-
-return (
-
-(c.name || "")
-.toLowerCase()
-.includes(text)
-
-||
-
-(c.department || "")
-.toLowerCase()
-.includes(text)
-
-||
-
-(c.city || "")
-.toLowerCase()
-.includes(text)
-
-||
-
-(c.phone || "")
-.includes(text)
-
-);
-
-
+    if(!confirm("Delete this customer?"))
+        return;
+await fetch(API_URL+"/customers/"+id,{
+    method:"DELETE"
 });
-
-
-displayCustomers(filtered);
-
-
+loadCustomers();
 }
+
+function searchCustomers(){
+    let text =document.getElementById("customerSearch").value.toLowerCase();
+    let filtered =allCustomers.filter(c=>{
+        return (
+            (c.name || "").toLowerCase().includes(text)||
+            (c.department || "").toLowerCase().includes(text)||
+            (c.city || "").toLowerCase().includes(text)||
+            (c.phone || "").includes(text)
+        );
+    });
+    displayCustomers(filtered);
+}
+
 let products=[];
-
-
-
 function addProduct(){
 
 
@@ -760,19 +708,19 @@ table.innerHTML+=`
 }
 async function loadCustomers() {
 
-    const response = await fetch(API_URL + "/customers");
+   const response = await fetch(API_URL + "/customers", {
+        headers:{
+            "Authorization":"Bearer " + localStorage.getItem("token")
+        }
+    });
     const data = await response.json();
 
     allCustomers = data.results;   // <-- THIS IS IMPORTANT
 
     displayCustomers(allCustomers);
-
     document.getElementById("customerCount").innerText = allCustomers.length;
 }
 function logout(){
-
     localStorage.removeItem("token");
-
     window.location.href = "login.html";
-
 }
