@@ -4,18 +4,27 @@
 // Create token
 export async function createToken(env) {
 
-    const timestamp = Date.now();
 
-    const data = timestamp + ":" + env.AUTH_SECRET;
+    const timestamp =
+    Date.now().toString();
 
 
-    const encoder = new TextEncoder();
+    const data =
+    timestamp + env.AUTH_SECRET;
+
+
+
+    const encoder =
+    new TextEncoder();
+
+
 
     const hash =
     await crypto.subtle.digest(
         "SHA-256",
         encoder.encode(data)
     );
+
 
 
     return Array.from(
@@ -30,16 +39,28 @@ export async function createToken(env) {
 
 
 
-// Login
-export async function handleLogin(request, env) {
+
+
+// Login API
+
+export async function handleLogin(
+    request,
+    env
+){
 
 
     const body =
     await request.json();
 
 
+
+    const password =
+    body.password;
+
+
+
     if(
-        body.password !== env.ADMIN_PASSWORD
+        password !== env.ADMIN_PASSWORD
     ){
 
         return Response.json(
@@ -55,43 +76,35 @@ export async function handleLogin(request, env) {
     }
 
 
+
+
     const token =
     await createToken(env);
 
 
 
+
     return Response.json(
         {
+
             success:true,
+
             token:token
+
         }
     );
 
-}
-
-
-
-// Verify token
-export async function verifyToken(token, env){
-
-    if(!token){
-        return false;
-    }
-
-
-    // simple token validation
-    const expected =
-    await createToken(env);
-
-
-    return token === expected;
 
 }
 
 
 
-// Get token from request
+
+
+// Extract token
+
 export function getToken(request){
+
 
     const header =
     request.headers.get(
@@ -99,9 +112,13 @@ export function getToken(request){
     );
 
 
+
     if(!header){
+
         return null;
+
     }
+
 
 
     return header.replace(
@@ -113,16 +130,57 @@ export function getToken(request){
 
 
 
-// Authentication helper
-export async function checkAuth(request, env){
+
+
+// Verify token
+
+export async function verifyToken(
+    token,
+    env
+){
+
+
+    if(!token){
+
+        return false;
+
+    }
+
+
+
+    const expected =
+    await createToken(env);
+
+
+
+    return (
+        token === expected
+    );
+
+
+}
+
+
+
+
+
+// Protect API routes
+
+export async function checkAuth(
+    request,
+    env
+){
+
 
     const token =
     getToken(request);
+
 
 
     return await verifyToken(
         token,
         env
     );
+
 
 }
