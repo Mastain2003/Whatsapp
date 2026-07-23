@@ -1,5 +1,6 @@
 const API_URL = "https://whatsapp-api.prakharmastain9.workers.dev/";
 let customers = [];
+let allCustomers = [];
 function showPage(page){
 
 
@@ -127,39 +128,138 @@ reader.readAsArrayBuffer(file);
 
 
 
-function displayCustomers(){
-
-    let table =
-    document.getElementById("customerTable");
+function displayCustomers(data){
 
 
-    table.innerHTML="";
+let table =
+document.getElementById("customerTable");
 
 
-    customers.forEach(c=>{
+table.innerHTML="";
 
 
-        table.innerHTML += `
+if(data.length===0){
 
-        <tr>
+table.innerHTML=
+`
+<tr>
+<td colspan="6">
+No customers found
+</td>
+</tr>
+`;
 
-        <td>${c.Name || ""}</td>
+return;
 
-        <td>${c.designation  || ""}</td>
-
-        <td>${c.department || ""}</td>
-        <td>${c.city || ""}</td>
-        <td>${c.phone || ""}</td>
-
-        </tr>
-
-        `;
-
-
-    });
+}
 
 
-    document.getElementById("customerCount").innerText = customers.length;
+
+data.forEach(c=>{
+
+
+table.innerHTML += `
+
+<tr>
+
+<td>${c.name || ""}</td>
+
+<td>${c.designation || ""}</td>
+
+<td>${c.department || ""}</td>
+
+<td>${c.city || ""}</td>
+
+<td>${c.phone || ""}</td>
+
+
+<td>
+
+<button
+class="btn btn-danger btn-sm"
+onclick="deleteCustomer(${c.id})">
+
+Delete
+
+</button>
+
+
+</td>
+
+
+</tr>
+
+`;
+
+});
+
+
+}
+async function deleteCustomer(id){
+
+
+if(!confirm("Delete this customer?"))
+return;
+
+
+await fetch(
+API_URL+"/customers/"+id,
+{
+method:"DELETE"
+}
+);
+
+
+loadCustomers();
+
+
+}
+function searchCustomers(){
+
+
+let text =
+document
+.getElementById("customerSearch")
+.value
+.toLowerCase();
+
+
+
+let filtered =
+allCustomers.filter(c=>{
+
+
+return (
+
+(c.name || "")
+.toLowerCase()
+.includes(text)
+
+||
+
+(c.department || "")
+.toLowerCase()
+.includes(text)
+
+||
+
+(c.city || "")
+.toLowerCase()
+.includes(text)
+
+||
+
+(c.phone || "")
+.includes(text)
+
+);
+
+
+});
+
+
+displayCustomers(filtered);
+
 
 }
 let products=[];
@@ -774,41 +874,15 @@ API_URL + "/customers"
 );
 
 
-let data =
+allCustomers =
 await response.json();
 
 
-
-let table =
-document.getElementById("customerTable");
-
-
-table.innerHTML="";
-
-
-
-data.forEach(c=>{
-
-
-table.innerHTML += `
-
-<tr>
-
-<td>${c.name}</td>
-
-<td>${c.phone}</td>
-
-<td>${c.email}</td>
-
-</tr>
-
-`;
-
-});
+displayCustomers(allCustomers);
 
 
 document.getElementById("customerCount").innerText =
-data.length;
+allCustomers.length;
 
 
 }
