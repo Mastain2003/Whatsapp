@@ -145,10 +145,10 @@ function displayCustomers(){
 
         <td>${c.Name || ""}</td>
 
-        <td>${c.Designation  || ""}</td>
+        <td>${c.designation  || ""}</td>
 
-        <td>${c.Department || ""}</td>
-        <td>${c.City || ""}</td>
+        <td>${c.department || ""}</td>
+        <td>${c.city || ""}</td>
         <td>${c.phone || ""}</td>
 
         </tr>
