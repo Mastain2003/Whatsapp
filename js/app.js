@@ -72,9 +72,11 @@ function displayCustomers(){
 
         <td>${c.Name || ""}</td>
 
-        <td>${c.Phone || c.Mobile || ""}</td>
+        <td>${c.Designation  || ""}</td>
 
-        <td>${c.Email || ""}</td>
+        <td>${c.Departmnet || ""}</td>
+        <td>${c.City || ""}</td>
+        <td>${c.phone || ""}</td>
 
         </tr>
 
