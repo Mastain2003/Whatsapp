@@ -1,4 +1,4 @@
-const API_URL = "https://whatsapp-api.prakharmastain9.workers.dev/";
+const API_URL = "https://whatsapp-api.prakharmastain9.workers.dev";
 let customers = [];
 let allCustomers = [];
 function showPage(page){
