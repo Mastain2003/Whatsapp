@@ -3,131 +3,63 @@ let customers = [];
 let allCustomers = [];
 function showPage(page){
 
-
-let pages=[
-"dashboard",
-"customers",
-"products",
-"campaigns",
-"orders",
-"reports"
-];
-
-
-pages.forEach(p=>{
-
-let el=document.getElementById(p);
-
-if(el)
-el.style.display="none";
-
-});
+    let pages=[
+        "dashboard",
+        "customers",
+        "products",
+        "campaigns",
+        "orders",
+        "reports"
+    ];
 
 
-document.getElementById(page).style.display="block";
+    pages.forEach(p=>{
+        let el=document.getElementById(p);
+        if(el)
+            el.style.display="none";
+    });
 
+    document.getElementById(page).style.display="block";
 
-if(page==="orders"){
-    loadOrderProducts();
+    if(page==="orders"){
+        loadOrderProducts();
+    }
 }
-
-
-}
-
-
 
 async function uploadExcel(){
-
-
-let file =
-document.getElementById("excelFile").files[0];
-
-
-if(!file){
-
-alert("Select Excel file");
-return;
-
+    let file =document.getElementById("excelFile").files[0];
+    if(!file){
+        alert("Select Excel file");
+        return;
+    }
+    let reader = new FileReader();
+    reader.onload = async function(e){
+        let data =new Uint8Array(e.target.result);
+        let workbook =XLSX.read(data,{type:"array"});
+        let sheet =workbook.Sheets[workbook.SheetNames[0]];
+        let rows =XLSX.utils.sheet_to_json(sheet);
+        for(let c of rows){
+            await fetch(API_URL + "/customers",{
+                method:"POST",
+               headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":"Bearer " + localStorage.getItem("token")
+                },
+                body:JSON.stringify({
+                    name:c.name || "",
+                    designation:c.designation ||  "",
+                    department:c.department || "",
+                    city:c.city || "",
+                    phone:c.phone || "",
+                    language:"en"
+                })
+            });
+        }
+        alert("Customers imported successfully");
+        loadCustomers();
+    };
+    reader.readAsArrayBuffer(file);
 }
-
-
-
-let reader = new FileReader();
-
-
-reader.onload = async function(e){
-
-
-let data =
-new Uint8Array(e.target.result);
-
-
-let workbook =
-XLSX.read(data,{type:"array"});
-
-
-let sheet =
-workbook.Sheets[workbook.SheetNames[0]];
-
-
-let rows =
-XLSX.utils.sheet_to_json(sheet);
-
-
-
-for(let c of rows){
-console.log(c);
-
-await fetch(
-API_URL + "/customers",
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-name:c.name || "",
-
-designation:c.designation ||  "",
-
-department:c.department || "",
-city:c.city || "",
-phone:c.phone || "",
-
-language:"en"
-
-})
-
-});
-
-
-}
-
-
-
-alert(
-"Customers imported successfully"
-);
-
-
-loadCustomers();
-
-
-};
-
-
-
-reader.readAsArrayBuffer(file);
-
-
-}
-
-
-
 function displayCustomers(customers){
 
     let table = document.getElementById("customerTable");
