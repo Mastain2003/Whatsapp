@@ -3,22 +3,11 @@
 import { checkAuth } from "./auth.js";
 
 
+export async function handleCustomers(request, env){
 
-export async function handleCustomers(
-    request,
-    env
-){
-
-
-
-    // Authentication
 
     const allowed =
-    await checkAuth(
-        request,
-        env
-    );
-
+    await checkAuth(request, env);
 
 
     if(!allowed){
@@ -37,20 +26,14 @@ export async function handleCustomers(
 
 
 
-
-
     const url =
     new URL(request.url);
 
 
 
-
-
     // GET CUSTOMERS
 
-    if(
-        request.method === "GET"
-    ){
+    if(request.method === "GET"){
 
 
         const result =
@@ -65,7 +48,6 @@ export async function handleCustomers(
         .all();
 
 
-
         return Response.json(
             {
                 success:true,
@@ -73,25 +55,18 @@ export async function handleCustomers(
             }
         );
 
-
     }
-
-
-
 
 
 
 
     // ADD CUSTOMER
 
-    if(
-        request.method === "POST"
-    ){
+    if(request.method === "POST"){
 
 
         const body =
         await request.json();
-
 
 
         await env.DB
@@ -100,21 +75,22 @@ export async function handleCustomers(
             INSERT INTO customers
             (
                 name,
-                phone,
-                email,
-                address
+                designation,
+                department,
+                city,
+                phone
             )
-            VALUES(?,?,?,?)
+            VALUES(?,?,?,?,?)
             `
         )
         .bind(
             body.name,
-            body.phone,
-            body.email,
-            body.address
+            body.designation,
+            body.department,
+            body.city,
+            body.phone
         )
         .run();
-
 
 
         return Response.json(
@@ -124,26 +100,18 @@ export async function handleCustomers(
             }
         );
 
-
     }
-
-
-
-
 
 
 
 
     // UPDATE CUSTOMER
 
-    if(
-        request.method === "PUT"
-    ){
+    if(request.method === "PUT"){
 
 
         const body =
         await request.json();
-
 
 
         await env.DB
@@ -152,26 +120,24 @@ export async function handleCustomers(
             UPDATE customers SET
 
             name=?,
-            phone=?,
-            email=?,
-            address=?
+            designation=?,
+            department=?,
+            city=?,
+            phone=?
 
             WHERE id=?
 
             `
         )
         .bind(
-
             body.name,
+            body.designation,
+            body.department,
+            body.city,
             body.phone,
-            body.email,
-            body.address,
             body.id
-
         )
         .run();
-
-
 
 
         return Response.json(
@@ -181,12 +147,7 @@ export async function handleCustomers(
             }
         );
 
-
     }
-
-
-
-
 
 
 
@@ -194,16 +155,11 @@ export async function handleCustomers(
 
     // DELETE CUSTOMER
 
-    if(
-        request.method === "DELETE"
-    ){
+    if(request.method === "DELETE"){
 
 
         const id =
-        url.searchParams.get(
-            "id"
-        );
-
+        url.searchParams.get("id");
 
 
         await env.DB
@@ -217,8 +173,6 @@ export async function handleCustomers(
         .run();
 
 
-
-
         return Response.json(
             {
                 success:true,
@@ -226,13 +180,7 @@ export async function handleCustomers(
             }
         );
 
-
     }
-
-
-
-
-
 
 
 
@@ -245,6 +193,5 @@ export async function handleCustomers(
             status:400
         }
     );
-
 
 }
