@@ -1,5 +1,6 @@
 import { handleLogin } from "./auth.js";
 import { handleCustomers } from "./customers.js";
+import { handleProducts } from "./products.js";
 
 //comment
 
