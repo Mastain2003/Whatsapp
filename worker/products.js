@@ -1,13 +1,23 @@
-import { verifyToken } from "./auth.js";
+// products.js
 
-export async function handleProducts(request, env) {
-
-    // Authentication
-    const auth =
-    request.headers.get("Authorization");
+import { checkAuth } from "./auth.js";
 
 
-    if (!auth) {
+export async function handleProducts(
+    request,
+    env
+){
+
+
+    const allowed =
+    await checkAuth(
+        request,
+        env
+    );
+
+
+    if(!allowed){
+
         return Response.json(
             {
                 success:false,
@@ -17,28 +27,9 @@ export async function handleProducts(request, env) {
                 status:401
             }
         );
+
     }
 
-
-    const token =
-    auth.replace("Bearer ","");
-
-
-    const valid =
-    await verifyToken(token, env);
-
-
-    if (!valid) {
-        return Response.json(
-            {
-                success:false,
-                message:"Invalid token"
-            },
-            {
-                status:401
-            }
-        );
-    }
 
 
 
@@ -47,15 +38,26 @@ export async function handleProducts(request, env) {
 
 
 
+
+
     // GET PRODUCTS
-    if(request.method==="GET"){
+
+    if(
+        request.method === "GET"
+    ){
+
 
         const result =
         await env.DB
         .prepare(
-            "SELECT * FROM products ORDER BY id DESC"
+            `
+            SELECT *
+            FROM products
+            ORDER BY id DESC
+            `
         )
         .all();
+
 
 
         return Response.json(
@@ -64,20 +66,31 @@ export async function handleProducts(request, env) {
                 data:result.results
             }
         );
+
+
     }
 
 
 
 
+
+
+
     // ADD PRODUCT
-    if(request.method==="POST"){
+
+    if(
+        request.method === "POST"
+    ){
+
 
         const body =
         await request.json();
 
 
+
         await env.DB
-        .prepare(`
+        .prepare(
+            `
             INSERT INTO products
             (
                 code,
@@ -87,15 +100,18 @@ export async function handleProducts(request, env) {
                 price,
                 gst
             )
-            VALUES (?,?,?,?,?,?)
-        `)
+            VALUES(?,?,?,?,?,?)
+            `
+        )
         .bind(
+
             body.code,
             body.name,
             body.category,
             body.unit,
             body.price,
             body.gst || 0
+
         )
         .run();
 
@@ -107,63 +123,55 @@ export async function handleProducts(request, env) {
                 message:"Product added"
             }
         );
+
+
     }
 
 
 
 
-    // DELETE PRODUCT
-    if(request.method==="DELETE"){
-
-        const id =
-        url.searchParams.get("id");
-
-
-        await env.DB
-        .prepare(
-            "DELETE FROM products WHERE id=?"
-        )
-        .bind(id)
-        .run();
-
-
-        return Response.json(
-            {
-                success:true,
-                message:"Product deleted"
-            }
-        );
-    }
 
 
 
 
     // UPDATE PRODUCT
-    if(request.method==="PUT"){
+
+    if(
+        request.method === "PUT"
+    ){
+
 
         const body =
         await request.json();
 
 
+
         await env.DB
-        .prepare(`
+        .prepare(
+            `
             UPDATE products SET
+
             code=?,
             name=?,
             category=?,
             unit=?,
             price=?,
             gst=?
+
             WHERE id=?
-        `)
+
+            `
+        )
         .bind(
+
             body.code,
             body.name,
             body.category,
             body.unit,
             body.price,
-            body.gst,
+            body.gst || 0,
             body.id
+
         )
         .run();
 
@@ -175,7 +183,56 @@ export async function handleProducts(request, env) {
                 message:"Product updated"
             }
         );
+
+
     }
+
+
+
+
+
+
+
+
+
+    // DELETE PRODUCT
+
+    if(
+        request.method === "DELETE"
+    ){
+
+
+        const id =
+        url.searchParams.get(
+            "id"
+        );
+
+
+
+        await env.DB
+        .prepare(
+            `
+            DELETE FROM products
+            WHERE id=?
+            `
+        )
+        .bind(id)
+        .run();
+
+
+
+        return Response.json(
+            {
+                success:true,
+                message:"Product deleted"
+            }
+        );
+
+
+    }
+
+
+
 
 
 
@@ -188,5 +245,6 @@ export async function handleProducts(request, env) {
             status:400
         }
     );
+
 
 }
