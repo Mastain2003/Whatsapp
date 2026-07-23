@@ -7,7 +7,8 @@ let pages=[
 "customers",
 "products",
 "campaigns",
-"orders"
+"orders",
+"reports"
 ];
 
 
@@ -543,6 +544,175 @@ cart.reduce(
 alert(
 "Order Total ₹"+total
 );
+
+
+}
+let orders=[];
+
+
+
+function checkout(){
+
+
+if(cart.length===0){
+
+alert("Cart empty");
+return;
+
+}
+
+
+let total =
+cart.reduce(
+(sum,item)=>sum+(item.price*item.qty),
+0
+);
+
+
+
+let order={
+
+id:"ORD-"+Date.now(),
+
+date:new Date().toLocaleDateString(),
+
+items:[...cart],
+
+total:total,
+
+status:"Pending"
+
+};
+
+
+
+orders.push(order);
+
+
+
+generateInvoice(order);
+
+
+
+cart=[];
+
+displayCart();
+
+displayOrders();
+
+
+}
+
+
+
+
+function generateInvoice(order){
+
+
+let invoice=`
+
+ORDER BILL
+
+Order No:
+${order.id}
+
+
+Date:
+${order.date}
+
+
+-----------------
+
+`;
+
+
+order.items.forEach(item=>{
+
+
+invoice +=
+
+`${item.name} x ${item.qty}
+₹${item.price*item.qty}
+
+`;
+
+});
+
+
+invoice +=
+`
+-----------------
+
+TOTAL:
+₹${order.total}
+
+STATUS:
+${order.status}
+
+`;
+
+
+
+alert(invoice);
+
+
+
+}
+
+
+
+
+function displayOrders(){
+
+
+let table =
+document.getElementById("orderHistory");
+
+
+if(!table) return;
+
+
+table.innerHTML="";
+
+
+
+if(orders.length===0){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="4">
+No Orders
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+
+
+orders.forEach(order=>{
+
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${order.id}</td>
+
+<td>${order.date}</td>
+
+<td>₹${order.total}</td>
+
+<td>${order.status}</td>
+
+</tr>
+
+`;
+
+});
 
 
 }
