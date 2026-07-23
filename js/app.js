@@ -74,7 +74,7 @@ function displayCustomers(){
 
         <td>${c.Designation  || ""}</td>
 
-        <td>${c.Departmnet || ""}</td>
+        <td>${c.Department || ""}</td>
         <td>${c.City || ""}</td>
         <td>${c.phone || ""}</td>
 
@@ -86,7 +86,6 @@ function displayCustomers(){
     });
 
 
-    document.getElementById("customerCount").innerText =
-    customers.length;
+    document.getElementById("customerCount").innerText = customers.length;
 
 }
