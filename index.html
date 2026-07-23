@@ -12,81 +12,66 @@
 <body>
 
 <div class="app">
-
     <aside class="sidebar">
         <h3>WhatsApp</h3>
         <h5>Order Manager</h5>
 
         <ul>
-    <li class="active" onclick="showPage('dashboard')">Dashboard</li>
-    <li onclick="showPage('customers')">Customers</li>
-    <li>Products</li>
-    <li>Campaigns</li>
-    <li>Orders</li>
-    <li>Reports</li>
-    <li>Settings</li>
+            <li class="active" onclick="showPage('dashboard')">Dashboard</li>
+            <li onclick="showPage('customers')">Customers</li>
+            <li>Products</li>
+            <li>Campaigns</li>
+            <li>Orders</li>
+            <li>Reports</li>
+            <li>Settings</li>
         </ul>
     </aside>
-
-
     <main class="content">
-
-        <h2>Dashboard</h2>
-
-        <div class="cards">
-
-            <div class="card-box">
-                <h4>Customers</h4>
-                <p>0</p>
+        <div id="dashboard">
+            <h2>Dashboard</h2>
+            <div class="cards">
+                <div class="card-box">
+                    <h4>Customers</h4>
+                    <p id="customerCount">0</p>
+                </div>
+                <div class="card-box">
+                    <h4>Products</h4>
+                    <p>0</p>
+                </div>
+                <div class="card-box">
+                    <h4>Orders</h4>
+                    <p>0</p>
+                </div>
+                <div class="card-box">
+                    <h4>Messages Sent</h4>
+                    <p>0</p>
+                </div>
             </div>
-
-            <div class="card-box">
-                <h4>Products</h4>
-                <p>0</p>
-            </div>
-
-            <div class="card-box">
-                <h4>Orders</h4>
-                <p>0</p>
-            </div>
-
-            <div class="card-box">
-                <h4>Messages Sent</h4>
-                <p>0</p>
-            </div>
-
         </div>
-
-
-        <div class="panel">
-
-            <h4>Recent Orders</h4>
-
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr>
-                        <td colspan="4">
-                            No orders yet
-                        </td>
-                    </tr>
-                </tbody>
-
-            </table>
-
+        <div id="customers" style="display:none">
+            <h2>Customers</h2>
+            <div class="panel">
+                <input type="file" id="excelFile" accept=".xlsx,.xls"/>
+                <button class="btn btn-primary mt-3"onclick="uploadExcel()">Import Customers</button>
+            </div>
+            <div class="panel">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTable">
+                        <tr>
+                            <td colspan="3">No customers</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-
     </main>
-
 </div>
 
 
