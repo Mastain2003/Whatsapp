@@ -22,7 +22,7 @@
             <li onclick="showPage('products')">Products</li>
             <li onclick="showPage('campaigns')">Campaigns</li>
             <li onclick="showPage('orders')">Orders</li>
-            <li>Reports</li>
+            <li onclick="showPage('reports')">Reports</li>
             <li>Settings</li>
         </ul>
     </aside>
@@ -346,7 +346,7 @@ Grand Total:
 class="btn btn-success"
 onclick="checkout()">
 
-Checkout
+Generate Bill
 
 </button>
 
@@ -355,6 +355,50 @@ Checkout
 
 
 </div>
+
+
+</div>
+
+
+</div>
+        <div id="reports" style="display:none">
+
+<h2>Order History</h2>
+
+
+<div class="panel">
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>Order No</th>
+<th>Date</th>
+<th>Total</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="orderHistory">
+
+<tr>
+
+<td colspan="4">
+No Orders
+</td>
+
+</tr>
+
+</tbody>
+
+
+</table>
 
 
 </div>
