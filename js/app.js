@@ -5,7 +5,8 @@ function showPage(page){
 let pages=[
 "dashboard",
 "customers",
-"products"
+"products",
+"campaigns"
 ];
 
 
@@ -217,6 +218,70 @@ products.filter(p=>p.id!==id);
 
 
 displayProducts();
+
+
+}
+function previewMessage(){
+
+
+let template =
+document.getElementById("messageTemplate").value;
+
+
+let table =
+document.getElementById("messagePreview");
+
+
+table.innerHTML="";
+
+
+
+if(customers.length===0){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="3">
+No customers imported
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+
+
+customers.forEach(c=>{
+
+
+let msg =
+template.replace(
+"{{Name}}",
+c.Name || ""
+);
+
+
+
+table.innerHTML +=
+`
+
+<tr>
+
+<td>${c.Name || ""}</td>
+
+<td>${c.Phone || c.Mobile || ""}</td>
+
+<td>${msg}</td>
+
+</tr>
+
+`;
+
+
+
+});
 
 
 }
