@@ -20,7 +20,7 @@
             <li class="active" onclick="showPage('dashboard')">Dashboard</li>
             <li onclick="showPage('customers')">Customers</li>
             <li onclick="showPage('products')">Products</li>
-            <li>Campaigns</li>
+            <li onclick="showPage('campaigns')">Campaigns</li>
             <li>Orders</li>
             <li>Reports</li>
             <li>Settings</li>
@@ -152,6 +152,97 @@ Add
 <tr>
 <td colspan="4">
 No products
+</td>
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+        <div id="campaigns" style="display:none">
+
+<h2>Campaigns</h2>
+
+
+<div class="panel">
+
+<h5>Create Message</h5>
+
+
+<label>Language</label>
+
+<select id="campaignLanguage" class="form-control">
+
+<option value="en">
+English
+</option>
+
+<option value="hi">
+Hindi
+</option>
+
+</select>
+
+
+<br>
+
+
+<label>Message Template</label>
+
+<textarea 
+id="messageTemplate"
+class="form-control"
+rows="5"
+placeholder="Hello {{Name}}, your order is ready.">
+</textarea>
+
+
+<br>
+
+
+<button 
+class="btn btn-primary"
+onclick="previewMessage()">
+
+Preview
+
+</button>
+
+
+</div>
+
+
+
+<div class="panel">
+
+
+<h5>Preview</h5>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>Message</th>
+</tr>
+
+</thead>
+
+
+<tbody id="messagePreview">
+
+<tr>
+<td colspan="3">
+No Preview
 </td>
 </tr>
 
