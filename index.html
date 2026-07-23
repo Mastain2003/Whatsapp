@@ -55,23 +55,48 @@
                 <button class="btn btn-primary mt-3"onclick="uploadExcel()">Import Customers</button>
             </div>
             <div class="panel">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Designation</th>
-                            <th>Department</th>
-                            <th>City</th>
-                            <th>Mobile Number</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customerTable">
-                        <tr>
-                            <td colspan="5">No customers</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+
+<input 
+type="text"
+id="customerSearch"
+class="form-control"
+placeholder="Search name, city, department..."
+onkeyup="searchCustomers()">
+
+
+<br>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Designation</th>
+<th>Department</th>
+<th>City</th>
+<th>Phone</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+
+<tbody id="customerTable">
+
+<tr>
+<td colspan="6">
+No customers
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+
+</div>
         </div>
         <div id="products" style="display:none">
 
