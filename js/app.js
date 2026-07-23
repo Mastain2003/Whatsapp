@@ -1,3 +1,6 @@
+if (!localStorage.getItem("token")) {
+    window.location.href = "login.html";
+}
 const API_URL = "https://whatsapp-api.prakharmastain9.workers.dev";
 let customers = [];
 let allCustomers = [];
