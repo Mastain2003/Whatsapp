@@ -128,71 +128,32 @@ reader.readAsArrayBuffer(file);
 
 
 
-function displayCustomers(data){
+function displayCustomers(customers){
 
+    let table = document.getElementById("customerTable");
+    table.innerHTML = "";
 
-let table =
-document.getElementById("customerTable");
+    if (!customers || customers.length === 0) {
+        table.innerHTML =
+        `<tr><td colspan="6">No customers found</td></tr>`;
+        return;
+    }
 
-
-table.innerHTML="";
-
-
-if(data.length===0){
-
-table.innerHTML=
-`
-<tr>
-<td colspan="6">
-No customers found
-</td>
-</tr>
-`;
-
-return;
-
-}
-
-
-
-data.forEach(c=>{
-
-
-table.innerHTML += `
-
-<tr>
-
-<td>${c.name || ""}</td>
-
-<td>${c.designation || ""}</td>
-
-<td>${c.department || ""}</td>
-
-<td>${c.city || ""}</td>
-
-<td>${c.phone || ""}</td>
-
-
-<td>
-
-<button
-class="btn btn-danger btn-sm"
-onclick="deleteCustomer(${c.id})">
-
-Delete
-
-</button>
-
-
-</td>
-
-
-</tr>
-
-`;
-
-});
-
+    customers.forEach(c => {
+        table.innerHTML += `
+        <tr>
+            <td>${c.name}</td>
+            <td>${c.designation}</td>
+            <td>${c.department}</td>
+            <td>${c.city}</td>
+            <td>${c.phone}</td>
+            <td>
+                <button onclick="deleteCustomer(${c.id})">
+                    Delete
+                </button>
+            </td>
+        </tr>`;
+    });
 
 }
 async function deleteCustomer(id){
@@ -865,24 +826,14 @@ table.innerHTML+=`
 
 
 }
-async function loadCustomers(){
+async function loadCustomers() {
 
+    const response = await fetch(API_URL + "/customers");
+    const data = await response.json();
 
-let response =
-await fetch(
-API_URL + "/customers"
-);
+    allCustomers = data.results;   // <-- THIS IS IMPORTANT
 
+    displayCustomers(allCustomers);
 
-allCustomers =
-await response.json();
-
-
-displayCustomers(allCustomers);
-
-
-document.getElementById("customerCount").innerText =
-allCustomers.length;
-
-
+    document.getElementById("customerCount").innerText = allCustomers.length;
 }
