@@ -6,7 +6,8 @@ let pages=[
 "dashboard",
 "customers",
 "products",
-"campaigns"
+"campaigns",
+"orders"
 ];
 
 
@@ -21,6 +22,11 @@ el.style.display="none";
 
 
 document.getElementById(page).style.display="block";
+
+
+if(page==="orders"){
+    loadOrderProducts();
+}
 
 
 }
@@ -282,6 +288,261 @@ table.innerHTML +=
 
 
 });
+
+
+}
+let cart=[];
+
+
+
+function loadOrderProducts(){
+
+
+let table =
+document.getElementById("orderProductList");
+
+
+if(!table) return;
+
+
+table.innerHTML="";
+
+
+
+products.forEach(p=>{
+
+
+table.innerHTML += `
+
+<tr>
+
+<td>${p.name}</td>
+
+<td>₹${p.price}</td>
+
+<td>
+
+<button 
+class="btn btn-primary btn-sm"
+onclick="addToCart(${p.id})">
+
+Add
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+
+}
+
+
+
+
+function addToCart(id){
+
+
+let product =
+products.find(p=>p.id===id);
+
+
+
+let existing =
+cart.find(c=>c.id===id);
+
+
+
+if(existing){
+
+existing.qty++;
+
+}
+
+else{
+
+
+cart.push({
+
+id:product.id,
+
+name:product.name,
+
+price:product.price,
+
+qty:1
+
+
+});
+
+
+}
+
+
+displayCart();
+
+
+}
+
+
+
+function displayCart(){
+
+
+let table =
+document.getElementById("cartList");
+
+
+if(!table) return;
+
+
+table.innerHTML="";
+
+
+let total=0;
+
+
+
+if(cart.length===0){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="4">
+Cart Empty
+</td>
+</tr>
+`;
+
+}
+
+
+
+cart.forEach(item=>{
+
+
+let amount =
+item.price * item.qty;
+
+
+total += amount;
+
+
+
+table.innerHTML +=
+
+`
+
+<tr>
+
+<td>${item.name}</td>
+
+<td>
+
+<input 
+type="number"
+value="${item.qty}"
+min="1"
+style="width:60px"
+onchange="changeQty(${item.id},this.value)"
+>
+
+</td>
+
+
+<td>
+₹${amount}
+</td>
+
+
+<td>
+
+<button
+class="btn btn-danger btn-sm"
+onclick="removeCart(${item.id})">
+
+X
+
+</button>
+
+
+</td>
+
+
+</tr>
+
+`;
+
+});
+
+
+document.getElementById("cartTotal").innerText=total;
+
+
+}
+
+
+
+
+function changeQty(id,qty){
+
+
+let item =
+cart.find(c=>c.id===id);
+
+
+item.qty =
+Number(qty);
+
+
+displayCart();
+
+
+}
+
+
+
+
+function removeCart(id){
+
+
+cart =
+cart.filter(c=>c.id!==id);
+
+
+displayCart();
+
+
+}
+
+
+
+function checkout(){
+
+
+if(cart.length===0){
+
+alert("Cart empty");
+return;
+
+}
+
+
+let total =
+cart.reduce(
+(sum,i)=>sum+(i.price*i.qty),
+0
+);
+
+
+
+alert(
+"Order Total ₹"+total
+);
 
 
 }
