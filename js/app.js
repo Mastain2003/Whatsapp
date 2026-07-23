@@ -1,3 +1,4 @@
+const API_URL = "https://whatsapp-api.prakharmastain9.workers.dev/";
 let customers = [];
 function showPage(page){
 
@@ -34,45 +35,93 @@ if(page==="orders"){
 
 
 
-function uploadExcel(){
-
-    let file =
-    document.getElementById("excelFile").files[0];
+async function uploadExcel(){
 
 
-    if(!file){
-        alert("Select Excel file");
-        return;
-    }
+let file =
+document.getElementById("excelFile").files[0];
 
 
-    let reader = new FileReader();
+if(!file){
+
+alert("Select Excel file");
+return;
+
+}
 
 
-    reader.onload=function(e){
 
-        let data =
-        new Uint8Array(e.target.result);
+let reader = new FileReader();
 
 
-        let workbook =
-        XLSX.read(data,{type:"array"});
+reader.onload = async function(e){
 
 
-        let sheet =
-        workbook.Sheets[workbook.SheetNames[0]];
+let data =
+new Uint8Array(e.target.result);
 
 
-        customers =
-        XLSX.utils.sheet_to_json(sheet);
+let workbook =
+XLSX.read(data,{type:"array"});
 
 
-        displayCustomers();
+let sheet =
+workbook.Sheets[workbook.SheetNames[0]];
 
-    };
+
+let rows =
+XLSX.utils.sheet_to_json(sheet);
 
 
-    reader.readAsArrayBuffer(file);
+
+for(let c of rows){
+
+
+await fetch(
+API_URL + "/customers",
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+name:c.Name || "",
+
+Designation:c.Designation ||  "",
+
+Department:c.Department || "",
+City:c.City || "",
+phone:c.phone || "",
+
+language:"en"
+
+})
+
+});
+
+
+}
+
+
+
+alert(
+"Customers imported successfully"
+);
+
+
+loadCustomers();
+
+
+};
+
+
+
+reader.readAsArrayBuffer(file);
+
 
 }
 
