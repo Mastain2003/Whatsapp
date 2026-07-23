@@ -19,7 +19,7 @@
         <ul>
             <li class="active" onclick="showPage('dashboard')">Dashboard</li>
             <li onclick="showPage('customers')">Customers</li>
-            <li>Products</li>
+            <li onclick="showPage('products')">Products</li>
             <li>Campaigns</li>
             <li>Orders</li>
             <li>Reports</li>
@@ -73,6 +73,98 @@
                 </table>
             </div>
         </div>
+        <div id="products" style="display:none">
+
+<h2>Products</h2>
+
+
+<div class="panel">
+
+<h5>Add Product</h5>
+
+
+<div class="row">
+
+<div class="col-md-3">
+<input 
+class="form-control"
+id="productName"
+placeholder="Product Name">
+</div>
+
+
+<div class="col-md-3">
+<input 
+class="form-control"
+id="productCategory"
+placeholder="Category">
+</div>
+
+
+<div class="col-md-3">
+<input 
+class="form-control"
+id="productPrice"
+placeholder="Price">
+</div>
+
+
+<div class="col-md-3">
+
+<button 
+class="btn btn-success"
+onclick="addProduct()">
+
+Add
+
+</button>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<div class="panel">
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+<th>Category</th>
+<th>Price</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="productTable">
+
+<tr>
+<td colspan="4">
+No products
+</td>
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
     </main>
 </div>
 
