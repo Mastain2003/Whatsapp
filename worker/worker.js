@@ -48,7 +48,16 @@ async fetch(request, env) {
         );
     }
 
+  if (
+    url.pathname === "/products"
+) {
 
+    return handleProducts(
+        request,
+        env
+    );
+
+}
 
     return Response.json(
         {
