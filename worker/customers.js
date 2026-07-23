@@ -1,13 +1,27 @@
-import { checkAuth } from "./utils.js";
+// customers.js
+
+import { checkAuth } from "./auth.js";
+
 
 
 export async function handleCustomers(
     request,
-    env,
-    corsHeaders
+    env
 ){
 
-    if(!(await checkAuth(request, env))){
+
+
+    // Authentication
+
+    const allowed =
+    await checkAuth(
+        request,
+        env
+    );
+
+
+
+    if(!allowed){
 
         return Response.json(
             {
@@ -15,12 +29,13 @@ export async function handleCustomers(
                 message:"Unauthorized"
             },
             {
-                status:401,
-                headers:corsHeaders
+                status:401
             }
         );
 
     }
+
+
 
 
 
@@ -29,37 +44,50 @@ export async function handleCustomers(
 
 
 
+
+
     // GET CUSTOMERS
+
     if(
-        request.method === "GET" &&
-        url.pathname === "/customers"
+        request.method === "GET"
     ){
 
-        const data =
+
+        const result =
         await env.DB
         .prepare(
-            "SELECT * FROM customers ORDER BY id DESC"
+            `
+            SELECT *
+            FROM customers
+            ORDER BY id DESC
+            `
         )
         .all();
 
 
 
         return Response.json(
-            data,
             {
-                headers:corsHeaders
+                success:true,
+                data:result.results
             }
         );
+
 
     }
 
 
 
+
+
+
+
     // ADD CUSTOMER
+
     if(
-        request.method === "POST" &&
-        url.pathname === "/customers"
+        request.method === "POST"
     ){
+
 
         const body =
         await request.json();
@@ -67,23 +95,23 @@ export async function handleCustomers(
 
 
         await env.DB
-        .prepare(`
+        .prepare(
+            `
             INSERT INTO customers
             (
                 name,
-                designation,
-                department,
-                city,
-                phone
+                phone,
+                email,
+                address
             )
-            VALUES (?, ?, ?, ?, ?)
-        `)
+            VALUES(?,?,?,?)
+            `
+        )
         .bind(
             body.name,
-            body.designation,
-            body.department,
-            body.city,
-            body.phone
+            body.phone,
+            body.email,
+            body.address
         )
         .run();
 
@@ -91,57 +119,132 @@ export async function handleCustomers(
 
         return Response.json(
             {
-                success:true
-            },
-            {
-                headers:corsHeaders
+                success:true,
+                message:"Customer added"
             }
         );
+
 
     }
 
 
 
-    // DELETE CUSTOMER
+
+
+
+
+
+    // UPDATE CUSTOMER
+
     if(
-        request.method === "DELETE"
+        request.method === "PUT"
     ){
 
-        const id =
-        url.pathname.split("/")[2];
+
+        const body =
+        await request.json();
+
 
 
         await env.DB
         .prepare(
-            "DELETE FROM customers WHERE id=?"
+            `
+            UPDATE customers SET
+
+            name=?,
+            phone=?,
+            email=?,
+            address=?
+
+            WHERE id=?
+
+            `
+        )
+        .bind(
+
+            body.name,
+            body.phone,
+            body.email,
+            body.address,
+            body.id
+
+        )
+        .run();
+
+
+
+
+        return Response.json(
+            {
+                success:true,
+                message:"Customer updated"
+            }
+        );
+
+
+    }
+
+
+
+
+
+
+
+
+
+    // DELETE CUSTOMER
+
+    if(
+        request.method === "DELETE"
+    ){
+
+
+        const id =
+        url.searchParams.get(
+            "id"
+        );
+
+
+
+        await env.DB
+        .prepare(
+            `
+            DELETE FROM customers
+            WHERE id=?
+            `
         )
         .bind(id)
         .run();
 
 
 
+
         return Response.json(
             {
-                success:true
-            },
-            {
-                headers:corsHeaders
+                success:true,
+                message:"Customer deleted"
             }
         );
 
+
     }
+
+
+
+
+
 
 
 
     return Response.json(
         {
             success:false,
-            message:"Invalid customer request"
+            message:"Invalid request"
         },
         {
-            status:404,
-            headers:corsHeaders
+            status:400
         }
     );
+
 
 }
