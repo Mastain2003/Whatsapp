@@ -1,16 +1,30 @@
 // auth.js
 
 
-// Create random token
-export function createToken() {
+// Create token
+export async function createToken(env) {
 
-    const bytes = new Uint8Array(32);
+    const timestamp = Date.now();
 
-    crypto.getRandomValues(bytes);
+    const data = timestamp + ":" + env.AUTH_SECRET;
 
-    return Array.from(bytes)
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
+
+    const encoder = new TextEncoder();
+
+    const hash =
+    await crypto.subtle.digest(
+        "SHA-256",
+        encoder.encode(data)
+    );
+
+
+    return Array.from(
+        new Uint8Array(hash)
+    )
+    .map(
+        b => b.toString(16).padStart(2,"0")
+    )
+    .join("");
 
 }
 
@@ -19,24 +33,19 @@ export function createToken() {
 // Login
 export async function handleLogin(request, env) {
 
-    const body = await request.json();
+
+    const body =
+    await request.json();
 
 
-    const username = body.username;
-    const password = body.password;
-
-
-    // Temporary admin credentials
-    // Change these later to environment variables
-    if (
-        username !== "admin" ||
-        password !== "admin"
-    ) {
+    if(
+        body.password !== env.ADMIN_PASSWORD
+    ){
 
         return Response.json(
             {
                 success:false,
-                message:"Invalid username or password"
+                message:"Invalid password"
             },
             {
                 status:401
@@ -46,18 +55,9 @@ export async function handleLogin(request, env) {
     }
 
 
+    const token =
+    await createToken(env);
 
-    const token = createToken();
-
-
-    // Save token in KV
-    await env.AUTH_KV.put(
-        token,
-        username,
-        {
-            expirationTtl: 86400
-        }
-    );
 
 
     return Response.json(
@@ -71,40 +71,40 @@ export async function handleLogin(request, env) {
 
 
 
-
 // Verify token
-export async function verifyToken(token, env) {
-
+export async function verifyToken(token, env){
 
     if(!token){
         return false;
     }
 
 
-    const user =
-    await env.AUTH_KV.get(token);
+    // simple token validation
+    const expected =
+    await createToken(env);
 
 
-    return user !== null;
+    return token === expected;
 
 }
 
 
 
-
-// Get token from request header
+// Get token from request
 export function getToken(request){
 
-    const auth =
-    request.headers.get("Authorization");
+    const header =
+    request.headers.get(
+        "Authorization"
+    );
 
 
-    if(!auth){
+    if(!header){
         return null;
     }
 
 
-    return auth.replace(
+    return header.replace(
         "Bearer ",
         ""
     );
@@ -113,8 +113,7 @@ export function getToken(request){
 
 
 
-
-// Check API authentication
+// Authentication helper
 export async function checkAuth(request, env){
 
     const token =
