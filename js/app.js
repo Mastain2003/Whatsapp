@@ -76,7 +76,7 @@ XLSX.utils.sheet_to_json(sheet);
 
 
 for(let c of rows){
-
+console.log(c);
 
 await fetch(
 API_URL + "/customers",
