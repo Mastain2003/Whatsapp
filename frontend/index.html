@@ -1,1 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Order Manager</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+    <aside class="sidebar">
+        <h3>WhatsApp</h3>
+        <h5>Order Manager</h5>
+
+        <ul>
+            <li class="active" onclick="showPage('dashboard')">Dashboard</li>
+            <li onclick="showPage('customers')">Customers</li>
+            <li onclick="showPage('products')">Products</li>
+            <li onclick="showPage('campaigns')">Campaigns</li>
+            <li onclick="showPage('orders')">Orders</li>
+            <li onclick="showPage('reports')">Reports</li>
+            <li>Settings</li>
+            <button onclick="logout()">Logout</button>
+        </ul>
+    </aside>
+    <main class="content">
+        <div id="dashboard">
+            <h2>Dashboard</h2>
+            <div class="cards">
+                <div class="card-box">
+                    <h4>Customers</h4>
+                    <p id="customerCount">0</p>
+                </div>
+                <div class="card-box">
+                    <h4>Products</h4>
+                    <p>0</p>
+                </div>
+                <div class="card-box">
+                    <h4>Orders</h4>
+                    <p>0</p>
+                </div>
+                <div class="card-box">
+                    <h4>Messages Sent</h4>
+                    <p>0</p>
+                </div>
+            </div>
+        </div>
+        <div id="customers" style="display:none">
+            <h2>Customers</h2>
+            <div class="panel">
+                <input type="file" id="excelFile" accept=".xlsx,.xls"/>
+                <button class="btn btn-primary mt-3"onclick="uploadExcel()">Import Customers</button>
+            </div>
+            <div class="panel">
+
+<input 
+type="text"
+id="customerSearch"
+class="form-control"
+placeholder="Search name, city, department..."
+onkeyup="searchCustomers()">
+
+
+<br>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Designation</th>
+<th>Department</th>
+<th>City</th>
+<th>Phone</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+
+<tbody id="customerTable">
+
+<tr>
+<td colspan="6">
+No customers
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+
+</div>
+        </div>
+        <div id="products" style="display:none">
+
+<h2>Products</h2>
+
+
+<div class="panel">
+
+<h5>Add Product</h5>
+
+
+<div class="row">
+
+<div class="col-md-3">
+<input 
+class="form-control"
+id="productName"
+placeholder="Product Name">
+</div>
+
+
+<div class="col-md-3">
+<input 
+class="form-control"
+id="productCategory"
+placeholder="Category">
+</div>
+
+
+<div class="col-md-3">
+<input 
+class="form-control"
+id="productPrice"
+placeholder="Price">
+</div>
+
+
+<div class="col-md-3">
+
+<button 
+class="btn btn-success"
+onclick="addProduct()">
+
+Add
+
+</button>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<div class="panel">
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+<th>Category</th>
+<th>Price</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="productTable">
+
+<tr>
+<td colspan="4">
+No products
+</td>
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+        <div id="campaigns" style="display:none">
+
+<h2>Campaigns</h2>
+
+
+<div class="panel">
+
+<h5>Create Message</h5>
+
+
+<label>Language</label>
+
+<select id="campaignLanguage" class="form-control">
+
+<option value="en">
+English
+</option>
+
+<option value="hi">
+Hindi
+</option>
+
+</select>
+
+
+<br>
+
+
+<label>Message Template</label>
+
+<textarea 
+id="messageTemplate"
+class="form-control"
+rows="5"
+placeholder="Hello {{Name}}, your order is ready.">
+</textarea>
+
+
+<br>
+
+
+<button 
+class="btn btn-primary"
+onclick="previewMessage()">
+
+Preview
+
+</button>
+
+
+</div>
+
+
+
+<div class="panel">
+
+
+<h5>Preview</h5>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+ <th>Name</th>
+ <th>Designation</th>
+                            <th>Department</th>
+                            <th>City</th>
+                            <th>Mobile Number</th>
+</tr>
+
+</thead>
+
+
+<tbody id="messagePreview">
+
+<tr>
+<td colspan="5">
+No Preview
+</td>
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+        <div id="orders" style="display:none">
+
+<h2>Orders</h2>
+
+
+<div class="row">
+
+
+<div class="col-md-6">
+
+<div class="panel">
+
+<h5>Products</h5>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Price</th>
+<th></th>
+</tr>
+
+</thead>
+
+
+<tbody id="orderProductList">
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+</div>
+
+
+
+<div class="col-md-6">
+
+
+<div class="panel">
+
+<h5>Cart</h5>
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Total</th>
+<th></th>
+</tr>
+
+</thead>
+
+
+<tbody id="cartList">
+
+<tr>
+<td colspan="4">
+Cart Empty
+</td>
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+<h4>
+Grand Total:
+₹<span id="cartTotal">0</span>
+</h4>
+
+
+<button 
+class="btn btn-success"
+onclick="checkout()">
+
+Generate Bill
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+        <div id="reports" style="display:none">
+
+<h2>Order History</h2>
+
+
+<div class="panel">
+
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>Order No</th>
+<th>Date</th>
+<th>Total</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="orderHistory">
+
+<tr>
+
+<td colspan="4">
+No Orders
+</td>
+
+</tr>
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
