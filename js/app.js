@@ -90,12 +90,12 @@ headers:{
 
 body:JSON.stringify({
 
-name:c.Name || "",
+name:c.name || "",
 
-designation:c.Designation ||  "",
+designation:c.designation ||  "",
 
-department:c.Department || "",
-city:c.City || "",
+department:c.department || "",
+city:c.city || "",
 phone:c.phone || "",
 
 language:"en"
