@@ -385,7 +385,7 @@ searchCustomer.addEventListener("input",applyFilter);
 
 
 
-cityFilte.addEventListener("change",applyFilter);
+cityFilter.addEventListener("change",applyFilter);
 
 
 
