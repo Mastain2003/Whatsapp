@@ -374,7 +374,7 @@ async function sendTemplate(
                     {
                         type:"text",
                         text:customer.department || ""
-                    },
+                    }/*,
 
                     {
                         type:"text",
@@ -384,7 +384,7 @@ async function sendTemplate(
                     {
                         type:"text",
                         text:"xxxxxxxxxx"
-                    }
+                    }*/
 
                     ]
 
