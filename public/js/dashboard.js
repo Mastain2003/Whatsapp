@@ -8,9 +8,3 @@ requireLogin();
 loadSidebar("dashboard");
 
 
-document
-.getElementById(
-    "logoutBtn"
-)
-.onclick =
-logout;
