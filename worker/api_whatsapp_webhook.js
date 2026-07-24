@@ -257,9 +257,132 @@ async function handleIncomingMessage(
     env
 ){
 
-    console.log(
-        "Incoming message",
-        message
-    );
+    const phone =
+    message.from;
+
+
+    let messageText = "";
+
+    let buttonId = "";
+
+
+
+    if(
+        message.type === "text"
+    ){
+
+        messageText =
+        message.text.body;
+
+    }
+
+
+
+    if(
+        message.type === "button"
+    ){
+
+        buttonId =
+        message.button.payload
+        ||
+        message.button.text;
+
+    }
+
+
+
+    const customer =
+    await env.DB
+    .prepare(
+    `
+    SELECT id
+    FROM customers
+    WHERE phone = ?
+    `
+    )
+    .bind(phone)
+    .first();
+
+
+
+    if(!customer){
+
+        return;
+
+    }
+
+
+
+    await env.DB
+    .prepare(
+    `
+    INSERT INTO whatsapp_incoming_messages
+    (
+        customer_id,
+        whatsapp_message_id,
+        message_type,
+        message_text,
+        button_id
+    )
+    VALUES
+    (
+        ?,
+        ?,
+        ?,
+        ?,
+        ?
+    )
+    `
+    )
+    .bind(
+
+        customer.id,
+
+        message.id,
+
+        message.type,
+
+        messageText,
+
+        buttonId
+
+    )
+    .run();
+
+
+
+
+
+    await env.DB
+    .prepare(
+    `
+    INSERT INTO whatsapp_sessions
+    (
+        customer_id,
+        last_customer_message,
+        window_active
+    )
+    VALUES
+    (
+        ?,
+        CURRENT_TIMESTAMP,
+        1
+    )
+
+    ON CONFLICT(customer_id)
+    DO UPDATE SET
+
+    last_customer_message =
+    CURRENT_TIMESTAMP,
+
+    window_active = 1
+
+    `
+    )
+    .bind(
+        customer.id
+    )
+    .run();
+
 
 }
