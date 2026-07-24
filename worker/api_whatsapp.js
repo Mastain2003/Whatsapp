@@ -113,10 +113,10 @@ async function sendTemplate(
 
 
 
-            const phone =
-            customer.phone.startsWith("91")
+            const phone = "919955160127";
+           /* customer.phone.startsWith("91")
             ? customer.phone
-            : "91" + customer.phone;
+            : "91" + customer.phone;*/
 
 
 
