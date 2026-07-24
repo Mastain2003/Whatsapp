@@ -27,6 +27,8 @@ import {
     handleBroadcast
 } from "./api_broadcast.js";
 
+import { handleWhatsApp } from "./api_whatsapp.js";
+
 
 
 
@@ -127,7 +129,16 @@ if(
     );
 
         }
+if(
+    url.pathname === "/whatsapp/send"
+){
 
+    return handleWhatsApp(
+        request,
+        env
+    );
+
+}
 
 
 
