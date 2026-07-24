@@ -6,52 +6,29 @@ import {
 } from "./core.js";
 
 
-
 requireLogin();
 
 
-
 const list =
-document.getElementById(
-    "productList"
-);
-
+document.getElementById("productList");
 
 const saveBtn =
-document.getElementById(
-    "saveProduct"
-);
-
+document.getElementById("saveProduct");
 
 const searchBtn =
-document.getElementById(
-    "searchBtn"
-);
-
+document.getElementById("searchBtn");
 
 const logoutBtn =
-document.getElementById(
-    "logoutBtn"
-);
+document.getElementById("logoutBtn");
+
+
+logoutBtn.onclick = logout;
 
 
 
+async function loadProducts(search = ""){
 
-
-logoutBtn.onclick =
-logout;
-
-
-
-
-
-
-async function loadProducts(
-    search = ""
-){
-
-    let url =
-    "/products";
+    let url = "/products";
 
 
     if(search){
@@ -63,81 +40,55 @@ async function loadProducts(
     }
 
 
-
     const data =
     await apiFetch(url);
 
 
-
-    if(
-        !data ||
-        !data.success
-    ){
+    if(!data || !data.success){
 
         return;
 
     }
 
 
-
     list.innerHTML = "";
 
 
-
-    data.products.forEach(
-    product => {
+    data.products.forEach(product => {
 
 
         const row =
-        document.createElement(
-            "tr"
-        );
+        document.createElement("tr");
 
 
         row.innerHTML = `
 
-        <td>
-        ${product.product_code}
-        </td>
+        <td>${product.product_code}</td>
 
-        <td>
-        ${product.name}
-        </td>
+        <td>${product.name}</td>
 
-        <td>
-        ${product.category || ""}
-        </td>
+        <td>${product.category || ""}</td>
 
-        <td>
-        ${product.brand || ""}
-        </td>
+        <td>${product.brand || ""}</td>
 
-        <td>
-        ${product.unit || ""}
-        </td>
+        <td>${product.unit || ""}</td>
 
-        <td>
-        ₹${product.price}
-        </td>
+        <td>₹${product.price}</td>
+
 
         <td>
 
         <button
+        onclick="editProduct(${product.id})">
+        Edit
+        </button>
+
+
         <button
-onclick="editProduct(${product.id})">
-
-Edit
-
-</button>
-
-
-<button
-class="action-btn"
-onclick="deleteProduct(${product.id})">
-
-Delete
-
-</button>
+        class="action-btn"
+        onclick="deleteProduct(${product.id})">
+        Delete
+        </button>
 
         </td>
 
@@ -157,7 +108,6 @@ Delete
 
 
 
-
 saveBtn.onclick =
 async function(){
 
@@ -166,70 +116,70 @@ async function(){
 
 
         name:
-        document.getElementById(
-            "name"
-        ).value,
+        document.getElementById("name").value,
 
 
         category:
-        document.getElementById(
-            "category"
-        ).value,
+        document.getElementById("category").value,
 
 
         brand:
-        document.getElementById(
-            "brand"
-        ).value,
+        document.getElementById("brand").value,
 
 
         unit:
-        document.getElementById(
-            "unit"
-        ).value,
+        document.getElementById("unit").value,
 
 
         price:
         Number(
-        document.getElementById(
-            "price"
-        ).value
+            document.getElementById("price").value
         ),
 
 
         description:
-        document.getElementById(
-            "description"
-        ).value
-
+        document.getElementById("description").value
 
     };
 
 
 
+    const editId =
+    saveBtn.dataset.editId;
+
+
+
+    let method =
+    "POST";
+
+
+
+    if(editId){
+
+        method = "PUT";
+
+        body.id =
+        Number(editId);
+
+    }
+
+
+
     const result =
     await apiFetch(
-    url,
+
+        "/products",
+
         {
 
-            const editId =
-saveBtn.dataset.editId;
+            method,
 
-
-const method =
-editId
-?
-"PUT"
-:
-"POST";
-
-
-const url =
-"/products";
 
             headers:{
+
                 "Content-Type":
                 "application/json"
+
             },
 
 
@@ -237,6 +187,7 @@ const url =
             JSON.stringify(body)
 
         }
+
     );
 
 
@@ -246,18 +197,58 @@ const url =
         result.success
     ){
 
+
         showMessage(
             "message",
+            editId
+            ?
+            "Product updated"
+            :
             "Product saved"
         );
 
 
-        loadProducts();
+        saveBtn.innerText =
+        "Save Product";
 
+
+        delete saveBtn.dataset.editId;
+
+
+        clearForm();
+
+
+        loadProducts();
 
     }
 
+
 };
+
+
+
+
+
+
+
+function clearForm(){
+
+
+    document.getElementById("name").value="";
+
+    document.getElementById("category").value="";
+
+    document.getElementById("brand").value="";
+
+    document.getElementById("unit").value="";
+
+    document.getElementById("price").value="";
+
+    document.getElementById("description").value="";
+
+
+}
+
 
 
 
@@ -269,9 +260,7 @@ searchBtn.onclick =
 function(){
 
     const value =
-    document.getElementById(
-        "search"
-    ).value;
+    document.getElementById("search").value;
 
 
     loadProducts(value);
@@ -284,57 +273,6 @@ function(){
 
 
 
-
-window.deleteProduct =
-async function(id){
-
-
-    if(
-        !confirm(
-        "Delete product?"
-        )
-    ){
-
-        return;
-
-    }
-
-
-
-    const result =
-    await apiFetch(
-        "/products",
-        {
-
-            method:"DELETE",
-
-            headers:{
-                "Content-Type":
-                "application/json"
-            },
-
-
-            body:
-            JSON.stringify({
-                id
-            })
-
-        }
-    );
-
-
-
-    if(
-        result &&
-        result.success
-    ){
-
-        loadProducts();
-
-    }
-
-
-};
 
 window.editProduct =
 async function(id){
@@ -356,6 +294,7 @@ async function(id){
     }
 
 
+
     const product =
     data.products.find(
         p => p.id === id
@@ -369,40 +308,30 @@ async function(id){
     }
 
 
-    document.getElementById(
-        "name"
-    ).value =
+
+    document.getElementById("name").value =
     product.name;
 
 
-    document.getElementById(
-        "category"
-    ).value =
-    product.category;
+    document.getElementById("category").value =
+    product.category || "";
 
 
-    document.getElementById(
-        "brand"
-    ).value =
-    product.brand;
+    document.getElementById("brand").value =
+    product.brand || "";
 
 
-    document.getElementById(
-        "unit"
-    ).value =
-    product.unit;
+    document.getElementById("unit").value =
+    product.unit || "";
 
 
-    document.getElementById(
-        "price"
-    ).value =
+    document.getElementById("price").value =
     product.price;
 
 
-    document.getElementById(
-        "description"
-    ).value =
-    product.description;
+    document.getElementById("description").value =
+    product.description || "";
+
 
 
     saveBtn.dataset.editId =
@@ -414,6 +343,73 @@ async function(id){
 
 
 };
+
+
+
+
+
+
+
+
+
+window.deleteProduct =
+async function(id){
+
+
+    if(
+        !confirm("Delete product?")
+    ){
+
+        return;
+
+    }
+
+
+
+    const result =
+    await apiFetch(
+
+        "/products",
+
+        {
+
+            method:"DELETE",
+
+
+            headers:{
+
+                "Content-Type":
+                "application/json"
+
+            },
+
+
+            body:
+            JSON.stringify({
+
+                id
+
+            })
+
+        }
+
+    );
+
+
+
+    if(
+        result &&
+        result.success
+    ){
+
+        loadProducts();
+
+    }
+
+
+};
+
+
 
 
 
