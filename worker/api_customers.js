@@ -75,16 +75,110 @@ export async function handleCustomers(
     ){
 
 
-        const result =
-            await env.DB
-            .prepare(
-                `
-                SELECT *
-                FROM customers
-                ORDER BY id DESC
-                `
-            )
-            .all();
+        let query = `
+    SELECT *
+    FROM customers
+`;
+
+let conditions = [];
+let values = [];
+
+
+const name =
+    url.searchParams.get("name");
+
+const city =
+    url.searchParams.get("city");
+
+const department =
+    url.searchParams.get("department");
+
+const phone =
+    url.searchParams.get("phone");
+
+
+
+if(name){
+
+    conditions.push(
+        "name LIKE ?"
+    );
+
+    values.push(
+        `%${name}%`
+    );
+
+}
+
+
+
+if(city){
+
+    conditions.push(
+        "city LIKE ?"
+    );
+
+    values.push(
+        `%${city}%`
+    );
+
+}
+
+
+
+if(department){
+
+    conditions.push(
+        "department LIKE ?"
+    );
+
+    values.push(
+        `%${department}%`
+    );
+
+}
+
+
+
+if(phone){
+
+    conditions.push(
+        "phone LIKE ?"
+    );
+
+    values.push(
+        `%${phone}%`
+    );
+
+}
+
+
+
+if(conditions.length > 0){
+
+    query +=
+    " WHERE "
+    +
+    conditions.join(
+        " AND "
+    );
+
+}
+
+
+
+query +=
+`
+ORDER BY id DESC
+`;
+
+
+
+const result =
+    await env.DB
+    .prepare(query)
+    .bind(...values)
+    .all();
 
 
 
