@@ -8,6 +8,7 @@ import {
 } from "./sidebar.js";
 
 
+
 loadSidebar("broadcast");
 
 
@@ -18,21 +19,34 @@ document.getElementById(
 );
 
 
-const selectAllBtn =
+const searchCustomer =
 document.getElementById(
-    "selectAll"
+    "searchCustomer"
 );
 
 
-const clearAllBtn =
+const cityFilter =
 document.getElementById(
-    "clearAll"
+    "cityFilter"
+);
+
+
+const departmentFilter =
+document.getElementById(
+    "departmentFilter"
+);
+
+
+const selectedCount =
+document.getElementById(
+    "selectedCount"
 );
 
 
 
 let customers = [];
 
+let filteredCustomers = [];
 
 
 
@@ -41,16 +55,15 @@ let customers = [];
 async function loadCustomers(){
 
 
-    const data =
+    const response =
     await apiFetch(
         "/customers"
     );
 
 
-
     if(
-        !data ||
-        !data.success
+        !response ||
+        !response.success
     ){
 
         customerList.innerHTML =
@@ -63,11 +76,90 @@ async function loadCustomers(){
 
 
     customers =
-    data.customers;
+    response.customers;
 
+
+
+    filteredCustomers =
+    [...customers];
+
+
+
+    createFilters();
 
 
     renderCustomers();
+
+}
+
+
+
+
+
+
+function createFilters(){
+
+
+    const cities =
+    [
+        ...new Set(
+            customers
+            .map(
+                c => c.city
+            )
+            .filter(Boolean)
+        )
+    ];
+
+
+
+    cities.forEach(
+        city => {
+
+
+            cityFilter.innerHTML +=
+            `
+            <option value="${city}">
+            ${city}
+            </option>
+            `;
+
+
+        }
+    );
+
+
+
+
+
+    const departments =
+    [
+        ...new Set(
+            customers
+            .map(
+                c => c.department
+            )
+            .filter(Boolean)
+        )
+    ];
+
+
+
+    departments.forEach(
+        department => {
+
+
+            departmentFilter.innerHTML +=
+            `
+            <option value="${department}">
+            ${department}
+            </option>
+            `;
+
+
+        }
+    );
+
 
 }
 
@@ -85,47 +177,65 @@ function renderCustomers(){
 
 
 
-    customers.forEach(customer => {
+    filteredCustomers.forEach(
+        customer => {
 
 
-        const div =
-        document.createElement(
-            "div"
-        );
+            const div =
+            document.createElement(
+                "div"
+            );
 
 
-        div.className =
-        "customer-item";
-
-
-
-        div.innerHTML = `
-
-        <input
-        type="checkbox"
-        class="customer-check"
-        value="${customer.id}">
-
-
-        <span>
-
-        ${customer.name || ""}
-
-        ${customer.phone || ""}
-
-        </span>
-
-        `;
+            div.className =
+            "customer-item";
 
 
 
-        customerList.appendChild(
-            div
-        );
+            div.innerHTML =
+
+            `
+            <input
+            type="checkbox"
+            class="customer-check"
+            value="${customer.id}">
 
 
-    });
+            <span>
 
+            <div class="customer-name">
+            ${customer.name}
+            </div>
+
+
+            <div class="customer-details">
+
+            ${customer.phone || ""}
+
+            ${customer.city || ""}
+
+            ${customer.department || ""}
+
+            </div>
+
+
+            </span>
+
+            `;
+
+
+
+            customerList.appendChild(
+                div
+            );
+
+
+        }
+    );
+
+
+
+    updateCount();
 
 }
 
@@ -136,7 +246,175 @@ function renderCustomers(){
 
 
 
-selectAllBtn.onclick =
+function applyFilter(){
+
+
+    const search =
+    searchCustomer
+    .value
+    .toLowerCase();
+
+
+
+    const city =
+    cityFilter.value;
+
+
+
+    const department =
+    departmentFilter.value;
+
+
+
+    filteredCustomers =
+
+    customers.filter(
+        customer => {
+
+
+            const matchesSearch =
+
+            !search ||
+
+            customer.name
+            .toLowerCase()
+            .includes(search)
+
+            ||
+
+            (customer.phone || "")
+            .includes(search);
+
+
+
+            const matchesCity =
+
+            !city ||
+
+            customer.city === city;
+
+
+
+            const matchesDepartment =
+
+            !department ||
+
+            customer.department === department;
+
+
+
+            return (
+
+                matchesSearch &&
+
+                matchesCity &&
+
+                matchesDepartment
+
+            );
+
+
+        }
+    );
+
+
+
+    renderCustomers();
+
+}
+
+
+
+
+
+
+
+function updateCount(){
+
+
+    const selected =
+
+    document
+    .querySelectorAll(
+        ".customer-check:checked"
+    )
+    .length;
+
+
+
+    selectedCount.innerHTML =
+
+    `Selected: ${selected}`;
+
+}
+
+
+
+
+
+
+
+
+document
+.addEventListener(
+"change",
+function(event){
+
+
+    if(
+        event.target.classList
+        .contains(
+            "customer-check"
+        )
+    ){
+
+        updateCount();
+
+    }
+
+
+});
+
+
+
+
+
+
+
+searchCustomer
+.addEventListener(
+"input",
+applyFilter
+);
+
+
+
+cityFilter
+.addEventListener(
+"change",
+applyFilter
+);
+
+
+
+departmentFilter
+.addEventListener(
+"change",
+applyFilter
+);
+
+
+
+
+
+
+
+
+document
+.getElementById(
+    "selectAll"
+)
+.onclick =
 function(){
 
 
@@ -154,6 +432,9 @@ function(){
     );
 
 
+    updateCount();
+
+
 };
 
 
@@ -162,7 +443,11 @@ function(){
 
 
 
-clearAllBtn.onclick =
+document
+.getElementById(
+    "clearAll"
+)
+.onclick =
 function(){
 
 
@@ -180,6 +465,9 @@ function(){
     );
 
 
+    updateCount();
+
+
 };
 
 
@@ -194,13 +482,15 @@ document
     "sendBroadcast"
 )
 .onclick =
-function(){
+async function(){
 
 
     const selected =
+
     Array.from(
 
-        document.querySelectorAll(
+        document
+        .querySelectorAll(
             ".customer-check:checked"
         )
 
@@ -213,10 +503,80 @@ function(){
 
 
     const message =
-    document.getElementById(
+
+    document
+    .getElementById(
         "message"
     )
     .value;
+
+
+
+
+    if(
+        selected.length === 0
+    ){
+
+        document
+        .getElementById(
+            "result"
+        )
+        .innerHTML =
+        "Select customers first";
+
+        return;
+
+    }
+
+
+
+    if(
+        !message.trim()
+    ){
+
+        document
+        .getElementById(
+            "result"
+        )
+        .innerHTML =
+        "Enter message";
+
+        return;
+
+    }
+
+
+
+
+
+    const response =
+
+    await apiFetch(
+        "/broadcast",
+        {
+
+            method:"POST",
+
+            headers:{
+
+                "Content-Type":
+                "application/json"
+
+            },
+
+
+            body:
+
+            JSON.stringify({
+
+                customers:selected,
+
+                message:message
+
+            })
+
+        }
+    );
 
 
 
@@ -226,13 +586,9 @@ function(){
     )
     .innerHTML =
 
-    `
-    Selected customers:
-    ${selected.length}
-    <br>
-    Message length:
-    ${message.length}
-    `;
+    response.message ||
+
+    "Broadcast created";
 
 
 };
