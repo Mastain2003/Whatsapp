@@ -488,7 +488,7 @@ async function sendTemplate(
     });
 
 
-}
+})
 
 
 
