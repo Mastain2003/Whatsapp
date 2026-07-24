@@ -1,5 +1,8 @@
 // worker/worker.js
 
+import {
+    importCustomers
+} from "./excel_import.js";
 
 import {
     handleOptions,
@@ -71,16 +74,29 @@ export default {
 
         // Customers
 
-        if(
-            path.startsWith("/customers")
-        ){
+      if(
+    path === "/customers/import"
+){
 
-            return handleCustomers(
-                request,
-                env
-            );
+    return importCustomers(
+        request,
+        env
+    );
 
-        }
+}
+
+
+
+if(
+    path.startsWith("/customers")
+){
+
+    return handleCustomers(
+        request,
+        env
+    );
+
+}
 
 
 
