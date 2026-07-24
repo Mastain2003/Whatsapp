@@ -66,3 +66,21 @@ ADD COLUMN language TEXT DEFAULT 'en';
 
 ALTER TABLE whatsapp_quick_replies
 ADD COLUMN language TEXT DEFAULT 'en';
+
+CREATE TABLE whatsapp_incoming_messages (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    customer_id INTEGER,
+
+    whatsapp_message_id TEXT,
+
+    message_type TEXT,
+
+    message_text TEXT,
+
+    button_id TEXT,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+
+);
