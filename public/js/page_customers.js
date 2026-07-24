@@ -226,13 +226,15 @@ async function(){
 
     if(!file){
 
-        alert(
-            "Select file first"
-        );
+    alert("Select file first");
 
-        return;
+    return;
 
-    }
+}
+
+
+document.getElementById("importResult").innerHTML =
+"Reading file: " + file.name;
 
 
 
