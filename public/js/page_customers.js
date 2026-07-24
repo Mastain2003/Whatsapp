@@ -1,6 +1,8 @@
 // public/js/page_customers.js
 import { loadSidebar } from "./sidebar.js";
 
+loadSidebar("customers");
+
 const API_URL =
 "https://whatsapp-api.prakharmastain9.workers.dev";
 
