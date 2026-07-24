@@ -159,7 +159,7 @@ async function sendTemplate(
             const languageCode =
             customer.whatsapp_language === "hi"
             ? "hi_IN"
-            : "en_US";
+            : "en";
 
 
 
