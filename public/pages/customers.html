@@ -1,1 +1,159 @@
-<!-->
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Customers
+    </title>
+
+
+    <link rel="stylesheet"
+          href="../css/page_customers.css">
+
+</head>
+
+
+<body>
+
+
+<div class="customer-container">
+
+
+    <h2>
+        Customers
+    </h2>
+
+
+
+    <div class="toolbar">
+
+
+        <input
+            type="text"
+            id="searchName"
+            placeholder="Search name">
+
+
+        <input
+            type="text"
+            id="filterCity"
+            placeholder="City">
+
+
+        <input
+            type="text"
+            id="filterDepartment"
+            placeholder="Department">
+
+
+        <button id="btnSearch">
+            Search
+        </button>
+
+
+    </div>
+
+
+
+
+
+    <div class="import-box">
+
+
+        <input
+            type="file"
+            id="excelFile"
+            accept=".xlsx,.xls,.csv">
+
+
+
+        <button id="btnImport">
+            Import Customers
+        </button>
+
+
+
+        <div id="importResult"></div>
+
+
+    </div>
+
+
+
+
+
+
+
+    <table>
+
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Code
+                </th>
+
+                <th>
+                    Name
+                </th>
+
+
+                <th>
+                    Designation
+                </th>
+
+
+                <th>
+                    Department
+                </th>
+
+
+                <th>
+                    City
+                </th>
+
+
+                <th>
+                    Phone
+                </th>
+
+
+            </tr>
+
+
+        </thead>
+
+
+
+        <tbody id="customerTable">
+
+
+        </tbody>
+
+
+    </table>
+
+
+
+</div>
+
+
+
+
+
+<script type="module"
+src="../js/page_customers.js">
+</script>
+
+
+</body>
+
+</html>
