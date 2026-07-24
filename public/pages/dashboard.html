@@ -6,173 +6,94 @@
 <meta charset="UTF-8">
 
 <meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+content="width=device-width, initial-scale=1">
 
-<title>
-WhatsApp Broadcast
-</title>
-
+<title>Dashboard</title>
+    <link rel="stylesheet" href="../css/sidebar.css">
 
 <link rel="stylesheet"
-href="../css/sidebar.css">
-
-<link rel="stylesheet"
-href="../css/page_broadcast.css">
+href="../css/dashboard.css">
 
 </head>
 
-
 <body>
-
-
 <div id="sidebarContainer"></div>
+    <div class="page-content">
+<div class="container">
+
+    <div class="topbar">
+
+        <h2>
+            WhatsApp CRM
+        </h2>
+
+        
+
+    </div>
 
 
+    <div class="grid">
 
-<div class="page-content">
+        <a class="card"
+        href="customers.html">
 
+            <h3>Customers</h3>
 
-<h2>
-WhatsApp Broadcast
-</h2>
+            <p>
+                Manage customer database
+            </p>
 
-
-
-<div class="broadcast-box">
-
-
-<h3>
-Customer Filter
-</h3>
+        </a>
 
 
+        <a class="card"
+        href="products.html">
 
-<div class="filters">
+            <h3>Products</h3>
 
+            <p>
+                Manage products
+            </p>
 
-<input
-type="text"
-id="searchCustomer"
-placeholder="Search name or phone">
-
-
-
-<select id="cityFilter">
-
-<option value="">
-All Cities
-</option>
-
-</select>
+        </a>
 
 
+        <div class="card disabled">
+
+            <h3>Broadcast</h3>
+
+            <p>Coming Soon</p>
+
+        </div>
 
 
-<select id="departmentFilter">
+        <div class="card disabled">
 
-<option value="">
-All Departments
-</option>
+            <h3>Templates</h3>
 
-</select>
+            <p>Coming Soon</p>
 
-
-
-</div>
+        </div>
 
 
+        <div class="card disabled">
+
+            <h3>Reports</h3>
+
+            <p>Coming Soon</p>
+
+        </div>
 
 
-<div class="customer-actions">
-
-
-<button id="selectAll">
-
-Select All
-
-</button>
-
-
-
-<button id="clearAll">
-
-Clear
-
-</button>
-
+    </div>
 
 </div>
-
-
-
-
-<div id="selectedCount">
-
-Selected: 0
-
-</div>
-
-
-
-<div id="customerList">
-
-Loading customers...
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-<div class="broadcast-box">
-
-
-<h3>
-Message
-</h3>
-
-
-
-<textarea
-id="message"
-placeholder="Type your WhatsApp message">
-</textarea>
-
-
-
-
-<button id="sendBroadcast">
-
-Send Broadcast
-
-</button>
-
-
-
-<div id="result">
-
-</div>
-
-
-
-</div>
-
-
-
-</div>
-
-
-
+    </div>
 
 <script
 type="module"
-src="../js/page_broadcast.js">
+src="../js/dashboard.js">
 </script>
-
 
 </body>
 
