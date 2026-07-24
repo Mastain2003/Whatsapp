@@ -471,6 +471,7 @@ alert("Customers parsed: " + customers.length);
 
     const result =
     await response.json();
+    alert(JSON.stringify(result, null, 2));
 
 
 
