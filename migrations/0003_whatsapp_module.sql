@@ -57,3 +57,6 @@ CREATE TABLE whatsapp_quick_replies (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 
 );
+
+ALTER TABLE customers
+ADD COLUMN whatsapp_language TEXT DEFAULT 'en';
