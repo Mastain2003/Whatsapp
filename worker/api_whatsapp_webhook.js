@@ -383,6 +383,128 @@ async function handleIncomingMessage(
         customer.id
     )
     .run();
+if(buttonId){
 
+    await processQuickReply(
+        customer.id,
+        buttonId,
+        env
+    );
+
+}
+
+}
+
+async function processQuickReply(
+    customerId,
+    buttonId,
+    env
+){
+
+    const customer =
+    await env.DB
+    .prepare(
+    `
+    SELECT
+        phone,
+        whatsapp_language
+    FROM customers
+    WHERE id = ?
+    `
+    )
+    .bind(customerId)
+    .first();
+
+
+
+    if(!customer){
+
+        return;
+
+    }
+
+
+
+    const reply =
+    await env.DB
+    .prepare(
+    `
+    SELECT reply_message
+    FROM whatsapp_quick_replies
+    WHERE button_id = ?
+    AND language = ?
+    `
+    )
+    .bind(
+        buttonId,
+        customer.whatsapp_language || "en"
+    )
+    .first();
+
+
+
+    if(!reply){
+
+        return;
+
+    }
+
+
+
+    await sendNormalMessage(
+        customer.phone,
+        reply.reply_message,
+        env
+    );
+
+}
+
+
+
+
+
+async function sendNormalMessage(
+    phone,
+    message,
+    env
+){
+
+    await fetch(
+    `https://graph.facebook.com/v21.0/${env.PHONE_NUMBER_ID}/messages`,
+    {
+
+        method:"POST",
+
+        headers:{
+
+            "Authorization":
+            `Bearer ${env.WHATSAPP_TOKEN}`,
+
+            "Content-Type":
+            "application/json"
+
+        },
+
+        body:JSON.stringify({
+
+            messaging_product:
+            "whatsapp",
+
+            to:
+            phone,
+
+            type:
+            "text",
+
+            text:{
+
+                body:
+                message
+
+            }
+
+        })
+
+    });
 
 }
