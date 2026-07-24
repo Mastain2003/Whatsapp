@@ -1,1 +1,155 @@
-/*‐-------*/
+/* public/css/page_customers.css */
+
+
+body{
+
+    font-family: Arial, sans-serif;
+
+    margin:0;
+
+    padding:20px;
+
+    background:#f5f5f5;
+
+}
+
+
+
+.customer-container{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:8px;
+
+}
+
+
+
+h2{
+
+    margin-top:0;
+
+}
+
+
+
+
+
+.toolbar,
+.import-box{
+
+    display:flex;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:20px;
+
+}
+
+
+
+
+
+input{
+
+    padding:8px;
+
+    border:1px solid #ccc;
+
+    border-radius:5px;
+
+}
+
+
+
+
+
+button{
+
+    padding:8px 15px;
+
+    border:none;
+
+    border-radius:5px;
+
+    cursor:pointer;
+
+}
+
+
+
+
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+
+
+
+
+th,
+td{
+
+    border:1px solid #ddd;
+
+    padding:10px;
+
+    text-align:left;
+
+}
+
+
+
+
+
+th{
+
+    background:#eee;
+
+}
+
+
+
+
+
+#importResult{
+
+    margin-top:10px;
+
+    font-weight:bold;
+
+}
+
+
+
+
+
+
+@media(max-width:700px){
+
+
+    table{
+
+        font-size:14px;
+
+    }
+
+
+    th,
+    td{
+
+        padding:6px;
+
+    }
+
+
+}
