@@ -8,9 +8,9 @@ import {
 
 
 import {
-    handleLogin
+    handleLogin,
+    checkAuth
 } from "./auth_service.js";
-
 
 
 
@@ -28,17 +28,14 @@ export default {
             new URL(request.url);
 
 
-
         const path =
             url.pathname;
 
 
 
-        // CORS preflight
+        // CORS
 
-        if(
-            request.method === "OPTIONS"
-        ){
+        if(request.method === "OPTIONS"){
 
             return handleOptions();
 
@@ -47,12 +44,9 @@ export default {
 
 
 
+        // Login (Public)
 
-        // Login route
-
-        if(
-            path === "/login"
-        ){
+        if(path === "/login"){
 
             return handleLogin(
                 request,
@@ -65,11 +59,53 @@ export default {
 
 
 
+        // Protected test route
+
+        if(path === "/protected-test"){
+
+
+            const authorized =
+                await checkAuth(
+                    request,
+                    env
+                );
+
+
+            if(!authorized){
+
+                return jsonResponse(
+                    {
+                        success:false,
+                        message:"Unauthorized"
+                    },
+                    401
+                );
+
+            }
+
+
+
+            return jsonResponse({
+
+                success:true,
+
+                message:
+                "Protected route working"
+
+            });
+
+
+        }
+
+
+
+
+
+
         // Health check
 
-        if(
-            path === "/"
-        ){
+        if(path === "/"){
+
 
             return jsonResponse({
 
@@ -80,38 +116,9 @@ export default {
 
             });
 
+
         }
 
-
-
-
-
-        // Future modules
-
-        /*
-        
-        Customers:
-        /customers
-
-        Products:
-        /products
-
-        Orders:
-        /orders
-
-        Campaigns:
-        /campaigns
-
-        Messages:
-        /messages
-
-        Settings:
-        /settings
-
-        Webhook:
-        /webhook
-
-        */
 
 
 
