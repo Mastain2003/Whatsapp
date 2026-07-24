@@ -449,7 +449,14 @@ async function sendTemplate(
             }
             else{
 
-                failed++;
+    return jsonResponse(
+    {
+        success:false,
+        message:"Meta API failed",
+        error: result
+    },
+    400
+    );
 
             }
 
