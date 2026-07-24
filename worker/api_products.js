@@ -70,6 +70,18 @@ export async function handleProducts(
 
     }
 
+
+    if(
+    method === "DELETE"
+){
+
+    return deleteProduct(
+        request,
+        env
+    );
+
+    }
+
     return jsonResponse(
         {
             success:false,
@@ -379,6 +391,53 @@ async function updateProduct(
         success:true,
 
         message:"Product updated"
+
+    });
+
+}
+
+
+async function deleteProduct(
+    request,
+    env
+){
+
+    const data =
+    await request.json();
+
+
+    if(!data.id){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"Product id required"
+            },
+            400
+        );
+
+    }
+
+
+    await env.DB
+    .prepare(
+    `
+    DELETE FROM products
+    WHERE id = ?
+    `
+    )
+    .bind(
+        data.id
+    )
+    .run();
+
+
+
+    return jsonResponse({
+
+        success:true,
+
+        message:"Product deleted"
 
     });
 
