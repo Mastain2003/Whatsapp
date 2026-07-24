@@ -222,6 +222,16 @@ async function sendTemplate(
                             {
                                 type:"text",
                                 text:String(customer.department || "N/A")
+                            },
+
+                            {
+                                type:"text",
+                                text:String(customer.city || "N/A")
+                            },
+
+                            {
+                                type:"text",
+                                text:"9955160127"
                             }
 
                             ]
