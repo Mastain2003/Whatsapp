@@ -29,6 +29,10 @@ import {
 
 import { handleWhatsApp } from "./api_whatsapp.js";
 
+import {
+ handleWhatsAppWebhook
+}
+from "./api_whatsapp_webhook.js";
 
 
 
@@ -139,6 +143,17 @@ if(
     );
 
 }
+
+        if(
+ url.pathname === "/whatsapp/webhook"
+){
+
+ return handleWhatsAppWebhook(
+    request,
+    env
+ );
+
+        }
 
 
 
