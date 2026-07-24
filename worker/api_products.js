@@ -49,6 +49,18 @@ export async function handleProducts(
     }
 
     if(
+    method === "POST" &&
+    url.pathname.endsWith("/import")
+){
+
+    return importProducts(
+        request,
+        env
+    );
+
+    }
+
+    if(
         method === "POST"
     ){
 
@@ -58,6 +70,8 @@ export async function handleProducts(
         );
 
     }
+
+    
 
     if(
     method === "PUT"
@@ -438,6 +452,167 @@ async function deleteProduct(
         success:true,
 
         message:"Product deleted"
+
+    });
+
+}
+
+async function importProducts(
+    request,
+    env
+){
+
+    const data =
+    await request.json();
+
+
+    if(
+        !Array.isArray(data.rows)
+    ){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"Rows required"
+            },
+            400
+        );
+
+    }
+
+
+    let imported = 0;
+    let skipped = 0;
+
+
+    for(
+        const row of data.rows
+    ){
+
+        if(
+            !row.name
+        ){
+
+            skipped++;
+            continue;
+
+        }
+
+
+        const exists =
+        await env.DB
+        .prepare(
+        `
+        SELECT id
+        FROM products
+        WHERE name = ?
+        AND brand = ?
+        `
+        )
+        .bind(
+
+            row.name,
+
+            row.brand || ""
+
+        )
+        .first();
+
+
+
+        if(exists){
+
+            skipped++;
+            continue;
+
+        }
+
+
+
+        const insert =
+        await env.DB
+        .prepare(
+        `
+        INSERT INTO products
+        (
+            product_code,
+            name,
+            category,
+            brand,
+            unit,
+            price,
+            description
+        )
+        VALUES
+        (
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?
+        )
+        `
+        )
+        .bind(
+
+            "TMP_" + Date.now(),
+
+            row.name,
+
+            row.category || "",
+
+            row.brand || "",
+
+            row.unit || "",
+
+            row.price || 0,
+
+            row.description || ""
+
+        )
+        .run();
+
+
+
+        const id =
+        insert.meta.last_row_id;
+
+
+
+        await env.DB
+        .prepare(
+        `
+        UPDATE products
+        SET product_code = ?
+        WHERE id = ?
+        `
+        )
+        .bind(
+
+            generateProductCode(id),
+
+            id
+
+        )
+        .run();
+
+
+
+        imported++;
+
+    }
+
+
+
+    return jsonResponse({
+
+        success:true,
+
+        imported,
+
+        skipped
 
     });
 
