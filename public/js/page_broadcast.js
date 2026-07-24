@@ -381,27 +381,15 @@ function(event){
 
 
 
-searchCustomer
-.addEventListener(
-"input",
-applyFilter
-);
+searchCustomer.addEventListener("input",applyFilter);
 
 
 
-cityFilter
-.addEventListener(
-"change",
-applyFilter
-);
+cityFilte.addEventListener("change",applyFilter);
 
 
 
-departmentFilter
-.addEventListener(
-"change",
-applyFilter
-);
+departmentFilter.addEventListener("change",applyFilter);
 
 
 
@@ -410,12 +398,7 @@ applyFilter
 
 
 
-document
-.getElementById(
-    "selectAll"
-)
-.onclick =
-function(){
+document.getElementById(    "selectAll").onclick =function(){
 
 
     document
