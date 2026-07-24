@@ -5,11 +5,8 @@ const API_URL =
 "https://whatsapp-api.prakharmastain9.workers.dev";
 
 
-
 const token =
 localStorage.getItem("token");
-
-
 
 
 
@@ -28,19 +25,22 @@ async function loadCustomers(){
     const name =
     document.getElementById(
         "searchName"
-    ).value;
+    ).value.trim();
+
 
 
     const city =
     document.getElementById(
         "filterCity"
-    ).value;
+    ).value.trim();
+
 
 
     const department =
     document.getElementById(
         "filterDepartment"
-    ).value;
+    ).value.trim();
+
 
 
 
@@ -58,6 +58,7 @@ async function loadCustomers(){
         "&";
 
     }
+
 
 
     if(city){
@@ -86,7 +87,9 @@ async function loadCustomers(){
 
     const response =
     await fetch(
+
         url,
+
         {
 
             headers:{
@@ -97,7 +100,9 @@ async function loadCustomers(){
             }
 
         }
+
     );
+
 
 
 
@@ -134,50 +139,52 @@ async function loadCustomers(){
 
 
 
-
     data.customers.forEach(
+
         customer => {
 
 
-        table.innerHTML +=
-        `
-        <tr>
+            table.innerHTML +=
 
-            <td>
-            ${customer.customer_code}
-            </td>
+            `
+            <tr>
 
-
-            <td>
-            ${customer.name}
-            </td>
+                <td>
+                ${customer.customer_code || ""}
+                </td>
 
 
-            <td>
-            ${customer.designation || ""}
-            </td>
+                <td>
+                ${customer.name || ""}
+                </td>
 
 
-            <td>
-            ${customer.department || ""}
-            </td>
+                <td>
+                ${customer.designation || ""}
+                </td>
 
 
-            <td>
-            ${customer.city || ""}
-            </td>
+                <td>
+                ${customer.department || ""}
+                </td>
 
 
-            <td>
-            ${customer.phone || ""}
-            </td>
+                <td>
+                ${customer.city || ""}
+                </td>
 
 
-        </tr>
-        `;
+                <td>
+                ${customer.phone || ""}
+                </td>
+
+
+            </tr>
+            `;
 
 
         }
+
     );
 
 
@@ -198,7 +205,6 @@ loadCustomers;
 
 
 
-loadCustomers();
 
 
 // Excel Import
@@ -209,6 +215,7 @@ document
     "btnImport"
 )
 .onclick =
+
 async function(){
 
 
@@ -219,41 +226,72 @@ async function(){
     );
 
 
+
     const file =
     fileInput.files[0];
 
 
 
+
     if(!file){
 
-    alert("Select file first");
+        alert(
+            "Please select Excel file"
+        );
 
-    return;
+        return;
 
-}
-
-
-document.getElementById("importResult").innerHTML =
-"Reading file: " + file.name;
+    }
 
 
 
 
-    const text =
-    await file.text();
+
+
+    const buffer =
+    await file.arrayBuffer();
+
+
+
+
+    const workbook =
+    XLSX.read(
+
+        buffer,
+
+        {
+            type:"array"
+        }
+
+    );
+
+
+
+
+
+    const sheet =
+    workbook.Sheets[
+        workbook.SheetNames[0]
+    ];
+
+
+
 
 
 
     const rows =
-    text
-    const rows =
-text
-.trim()
-.split(/\r?\n/)
-.map(
-    row =>
-    row.split(",")
-);
+    XLSX.utils.sheet_to_json(
+
+        sheet,
+
+        {
+            header:1
+        }
+
+    );
+
+
+
 
 
 
@@ -262,13 +300,17 @@ text
 
 
 
-    // Skip header row
 
     for(
+
         let i=1;
+
         i<rows.length;
+
         i++
+
     ){
+
 
 
         const row =
@@ -277,7 +319,11 @@ text
 
 
         if(
+
+            !row ||
+
             row.length < 5
+
         ){
 
             continue;
@@ -286,32 +332,91 @@ text
 
 
 
-        customers.push({
+
+
+        const customer = {
+
 
             name:
-            row[0].trim(),
+            String(
+                row[0] || ""
+            )
+            .trim(),
+
 
 
             designation:
-            row[1].trim(),
+            String(
+                row[1] || ""
+            )
+            .trim(),
+
 
 
             department:
-            row[2].trim(),
+            String(
+                row[2] || ""
+            )
+            .trim(),
+
 
 
             city:
-            row[3].trim(),
+            String(
+                row[3] || ""
+            )
+            .trim(),
+
 
 
             phone:
-            row[4].trim()
+            String(
+                row[4] || ""
+            )
+            .trim()
 
-        });
+
+        };
+
+
+
+
+        if(
+
+            customer.name &&
+
+            customer.phone
+
+        ){
+
+            customers.push(
+                customer
+            );
+
+        }
 
 
 
     }
+
+
+
+
+
+
+    if(
+        customers.length === 0
+    ){
+
+        alert(
+            "No valid customer rows found"
+        );
+
+        return;
+
+    }
+
+
 
 
 
@@ -325,24 +430,32 @@ text
 
         {
 
+
             method:"POST",
 
+
+
             headers:{
+
 
                 "Content-Type":
                 "application/json",
 
 
+
                 "Authorization":
                 "Bearer " + token
 
+
             },
+
 
 
             body:
             JSON.stringify(
                 customers
             )
+
 
         }
 
@@ -352,8 +465,10 @@ text
 
 
 
+
     const result =
     await response.json();
+
 
 
 
@@ -378,3 +493,12 @@ text
 
 
 };
+
+
+
+
+
+
+// Initial load
+
+loadCustomers();
