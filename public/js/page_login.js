@@ -94,7 +94,7 @@ async function(){
             setTimeout(()=>{
 
                 window.location.href =
-                "customers.html";
+                "dashboard.html";
 
             },800);
 
