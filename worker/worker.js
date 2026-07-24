@@ -8,9 +8,13 @@ import {
 
 
 import {
-    handleLogin,
-    checkAuth
+    handleLogin
 } from "./auth_service.js";
+
+
+import {
+    handleCustomers
+} from "./api_customers.js";
 
 
 
@@ -35,7 +39,9 @@ export default {
 
         // CORS
 
-        if(request.method === "OPTIONS"){
+        if(
+            request.method === "OPTIONS"
+        ){
 
             return handleOptions();
 
@@ -44,9 +50,12 @@ export default {
 
 
 
-        // Login (Public)
 
-        if(path === "/login"){
+        // Login
+
+        if(
+            path === "/login"
+        ){
 
             return handleLogin(
                 request,
@@ -59,41 +68,17 @@ export default {
 
 
 
-        // Protected test route
 
-        if(path === "/protected-test"){
+        // Customers
 
+        if(
+            path.startsWith("/customers")
+        ){
 
-            const authorized =
-                await checkAuth(
-                    request,
-                    env
-                );
-
-
-            if(!authorized){
-
-                return jsonResponse(
-                    {
-                        success:false,
-                        message:"Unauthorized"
-                    },
-                    401
-                );
-
-            }
-
-
-
-            return jsonResponse({
-
-                success:true,
-
-                message:
-                "Protected route working"
-
-            });
-
+            return handleCustomers(
+                request,
+                env
+            );
 
         }
 
@@ -102,10 +87,11 @@ export default {
 
 
 
-        // Health check
+        // Health Check
 
-        if(path === "/"){
-
+        if(
+            path === "/"
+        ){
 
             return jsonResponse({
 
@@ -116,8 +102,8 @@ export default {
 
             });
 
-
         }
+
 
 
 
