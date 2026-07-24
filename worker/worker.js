@@ -117,6 +117,17 @@ if(
 
         }
 
+        if(
+    url.pathname === "/broadcast"
+){
+
+    return handleBroadcast(
+        request,
+        env
+    );
+
+        }
+
 
 
 
