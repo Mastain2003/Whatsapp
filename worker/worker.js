@@ -1,6 +1,10 @@
 // worker/worker.js
 
 import {
+    handleProducts
+} from "./api_products.js";
+
+import {
     importCustomers
 } from "./excel_import.js";
 
@@ -97,6 +101,17 @@ if(
     );
 
 }
+
+        if(
+    path.startsWith("/products")
+){
+
+    return handleProducts(
+        request,
+        env
+    );
+
+        }
 
 
 
