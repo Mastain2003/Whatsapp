@@ -63,9 +63,6 @@ export async function handleWhatsApp(
 
 }
 
-
-
-
 async function sendTemplate(
     request,
     env
@@ -75,23 +72,21 @@ async function sendTemplate(
     await request.json();
 
 
-
     if(
         !data.template ||
-        !Array.isArray(data.customers) ||
-        data.customers.length === 0
+        !Array.isArray(data.customer_ids) ||
+        data.customer_ids.length === 0
     ){
 
         return jsonResponse(
         {
             success:false,
-            message:"Template and customers required"
+            message:"Template and customer ids required"
         },
         400
         );
 
     }
-
 
 
     let sent = 0;
@@ -100,23 +95,71 @@ async function sendTemplate(
 
 
     for(
-        const customer of data.customers
+        const customerId of data.customer_ids
     ){
 
+        const customer =
+        await env.DB
+        .prepare(
+        `
+        SELECT
+            id,
+            name,
+            designation,
+            department,
+            city,
+            phone,
+            whatsapp_language
+        FROM customers
+        WHERE id = ?
+        `
+        )
+        .bind(customerId)
+        .first();
+
+
+
+        if(!customer){
+
+            failed++;
+            continue;
+
+        }
+
+
+
         try{
+
+
+            if(!customer.phone){
+
+                await saveFailedMessage(
+                    customer,
+                    data.template,
+                    {
+                        message:"Phone missing"
+                    },
+                    env
+                );
+
+                failed++;
+                continue;
+
+            }
+
+
+
+            const phone =
+            customer.phone.startsWith("91")
+            ? customer.phone
+            : "91" + customer.phone;
+
 
 
             const languageCode =
             customer.whatsapp_language === "hi"
             ? "hi_IN"
             : "en_US";
-
-
-
-            const phone = "919955160127";
-           /* customer.phone.startsWith("91")
-            ? customer.phone
-            : "91" + customer.phone;*/
 
 
 
@@ -129,7 +172,7 @@ async function sendTemplate(
 
                 headers:{
 
-                    "Authorization":
+                    Authorization:
                     `Bearer ${env.WHATSAPP_TOKEN}`,
 
                     "Content-Type":
@@ -140,29 +183,20 @@ async function sendTemplate(
 
                 body:JSON.stringify({
 
-                    messaging_product:
-                    "whatsapp",
+                    messaging_product:"whatsapp",
 
+                    to:phone,
 
-                    to:
-                    phone,
-
-
-                    type:
-                    "template",
-
-
+                    type:"template",
 
                     template:{
 
-                        name:
-                        data.template,
+                        name:data.template,
 
 
                         language:{
 
-                            code:
-                            languageCode
+                            code:languageCode
 
                         },
 
@@ -173,33 +207,22 @@ async function sendTemplate(
 
                             type:"body",
 
-
                             parameters:[
 
                             {
- type:"text",
- text:String(customer.name || "Customer")
-},
-
-{
- type:"text",
- text:String(customer.designation || "N/A")
-},
-
-{
- type:"text",
- text:String(customer.department || "N/A")
-}/*,
-
-                            {
                                 type:"text",
-                                text:customer.city || ""
+                                text:String(customer.name || "Customer")
                             },
 
                             {
                                 type:"text",
-                                text:"xxxxxxxxxx"
-                            }*/
+                                text:String(customer.designation || "N/A")
+                            },
+
+                            {
+                                type:"text",
+                                text:String(customer.department || "N/A")
+                            }
 
                             ]
 
@@ -215,15 +238,12 @@ async function sendTemplate(
 
 
 
-            const metaResult =
+            const result =
             await metaResponse.json();
 
 
 
             if(metaResponse.ok){
-
-                const messageId =
-                metaResult.messages[0].id;
 
 
                 await env.DB
@@ -257,7 +277,7 @@ async function sendTemplate(
 
                     data.template,
 
-                    messageId,
+                    result.messages[0].id,
 
                     "sent"
 
@@ -275,7 +295,7 @@ async function sendTemplate(
                 await saveFailedMessage(
                     customer,
                     data.template,
-                    metaResult,
+                    result,
                     env
                 );
 
@@ -292,7 +312,9 @@ async function sendTemplate(
             await saveFailedMessage(
                 customer,
                 data.template,
-                error,
+                {
+                    message:error.message
+                },
                 env
             );
 
