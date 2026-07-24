@@ -6,10 +6,10 @@
 <meta charset="UTF-8">
 
 <meta name="viewport"
-content="width=device-width, initial-scale=1">
+content="width=device-width, initial-scale=1.0">
 
 <title>
-Broadcast
+WhatsApp Broadcast
 </title>
 
 
@@ -28,6 +28,7 @@ href="../css/page_broadcast.css">
 <div id="sidebarContainer"></div>
 
 
+
 <div class="page-content">
 
 
@@ -41,8 +42,45 @@ WhatsApp Broadcast
 
 
 <h3>
-Select Customers
+Customer Filter
 </h3>
+
+
+
+<div class="filters">
+
+
+<input
+type="text"
+id="searchCustomer"
+placeholder="Search name or phone">
+
+
+
+<select id="cityFilter">
+
+<option value="">
+All Cities
+</option>
+
+</select>
+
+
+
+
+<select id="departmentFilter">
+
+<option value="">
+All Departments
+</option>
+
+</select>
+
+
+
+</div>
+
+
 
 
 <div class="customer-actions">
@@ -55,12 +93,22 @@ Select All
 </button>
 
 
+
 <button id="clearAll">
 
 Clear
 
 </button>
 
+
+</div>
+
+
+
+
+<div id="selectedCount">
+
+Selected: 0
 
 </div>
 
@@ -88,10 +136,12 @@ Message
 </h3>
 
 
+
 <textarea
 id="message"
-placeholder="Type your message here...">
+placeholder="Type your WhatsApp message">
 </textarea>
+
 
 
 
@@ -102,16 +152,19 @@ Send Broadcast
 </button>
 
 
+
 <div id="result">
 
 </div>
 
 
-</div>
-
-
 
 </div>
+
+
+
+</div>
+
 
 
 
