@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1">
+
+<title>
+Products
+</title>
+
+
+<link rel="stylesheet"
+href="../css/page_products.css">
+
+</head>
+
+
+<body>
+
+
+<div class="page-container">
+
+
+<div class="header">
+
+<h2>
+Products
+</h2>
+
+<button id="logoutBtn">
+Logout
+</button>
+
+</div>
+
+
+
+<div class="product-form">
+
+
+<h3>
+Add Product
+</h3>
+
+
+<input
+id="name"
+placeholder="Product Name">
+
+
+
+<input
+id="category"
+placeholder="Category">
+
+
+
+<input
+id="brand"
+placeholder="Brand">
+
+
+
+<input
+id="unit"
+placeholder="Unit">
+
+
+
+<input
+id="price"
+type="number"
+placeholder="Price">
+
+
+
+<textarea
+id="description"
+placeholder="Description">
+</textarea>
+
+
+<button id="saveProduct">
+
+Save Product
+
+</button>
+
+
+<div id="message"></div>
+
+
+</div>
+
+
+
+
+<div class="search-box">
+
+<input
+id="search"
+placeholder="Search product">
+
+<button id="searchBtn">
+
+Search
+
+</button>
+
+</div>
+
+
+
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>
+Code
+</th>
+
+<th>
+Name
+</th>
+
+<th>
+Category
+</th>
+
+<th>
+Brand
+</th>
+
+<th>
+Unit
+</th>
+
+<th>
+Price
+</th>
+
+<th>
+Action
+</th>
+
+
+</tr>
+
+</thead>
+
+
+<tbody id="productList">
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+<script
+type="module"
+src="../js/page_products.js">
+
+</script>
+
+
+</body>
+
+</html>
