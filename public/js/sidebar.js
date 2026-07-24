@@ -1,52 +1,70 @@
-import {
-    logout
-} from "./core.js";
-
-
 export async function loadSidebar(activePage){
 
+    const container =
+    document.getElementById(
+        "sidebarContainer"
+    );
+
+
+    if(!container){
+
+        console.error(
+            "sidebarContainer not found"
+        );
+
+        return;
+
+    }
+
+
     const response =
-    await fetch("../components/sidebar.html");
+    await fetch(
+        "../components/sidebar.html"
+    );
 
 
     const html =
     await response.text();
 
 
-    const holder =
-    document.getElementById(
-        "sidebarContainer"
-    );
-
-
-    holder.innerHTML =
+    container.innerHTML =
     html;
 
 
 
-    const active =
-    holder.querySelector(
-
+    const activeLink =
+    container.querySelector(
         `[data-page="${activePage}"]`
-
     );
 
 
-    if(active){
+    if(activeLink){
 
-        active.classList.add(
+        activeLink.classList.add(
             "active"
         );
 
     }
 
 
-
-    document
-    .getElementById(
+    const logoutBtn =
+    document.getElementById(
         "sidebarLogout"
-    )
-    .onclick =
-    logout;
+    );
+
+
+    if(logoutBtn){
+
+        logoutBtn.onclick =
+        () => {
+
+            localStorage.clear();
+
+            window.location.href =
+            "login.html";
+
+        };
+
+    }
 
 }
