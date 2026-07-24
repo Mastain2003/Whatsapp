@@ -289,8 +289,9 @@ async function(){
         }
 
     );
-
-
+console.log(rows);
+alert("Rows in sheet: " + rows.length);
+ 
 
 
 
@@ -398,6 +399,8 @@ async function(){
 
 
     }
+    console.log(customers);
+alert("Customers parsed: " + customers.length);
 
 
 
