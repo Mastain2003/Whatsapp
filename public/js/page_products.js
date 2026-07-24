@@ -5,8 +5,11 @@ import {
     showMessage
 } from "./core.js";
 
+import { loadSidebar } from "./sidebar.js";
+
 
 requireLogin();
+loadSidebar("products");
 
 
 const list =
