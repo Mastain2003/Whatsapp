@@ -241,13 +241,215 @@ async function sendTemplate(
                 await saveFailedMessage(
                     customer,
                     data.template,
-                    metaResult,
-                    env
-                );
+async function sendTemplate(
+    request,
+    env
+){
 
+    const data =
+    await request.json();
+
+
+    if(
+        !data.template ||
+        !Array.isArray(data.customer_ids)
+    ){
+
+        return jsonResponse(
+        {
+            success:false,
+            message:"Template and customers required"
+        },
+        400
+        );
+
+    }
+
+
+    let sent = 0;
+    let failed = 0;
+
+
+
+    for(
+        const customerId of data.customer_ids
+    ){
+
+
+        const customer =
+        await env.DB
+        .prepare(
+        `
+        SELECT
+            id,
+            name,
+            designation,
+            department,
+            city,
+            phone
+        FROM customers
+        WHERE id = ?
+        `
+        )
+        .bind(customerId)
+        .first();
+
+
+
+        if(!customer){
+
+            failed++;
+            continue;
+
+        }
+
+
+
+        try{
+
+
+            const metaResponse =
+            await fetch(
+            `https://graph.facebook.com/v21.0/${env.PHONE_NUMBER_ID}/messages`,
+            {
+
+            method:"POST",
+
+            headers:{
+
+                Authorization:
+                `Bearer ${env.WHATSAPP_TOKEN}`,
+
+                "Content-Type":
+                "application/json"
+
+            },
+
+
+            body:JSON.stringify({
+
+                messaging_product:
+                "whatsapp",
+
+
+                to:
+                customer.phone,
+
+
+                type:
+                "template",
+
+
+                template:{
+
+                    name:
+                    data.template,
+
+
+                    language:{
+
+                        code:"en_US"
+
+                    },
+
+
+                    components:[
+
+                    {
+
+                    type:"body",
+
+                    parameters:[
+
+                    {
+                        type:"text",
+                        text:customer.name || ""
+                    },
+
+                    {
+                        type:"text",
+                        text:customer.designation || ""
+                    },
+
+                    {
+                        type:"text",
+                        text:customer.department || ""
+                    },
+
+                    {
+                        type:"text",
+                        text:customer.city || ""
+                    },
+
+                    {
+                        type:"text",
+                        text:"xxxxxxxxxx"
+                    }
+
+                    ]
+
+                    }
+
+                    ]
+
+                }
+
+            })
+
+            });
+
+
+
+            const result =
+            await metaResponse.json();
+
+
+
+            if(metaResponse.ok){
+
+
+                await env.DB
+                .prepare(
+                `
+                INSERT INTO whatsapp_messages
+                (
+                    customer_id,
+                    template_name,
+                    whatsapp_message_id,
+                    status,
+                    sent_at
+                )
+                VALUES
+                (
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    CURRENT_TIMESTAMP
+                )
+                `
+                )
+                .bind(
+
+                    customer.id,
+
+                    data.template,
+
+                    result.messages[0].id,
+
+                    "sent"
+
+                )
+                .run();
+
+
+                sent++;
+
+
+            }
+            else{
 
                 failed++;
-
 
             }
 
@@ -256,17 +458,7 @@ async function sendTemplate(
         }
         catch(error){
 
-
-            await saveFailedMessage(
-                customer,
-                data.template,
-                error.message,
-                env
-            );
-
-
             failed++;
-
 
         }
 
