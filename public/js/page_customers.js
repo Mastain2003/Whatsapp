@@ -246,11 +246,14 @@ document.getElementById("importResult").innerHTML =
 
     const rows =
     text
-    .split("\n")
-    .map(
-        row =>
-        row.split(",")
-    );
+    const rows =
+text
+.trim()
+.split(/\r?\n/)
+.map(
+    row =>
+    row.split(",")
+);
 
 
 
