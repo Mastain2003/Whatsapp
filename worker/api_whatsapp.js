@@ -356,7 +356,7 @@ async function saveFailedMessage(
 
         "failed",
 
-        JSON.stringify(error)
+        error.message || JSON.stringify(error)
 
     )
     .run();
