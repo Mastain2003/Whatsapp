@@ -123,12 +123,21 @@ async function loadProducts(
         <td>
 
         <button
-        class="action-btn"
-        onclick="deleteProduct(${product.id})">
+        <button
+onclick="editProduct(${product.id})">
 
-        Delete
+Edit
 
-        </button>
+</button>
+
+
+<button
+class="action-btn"
+onclick="deleteProduct(${product.id})">
+
+Delete
+
+</button>
 
         </td>
 
@@ -200,10 +209,23 @@ async function(){
 
     const result =
     await apiFetch(
-        "/products",
+    url,
         {
 
-            method:"POST",
+            const editId =
+saveBtn.dataset.editId;
+
+
+const method =
+editId
+?
+"PUT"
+:
+"POST";
+
+
+const url =
+"/products";
 
             headers:{
                 "Content-Type":
@@ -314,7 +336,84 @@ async function(id){
 
 };
 
+window.editProduct =
+async function(id){
 
+
+    const data =
+    await apiFetch(
+        "/products"
+    );
+
+
+    if(
+        !data ||
+        !data.success
+    ){
+
+        return;
+
+    }
+
+
+    const product =
+    data.products.find(
+        p => p.id === id
+    );
+
+
+    if(!product){
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "name"
+    ).value =
+    product.name;
+
+
+    document.getElementById(
+        "category"
+    ).value =
+    product.category;
+
+
+    document.getElementById(
+        "brand"
+    ).value =
+    product.brand;
+
+
+    document.getElementById(
+        "unit"
+    ).value =
+    product.unit;
+
+
+    document.getElementById(
+        "price"
+    ).value =
+    product.price;
+
+
+    document.getElementById(
+        "description"
+    ).value =
+    product.description;
+
+
+    saveBtn.dataset.editId =
+    product.id;
+
+
+    saveBtn.innerText =
+    "Update Product";
+
+
+};
 
 
 
