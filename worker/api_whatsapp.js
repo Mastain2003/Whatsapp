@@ -78,6 +78,9 @@ async function sendTemplate(
     request,
     env
 ){
+    return jsonResponse({
+    test:"new whatsapp code running"
+});
 
     const data =
     await request.json();
