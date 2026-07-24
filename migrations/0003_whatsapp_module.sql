@@ -60,3 +60,9 @@ CREATE TABLE whatsapp_quick_replies (
 
 ALTER TABLE customers
 ADD COLUMN whatsapp_language TEXT DEFAULT 'en';
+
+ALTER TABLE whatsapp_sessions
+ADD COLUMN language TEXT DEFAULT 'en';
+
+ALTER TABLE whatsapp_quick_replies
+ADD COLUMN language TEXT DEFAULT 'en';
