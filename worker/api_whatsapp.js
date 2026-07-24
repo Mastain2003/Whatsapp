@@ -177,19 +177,19 @@ async function sendTemplate(
                             parameters:[
 
                             {
-                                type:"text",
-                                text:customer.name || ""
-                            },
+ type:"text",
+ text:String(customer.name || "Customer")
+},
 
-                            {
-                                type:"text",
-                                text:customer.designation || ""
-                            },
+{
+ type:"text",
+ text:String(customer.designation || "N/A")
+},
 
-                            {
-                                type:"text",
-                                text:customer.department || ""
-                            }/*,
+{
+ type:"text",
+ text:String(customer.department || "N/A")
+}/*,
 
                             {
                                 type:"text",
