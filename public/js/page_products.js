@@ -21,11 +21,7 @@ document.getElementById("saveProduct");
 const searchBtn =
 document.getElementById("searchBtn");
 
-const logoutBtn =
-document.getElementById("logoutBtn");
 
-
-logoutBtn.onclick = logout;
 
 
 
