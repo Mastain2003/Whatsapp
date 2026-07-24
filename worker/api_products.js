@@ -59,6 +59,17 @@ export async function handleProducts(
 
     }
 
+    if(
+    method === "PUT"
+){
+
+    return updateProduct(
+        request,
+        env
+    );
+
+    }
+
     return jsonResponse(
         {
             success:false,
@@ -297,6 +308,77 @@ async function addProduct(
 
         product_code:
         productCode
+
+    });
+
+}
+
+async function updateProduct(
+    request,
+    env
+){
+
+    const data =
+    await request.json();
+
+
+    if(!data.id){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"Product id required"
+            },
+            400
+        );
+
+    }
+
+
+    await env.DB
+    .prepare(
+    `
+    UPDATE products
+    SET
+        name = ?,
+        category = ?,
+        brand = ?,
+        unit = ?,
+        price = ?,
+        image_url = ?,
+        description = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+    `
+    )
+    .bind(
+
+        data.name || "",
+
+        data.category || "",
+
+        data.brand || "",
+
+        data.unit || "",
+
+        data.price || 0,
+
+        data.image_url || "",
+
+        data.description || "",
+
+        data.id
+
+    )
+    .run();
+
+
+
+    return jsonResponse({
+
+        success:true,
+
+        message:"Product updated"
 
     });
 
