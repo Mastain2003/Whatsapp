@@ -481,12 +481,12 @@ async function(){
     .innerHTML =
 
     `
-    Imported:
+    Importeds:
     ${result.imported || 0}
 
     <br>
 
-    Skipped:
+    Skippeds:
     ${result.skipped || 0}
     `;
 
