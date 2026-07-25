@@ -179,7 +179,7 @@ async function sendTemplate(
                 headers:{
 
                     Authorization:
-                    `Bearer ${env.WHATSAPP_TOKEN}`,
+                    `Bearer ${env.WHATSAPP_SEND_TOKEN}`,
 
                     "Content-Type":
                     "application/json"
