@@ -36,7 +36,12 @@ export async function handleWhatsAppWebhook(
             "hub.challenge"
         );
 
-
+        console.log("MODE:", mode);
+console.log("TOKEN RECEIVED:", token);
+console.log(
+    "VERIFY TOKEN EXISTS:",
+    !!env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
+);
 
         if(
             mode === "subscribe"
