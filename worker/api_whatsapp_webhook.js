@@ -41,7 +41,7 @@ export async function handleWhatsAppWebhook(
         if(
             mode === "subscribe"
             &&
-            token === env.WHATSAPP_VERIFY_TOKEN
+            token === env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
         ){
 
             return new Response(
