@@ -9,7 +9,6 @@ const API_URL =
 
 const token =
 localStorage.getItem("token");
-alert("Token: " + token);
 
 
 
