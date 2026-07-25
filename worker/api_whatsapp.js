@@ -92,7 +92,7 @@ async function sendTemplate(
 
 
     const languageCode =
-    data.language || "en_US";
+    data.language || "en";
 
 
 
