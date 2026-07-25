@@ -31,7 +31,6 @@ export async function handleWhatsApp(
     request.method;
 
 
-
     if(method === "POST"){
 
         return sendTemplate(
@@ -42,7 +41,6 @@ export async function handleWhatsApp(
     }
 
 
-
     if(method === "GET"){
 
         return getMessages(
@@ -50,7 +48,6 @@ export async function handleWhatsApp(
         );
 
     }
-
 
 
     return jsonResponse(
@@ -63,6 +60,9 @@ export async function handleWhatsApp(
 
 }
 
+
+
+
 async function sendTemplate(
     request,
     env
@@ -70,6 +70,7 @@ async function sendTemplate(
 
     const data =
     await request.json();
+
 
 
     if(
@@ -89,6 +90,12 @@ async function sendTemplate(
     }
 
 
+
+    const languageCode =
+    data.language || "en_US";
+
+
+
     let sent = 0;
     let failed = 0;
 
@@ -97,6 +104,7 @@ async function sendTemplate(
     for(
         const customerId of data.customer_ids
     ){
+
 
         const customer =
         await env.DB
@@ -108,8 +116,7 @@ async function sendTemplate(
             designation,
             department,
             city,
-            phone,
-            whatsapp_language
+            phone
         FROM customers
         WHERE id = ?
         `
@@ -137,7 +144,7 @@ async function sendTemplate(
                     customer,
                     data.template,
                     {
-                        message:"Phone missing"
+                        message:"Phone number missing"
                     },
                     env
                 );
@@ -149,17 +156,16 @@ async function sendTemplate(
 
 
 
+            const cleanPhone =
+            String(customer.phone)
+            .replace(/\D/g,"");
+
+
+
             const phone =
-            customer.phone.startsWith("91")
-            ? customer.phone
-            : "91" + customer.phone;
-
-
-
-            const languageCode =
-            customer.whatsapp_language === "hi"
-            ? "hi_IN"
-            : "en";
+            cleanPhone.startsWith("91")
+            ? cleanPhone
+            : "91" + cleanPhone;
 
 
 
@@ -189,6 +195,7 @@ async function sendTemplate(
 
                     type:"template",
 
+
                     template:{
 
                         name:data.template,
@@ -211,27 +218,35 @@ async function sendTemplate(
 
                             {
                                 type:"text",
-                                text:String(customer.name || "Customer")
+                                text:String(
+                                    customer.name || "Customer"
+                                )
                             },
 
                             {
                                 type:"text",
-                                text:String(customer.designation || "N/A")
+                                text:String(
+                                    customer.designation || "N/A"
+                                )
                             },
 
                             {
                                 type:"text",
-                                text:String(customer.department || "N/A")
+                                text:String(
+                                    customer.department || "N/A"
+                                )
                             },
 
                             {
                                 type:"text",
-                                text:String(customer.city || "N/A")
+                                text:String(
+                                    customer.city || "N/A"
+                                )
                             },
 
                             {
                                 type:"text",
-                                text:"9955160127"
+                                text: "9955160127"
                             }
 
                             ]
@@ -254,7 +269,6 @@ async function sendTemplate(
 
 
             if(metaResponse.ok){
-
 
                 await env.DB
                 .prepare(
@@ -297,10 +311,8 @@ async function sendTemplate(
 
                 sent++;
 
-
             }
             else{
-
 
                 await saveFailedMessage(
                     customer,
@@ -333,7 +345,6 @@ async function sendTemplate(
 
         }
 
-
     }
 
 
@@ -345,92 +356,6 @@ async function sendTemplate(
         sent,
 
         failed
-
-    });
-
-}
-
-async function saveFailedMessage(
-    customer,
-    template,
-    error,
-    env
-){
-
-    await env.DB
-    .prepare(
-    `
-    INSERT INTO whatsapp_messages
-    (
-        customer_id,
-        direction,
-        template_name,
-        status,
-        failed_reason
-    )
-    VALUES
-    (
-        ?,
-        ?,
-        ?,
-        ?,
-        ?
-    )
-    `
-    )
-    .bind(
-
-        customer.id,
-
-        "outgoing",
-
-        template,
-
-        "failed",
-
-        error.message || JSON.stringify(error)
-
-    )
-    .run();
-
-}
-
-
-
-
-async function getMessages(
-    env
-){
-
-    const result =
-    await env.DB
-    .prepare(
-    `
-    SELECT
-        whatsapp_messages.*,
-        customers.name,
-        customers.phone
-    FROM whatsapp_messages
-
-    LEFT JOIN customers
-
-    ON customers.id =
-    whatsapp_messages.customer_id
-
-    ORDER BY
-    whatsapp_messages.created_at DESC
-    `
-    )
-    .all();
-
-
-
-    return jsonResponse({
-
-        success:true,
-
-        messages:
-        result.results
 
     });
 
