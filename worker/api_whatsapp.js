@@ -360,3 +360,147 @@ async function sendTemplate(
     });
 
 }
+
+async function saveFailedMessage(
+    customer,
+    template,
+    error,
+    env
+){
+
+    let reason = "";
+
+    try{
+
+        if(
+            typeof error === "string"
+        ){
+
+            reason = error;
+
+        }
+        else if(
+            error?.error?.message
+        ){
+
+            reason =
+            error.error.message;
+
+            if(
+                error.error.error_data?.details
+            ){
+
+                reason +=
+                " | " +
+                error.error.error_data.details;
+
+            }
+
+        }
+        else if(
+            error?.message
+        ){
+
+            reason =
+            error.message;
+
+        }
+        else{
+
+            reason =
+            JSON.stringify(error);
+
+        }
+
+    }
+    catch{
+
+        reason =
+        "Unknown error";
+
+    }
+
+
+    await env.DB
+    .prepare(
+    `
+    INSERT INTO whatsapp_messages
+    (
+        customer_id,
+        direction,
+        template_name,
+        status,
+        failed_reason
+    )
+    VALUES
+    (
+        ?,
+        ?,
+        ?,
+        ?,
+        ?
+    )
+    `
+    )
+    .bind(
+
+        customer.id,
+
+        "outgoing",
+
+        template,
+
+        "failed",
+
+        reason
+
+    )
+    .run();
+
+}
+
+
+
+
+
+async function getMessages(
+    env
+){
+
+    const result =
+    await env.DB
+    .prepare(
+    `
+    SELECT
+
+        whatsapp_messages.*,
+
+        customers.name,
+
+        customers.phone
+
+    FROM whatsapp_messages
+
+    LEFT JOIN customers
+
+    ON customers.id =
+    whatsapp_messages.customer_id
+
+    ORDER BY
+    whatsapp_messages.created_at DESC
+    `
+    )
+    .all();
+
+
+
+    return jsonResponse({
+
+        success:true,
+
+        messages:
+        result.results
+
+    });
+
+}
