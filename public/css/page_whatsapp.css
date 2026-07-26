@@ -1,0 +1,26 @@
+.section {
+
+margin-top:30px;
+
+}
+
+
+table {
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+
+th,
+td {
+
+padding:12px;
+
+border-bottom:1px solid #ddd;
+
+text-align:left;
+
+}
