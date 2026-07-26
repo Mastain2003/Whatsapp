@@ -6,3 +6,7 @@ compatibility_date = "2026-07-23"
 binding = "DB"
 database_name = "whatsapp-db"
 database_id = "665b2e9f-5dcf-4050-8995-cdeb678a409c"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
