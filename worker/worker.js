@@ -1,6 +1,11 @@
 // worker/worker.js
 
 import {
+ handleWhatsAppDashboard
+}
+from "./api_whatsapp_dashboard.js";
+
+import {
     handleProducts
 } from "./api_products.js";
 
@@ -224,6 +229,17 @@ if(
     request,
     env
  );
+
+        }
+
+        if(
+ path === "/whatsapp/dashboard"
+){
+
+    return handleWhatsAppDashboard(
+        request,
+        env
+    );
 
         }
 
