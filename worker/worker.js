@@ -53,6 +53,78 @@ export default {
             url.pathname;
 
 
+        // Frontend Pages
+
+if (path === "/") {
+
+    return env.ASSETS.fetch(
+        new Request(
+            new URL(
+                "/pages/login.html",
+                request.url
+            )
+        )
+    );
+
+}
+
+
+if (path === "/dashboard") {
+
+    return env.ASSETS.fetch(
+        new Request(
+            new URL(
+                "/pages/dashboard.html",
+                request.url
+            )
+        )
+    );
+
+}
+
+
+if (path === "/customers") {
+
+    return env.ASSETS.fetch(
+        new Request(
+            new URL(
+                "/pages/customers.html",
+                request.url
+            )
+        )
+    );
+
+}
+
+
+if (path === "/products") {
+
+    return env.ASSETS.fetch(
+        new Request(
+            new URL(
+                "/pages/products.html",
+                request.url
+            )
+        )
+    );
+
+}
+
+
+if (path === "/broadcast") {
+
+    return env.ASSETS.fetch(
+        new Request(
+            new URL(
+                "/pages/broadcast.html",
+                request.url
+            )
+        )
+    );
+
+}
+
+
 
         // CORS
 
