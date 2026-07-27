@@ -4,14 +4,13 @@ const API_URL =
 "https://whatsapp-api.prakharmastain9.workers.dev";
 
 
-// If already logged in, go directly to dashboard
+// Already logged in?
 if(localStorage.getItem("token")){
 
     window.location.href =
-    "/dashboard";
+    "dashboard.html";
 
 }
-
 
 
 document
@@ -19,20 +18,16 @@ document
 .onclick =
 async function(){
 
-
     const username =
     document
     .getElementById("username")
     .value
     .trim();
 
-
     const password =
     document
     .getElementById("password")
     .value;
-
-
 
     if(!username || !password){
 
@@ -44,8 +39,6 @@ async function(){
         return;
 
     }
-
-
 
     try{
 
@@ -73,37 +66,25 @@ async function(){
 
         );
 
-
-
         const result =
         await response.json();
 
-
-
         if(result.success){
 
-
             localStorage.setItem(
-
                 "token",
-
                 result.token
-
             );
-
-
 
             document
             .getElementById("loginMessage")
             .innerHTML =
             "Login successful...";
 
-
-
             setTimeout(()=>{
 
                 window.location.href =
-                "/dashboard";
+                "dashboard.html";
 
             },800);
 
@@ -117,7 +98,6 @@ async function(){
             "Login failed";
 
         }
-
 
     }
     catch(error){
