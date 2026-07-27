@@ -1,3 +1,7 @@
+import {
+    logout
+} from "./core.js";
+
 export async function loadSidebar(activePage){
 
     const container =
@@ -55,15 +59,12 @@ export async function loadSidebar(activePage){
 
     if(logoutBtn){
 
-        logoutBtn.onclick =
-        () => {
+    logoutBtn.onclick =
+    async () => {
 
-            localStorage.clear();
+        await logout();
 
-            window.location.href =
-            "login.html";
-
-        };
+    };
 
     }
 
