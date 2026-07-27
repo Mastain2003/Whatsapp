@@ -20,7 +20,8 @@ import {
 
 
 import {
-    handleLogin
+    handleLogin,
+ logout
 } from "./auth_service.js";
 
 
