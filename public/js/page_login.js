@@ -4,6 +4,15 @@ const API_URL =
 "https://whatsapp-api.prakharmastain9.workers.dev";
 
 
+// If already logged in, go directly to dashboard
+if(localStorage.getItem("token")){
+
+    window.location.href =
+    "/dashboard";
+
+}
+
+
 
 document
 .getElementById("btnLogin")
@@ -94,7 +103,7 @@ async function(){
             setTimeout(()=>{
 
                 window.location.href =
-                "dashboard.html";
+                "/dashboard";
 
             },800);
 
@@ -112,6 +121,8 @@ async function(){
 
     }
     catch(error){
+
+        console.error(error);
 
         document
         .getElementById("loginMessage")
