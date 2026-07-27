@@ -159,6 +159,17 @@ if (path === "/broadcast") {
 
         }
 
+     if (
+    path === "/logout"
+){
+
+    return logout(
+        request,
+        env
+    );
+
+     }
+
 
 
 
