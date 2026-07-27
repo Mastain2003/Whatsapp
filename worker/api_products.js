@@ -13,13 +13,13 @@ export async function handleProducts(
     env
 ){
 
-    const authorized =
+    const user =
     await checkAuth(
         request,
         env
     );
 
-    if(!authorized){
+    if(!user){
 
         return jsonResponse(
             {
