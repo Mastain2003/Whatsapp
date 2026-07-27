@@ -7,14 +7,14 @@ export async function handleWhatsApp(
     env
 ){
 
-    const authorized =
+    const user =
     await checkAuth(
         request,
         env
     );
 
 
-    if(!authorized){
+    if(!user){
 
         return jsonResponse(
         {
