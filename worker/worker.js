@@ -61,7 +61,7 @@ export default {
 
         // Frontend Pages
 
-if (path === "/") {
+/*if (path === "/") {
 
     return env.ASSETS.fetch(
         new Request(
@@ -128,7 +128,7 @@ if (path === "/broadcast") {
         )
     );
 
-}
+}*/
 
 
 
