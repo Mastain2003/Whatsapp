@@ -1,4 +1,4 @@
-// worker/worker.js
+// worker/worker.js 
 
 import {
  handleWhatsAppDashboard
