@@ -218,7 +218,7 @@ async function sendTemplate(
     {
       "type": "image",
       "image": {
-        "link": "https://whatsapp.mastain.in/img/headeImage.jpg"
+        "link": "https://whatsapp.mastain.in/img/1784960031243.png"
       }
     }
   ]
