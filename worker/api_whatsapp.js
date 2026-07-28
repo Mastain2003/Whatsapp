@@ -210,28 +210,12 @@ async function sendTemplate(
 
                         components:[
 
-                          /*  //header image code start
-
-                            {
-  "type": "header",
-  "parameters": [
-    {
-      "type": "image",
-      "image": {
-        "link": "https://whatsapp.mastain.in/img/1784960031243.png"
-      }
-    }
-  ]
-},
-
-                            
-                            //header image code end*/
-
                         {
 
                             type:"body",
 
                             parameters:[
+
                             {
                                 type:"text",
                                 text:String(
