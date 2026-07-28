@@ -210,7 +210,7 @@ async function sendTemplate(
 
                         components:[
 
-                            //header image code start
+                          /*  //header image code start
 
                             {
   "type": "header",
@@ -225,7 +225,7 @@ async function sendTemplate(
 },
 
                             
-                            //header image code end
+                            //header image code end*/
 
                         {
 
