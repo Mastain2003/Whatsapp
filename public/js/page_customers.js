@@ -7,7 +7,7 @@ import {
 } from "./core.js";
 import { loadSidebar } from "./sidebar.js";
 
-requirLogin();
+requireLogin();
 loadSidebar("customers");
 
 const API_URL =
