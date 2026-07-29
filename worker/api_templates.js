@@ -55,7 +55,7 @@ export async function handleTemplates(
                 headers:{
 
                     Authorization:
-                    `Bearer ${env.WHATSAPP_TOKEN}`
+                    `Bearer ${env.WHATSAPP_SEND_TOKEN}`
 
                 }
 
