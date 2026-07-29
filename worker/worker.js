@@ -40,6 +40,10 @@ import {
 }
 from "./api_whatsapp_webhook.js";
 
+import {
+    handleTemplates
+} from "./api_templates.js";
+
 
 
 export default {
@@ -255,6 +259,16 @@ if(
 
         }
 
+     if(
+    path === "/templates"
+){
+
+    return handleTemplates(
+        request,
+        env
+    );
+
+     }
 
 
 
