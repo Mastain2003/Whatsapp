@@ -16,7 +16,7 @@ init();
 async function init(){
 
     try{
-
+      console.log("apiFetch templates");
         const result =
         await apiFetch(
             "/templates"
