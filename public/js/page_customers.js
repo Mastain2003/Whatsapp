@@ -1,6 +1,13 @@
 // public/js/page_customers.js
+import {
+    apiFetch,
+    requireLogin,
+    logout,
+    showMessage
+} from "./core.js";
 import { loadSidebar } from "./sidebar.js";
 
+requirLogin();
 loadSidebar("customers");
 
 const API_URL =
