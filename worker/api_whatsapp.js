@@ -209,7 +209,7 @@ async function sendTemplate(
 
 
                         components:[
-                             //header image start
+                           /*  //header image start
 
                             {
   "type": "header",
@@ -224,7 +224,7 @@ async function sendTemplate(
 },
 
                             
-                            //header image end
+                            //header image end*/
 
                         {
 
@@ -239,12 +239,12 @@ async function sendTemplate(
                                 )
                             },
 
-                            {
+                           /* {
                                 type:"text",
                                 text:String(
                                     customer.designation || "N/A"
                                 )
-                            },
+                            },*/
 
                             {
                                 type:"text",
@@ -258,12 +258,12 @@ async function sendTemplate(
                                 text:String(
                                     customer.city || "N/A"
                                 )
-                            },
+                            }/*,
 
                             {
                                 type:"text",
                                 text: "9955160127"
-                            }
+                            }*/
 
                             ]
 
