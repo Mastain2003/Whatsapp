@@ -1,23 +1,18 @@
-import {
-    jsonResponse
-} from "./cors_helper.js";
-
-import {
-    checkAuth
-} from "./auth_service.js";
+import { jsonResponse } from "./cors_helper.js";
+import { checkAuth } from "./auth_service.js";
 
 export async function handleTemplates(
     request,
     env
 ){
 
-    const user =
-    await checkAuth(
-        request,
-        env
-    );
+    const authorized =
+        await checkAuth(
+            request,
+            env
+        );
 
-    if(!user){
+    if(!authorized){
 
         return jsonResponse(
             {
@@ -44,34 +39,33 @@ export async function handleTemplates(
     try{
 
         const response =
-        await fetch(
+            await fetch(
 
-            `https://graph.facebook.com/v23.0/${env.WHATSAPP_BUSINESS_ACCOUNT_ID}/message_templates`,
+                `https://graph.facebook.com/v23.0/${env.WHATSAPP_BUSINESS_ACCOUNT_ID}/message_templates`,
 
-            {
+                {
 
-                method:"GET",
+                    headers:{
 
-                headers:{
+                        Authorization:
+                        `Bearer ${env.WHATSAPP_SEND_TOKEN}`
 
-                    Authorization:
-                    `Bearer ${env.WHATSAPP_SEND_TOKEN}`
+                    }
 
                 }
 
-            }
-
-        );
+            );
 
         const result =
-        await response.json();
+            await response.json();
 
         if(!response.ok){
 
             return jsonResponse(
                 {
                     success:false,
-                    meta:result
+                    message:"Meta API Error",
+                    error:result
                 },
                 response.status
             );
@@ -88,6 +82,7 @@ export async function handleTemplates(
         });
 
     }
+
     catch(error){
 
         return jsonResponse(
