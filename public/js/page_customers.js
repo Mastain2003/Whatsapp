@@ -226,7 +226,7 @@ document
 .onclick =
 
 async function(){
-
+console.log("importing customers from excel sheet...");
 
 
     const fileInput =
@@ -298,8 +298,8 @@ async function(){
         }
 
     );
-console.log(rows);
-alert("Rows in sheet: " + rows.length);
+//console.log(rows);
+//alert("Rows in sheet: " + rows.length);
  
 
 
@@ -309,7 +309,7 @@ alert("Rows in sheet: " + rows.length);
 
 
 
-
+console.log("reading customers...");
 
     for(
 
@@ -332,7 +332,7 @@ alert("Rows in sheet: " + rows.length);
 
             !row ||
 
-            row.length < 5
+            row.length < 6
 
         ){
 
@@ -377,6 +377,12 @@ alert("Rows in sheet: " + rows.length);
             )
             .trim(),
 
+            block:
+            String(
+                row[4] || ""
+            )
+            .trim(),
+
 
 
             phone:
@@ -408,7 +414,7 @@ alert("Rows in sheet: " + rows.length);
 
 
     }
-    console.log(customers);
+    //console.log(customers);
 alert("Customers parsed: " + customers.length);
 
 
