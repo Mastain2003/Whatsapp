@@ -24,109 +24,50 @@
 <div id="sidebarContainer"></div>
 
 <div class="page-content">
-
     <div class="templates-container">
 
-        <div class="templates-header">
+    <div class="templates-left">
 
-            <h2>
-                WhatsApp Templates
-            </h2>
+        <input
+            type="text"
+            id="searchTemplate"
+            placeholder="Search template...">
 
-            <button
-                id="refreshTemplates">
+        <div id="templateList"></div>
 
-                🔄 Refresh
+    </div>
 
-            </button>
+
+    <div class="templates-middle">
+
+        <div id="templateDetails">
+
+            <div class="empty-state">
+
+                Select a template
+
+            </div>
 
         </div>
 
+    </div>
 
-        <div class="templates-layout">
 
+    <div class="templates-right">
 
-            <!-- LEFT PANEL -->
+        <h3>Preview</h3>
 
-            <div class="template-list-panel">
+        <div id="templatePreview">
 
-                <div class="search-box">
+            <div class="phone-preview">
 
-                    <input
-                        type="text"
-                        id="searchTemplate"
-                        placeholder="Search templates...">
-
-                </div>
-
-                <div
-                    id="templateList"
-                    class="template-list">
-
-                </div>
+                Select a template
 
             </div>
-
-
-
-            <!-- MIDDLE PANEL -->
-
-            <div class="template-details-panel">
-
-                <h3>
-                    Template Details
-                </h3>
-
-                <div id="templateDetails">
-
-                    <div class="placeholder">
-
-                        Select a template
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- RIGHT PANEL -->
-
-            <div class="template-preview-panel">
-
-                <h3>
-
-                    WhatsApp Preview
-
-                </h3>
-
-                <div class="phone-preview">
-
-                    <div class="phone-header">
-
-                        WhatsApp Business
-
-                    </div>
-
-                    <div
-                        id="templatePreview"
-                        class="chat-area">
-
-                        <div class="placeholder">
-
-                            Preview will appear here
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
 
         </div>
+
+    </div>
 
     </div>
 
