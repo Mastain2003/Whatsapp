@@ -573,7 +573,7 @@ function renderPreview(
 
                     `{{${index+1}}}`,
 
-                    `<span style="color:#0a7cff;font-weight:bold;">${value}</span>`
+                    `${value}`
 
                 );
 
