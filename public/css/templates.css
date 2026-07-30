@@ -288,4 +288,78 @@ pre{
 
     flex:1;
 
-    padding:15
+    padding:15px;
+
+    overflow-y:auto;
+
+}
+
+.message{
+
+    background:white;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    max-width:250px;
+
+    box-shadow:0 1px 3px rgba(0,0,0,.12);
+
+}
+
+.message img{
+
+    width:100%;
+
+    border-radius:8px;
+
+    margin-bottom:10px;
+
+}
+
+.message-body{
+
+    white-space:pre-wrap;
+
+}
+
+.message-footer{
+
+    margin-top:10px;
+
+    color:#777;
+
+    font-size:12px;
+
+}
+
+.message-button{
+
+    text-align:center;
+
+    padding:10px;
+
+    border-top:1px solid #eee;
+
+    color:#0a7cff;
+
+    cursor:pointer;
+
+}
+
+.empty-state{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    height:100%;
+
+    color:#888;
+
+    font-size:18px;
+
+}
