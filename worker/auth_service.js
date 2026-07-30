@@ -130,7 +130,7 @@ export async function checkAuth(
     request,
     env
 ){
-    alert(request.path);
+   // alert(request.path);
     const auth =
     request.headers.get(
         "Authorization"
