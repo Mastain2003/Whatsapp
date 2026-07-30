@@ -16,21 +16,22 @@ init();
 async function init(){
 
     try{
-      console.log("apiFetch templates");
-        const result =
-        await apiFetch(
-            "/templates"
-        );
 
-        console.log(result);
+        const result = await apiFetch("/templates");
+
+        if(!result.success){
+
+            alert(result.message);
+            return;
+
+        }
+
+        renderTemplateList(result.templates);
 
     }
     catch(error){
 
-        console.error(
-            "Unable to load templates",
-            error
-        );
+        console.error(error);
 
     }
 
