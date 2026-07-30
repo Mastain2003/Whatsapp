@@ -5,160 +5,54 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
 
-    <title>
-        Customers
-    </title>
+    <title>  Customers </title>
 <link rel="stylesheet" href="../css/sidebar.css">
 
-    <link rel="stylesheet"
-          href="../css/page_customers.css">
+    <link rel="stylesheet"  href="../css/page_customers.css">
 
 </head>
 
 
 <body>
-<div id="sidebarContainer"></div>
-<div class="page-content">
-
-<div class="customer-container">
-
-
-    <h2>
-        Customers
-    </h2>
-
-
-
-    <div class="toolbar">
-
-
-        <input
-            type="text"
-            id="searchName"
-            placeholder="Search name">
-
-
-        <input
-            type="text"
-            id="filterCity"
-            placeholder="City">
-
-
-        <input
-            type="text"
-            id="filterDepartment"
-            placeholder="Department">
-
-
-        <button id="btnSearch">
-            Search
-        </button>
-
-
+    <div id="sidebarContainer"></div>
+    <div class="page-content">
+        <div class="customer-container">
+            <h2>
+                Customers
+            </h2>
+            <div class="toolbar">
+                <input type="text"  id="searchName"  placeholder="Search name">
+                <input type="text"  id="filterCity"  placeholder="City">
+                <input type="text"  id="filterDepartment" placeholder="Department">
+                
+                <button id="btnSearch">Search </button>
+            </div>
+            <div class="import-box">
+                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
+                <button id="btnImport">Import Customers</button>
+                <div id="importResult"></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Post</th>
+                        <th>Department</th>
+                        <th>City</th>
+                        <th>Teritory</th>
+                        <th>Phone Number</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTable">
+                    
+                </tbody>
+            </table>
+        </div>
     </div>
-
-
-
-
-
-    <div class="import-box">
-
-
-        <input
-            type="file"
-            id="excelFile"
-            accept=".xlsx,.xls,.csv">
-
-
-
-        <button id="btnImport">
-            Import Customers
-        </button>
-
-
-
-        <div id="importResult"></div>
-
-
-    </div>
-
-
-
-
-
-
-
-    <table>
-
-
-        <thead>
-
-            <tr>
-
-                <th>
-                    Code
-                </th>
-
-                <th>
-                    Name
-                </th>
-
-
-                <th>
-                    Designation
-                </th>
-
-
-                <th>
-                    Department
-                </th>
-
-
-                <th>
-                    City
-                </th>
-
-
-                <th>
-                    Phone
-                </th>
-
-
-            </tr>
-
-
-        </thead>
-
-
-
-        <tbody id="customerTable">
-
-
-        </tbody>
-
-
-    </table>
-
-
-
-</div>
-</div>
-
-
-
-
-
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
-
-<script type="module"
-src="../js/page_customers.js">
-</script>
-
-
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script type="module" src="../js/page_customers.js"></script>
 </body>
-
 </html>
