@@ -18,6 +18,8 @@ body{
 
     padding:20px;
 
+    overflow-x:hidden;
+
 }
 
 .templates-container{
@@ -48,7 +50,7 @@ body{
 
     flex-direction:column;
 
-    overflow:hidden;
+    /*overflow:hidden;*/
 
 }
 
@@ -70,7 +72,7 @@ body{
 
     flex:1;
 
-    overflow-y:auto;
+    /*overflow-y:auto;*/
 
 }
 
@@ -154,7 +156,7 @@ body{
 
     padding:20px;
 
-    overflow-y:auto;
+    /*overflow-y:auto;*/
 
 }
 
