@@ -137,46 +137,77 @@ function renderTemplateList(
     );
 
 }
-function showTemplate(
-    template
-){
+
+function showTemplate(template){
 
     let header = null;
     let body = null;
     let footer = null;
     let buttons = [];
 
-    template.components.forEach(
+    template.components.forEach(component=>{
 
-        component=>{
+        switch(component.type){
 
-            switch(component.type){
+            case "HEADER":
+                header = component;
+                break;
 
-                case "HEADER":
+            case "BODY":
+                body = component;
+                break;
 
-                    header = component;
-                    break;
+            case "FOOTER":
+                footer = component;
+                break;
 
-                case "BODY":
-
-                    body = component;
-                    break;
-
-                case "FOOTER":
-
-                    footer = component;
-                    break;
-
-                case "BUTTONS":
-
-                    buttons = component.buttons || [];
-                    break;
-
-            }
+            case "BUTTONS":
+                buttons = component.buttons || [];
+                break;
 
         }
 
-    );
+    });
+
+
+    let variablesHtml = "";
+
+    if(
+
+        body &&
+        body.example &&
+        body.example.body_text
+
+    ){
+
+        body.example.body_text[0].forEach(
+
+            (value,index)=>{
+
+                variablesHtml +=
+
+                `
+                <div class="variable">
+
+                    <label>
+
+                        {{${index+1}}}
+
+                    </label>
+
+                    <input
+                    class="variable-input"
+                    data-index="${index}"
+                    value="${value}">
+
+                </div>
+                `;
+
+            }
+
+        );
+
+    }
 
 
     const details =
@@ -184,66 +215,91 @@ function showTemplate(
         "templateDetails"
     );
 
+
     details.innerHTML =
+
     `
-        <h2>${template.name}</h2>
+        <h2>
+
+            ${template.name}
+
+        </h2>
+
 
         <div class="section">
 
-            <h4>Information</h4>
+            <h4>
+
+                Information
+
+            </h4>
 
             <p>
 
                 <b>Category :</b>
+
                 ${template.category}
 
                 <br>
 
                 <b>Language :</b>
+
                 ${template.language}
 
                 <br>
 
                 <b>Status :</b>
+
                 ${template.status}
 
             </p>
 
         </div>
 
+
         <div class="section">
 
-            <h4>Header</h4>
+            <h4>
+
+                Header
+
+            </h4>
 
             <p>
 
-                ${
-                    header
-                    ?
+            ${
+                header
 
-                    header.format==="TEXT"
+                ?
 
-                    ?
+                header.format==="TEXT"
 
-                    header.text
+                ?
 
-                    :
+                header.text
 
-                    header.format
+                :
 
-                    :
+                header.format
 
-                    "None"
+                :
 
-                }
+                "None"
+
+            }
 
             </p>
 
         </div>
 
+
         <div class="section">
 
-            <h4>Body</h4>
+            <h4>
+
+                Body
+
+            </h4>
 
             <pre>
 
@@ -253,35 +309,67 @@ ${body ? body.text : ""}
 
         </div>
 
+
         <div class="section">
 
-            <h4>Footer</h4>
+            <h4>
+
+                Variables
+
+            </h4>
+
+            ${
+
+                variablesHtml ||
+
+                "No variables"
+
+            }
+
+        </div>
+
+
+        <div class="section">
+
+            <h4>
+
+                Footer
+
+            </h4>
 
             <p>
 
-                ${
-                    footer
-                    ?
+            ${
 
-                    footer.text
+                footer
 
-                    :
+                ?
 
-                    "None"
+                footer.text
 
-                }
+                :
+
+                "None"
+
+            }
 
             </p>
 
         </div>
 
+
         <div class="section">
 
-            <h4>Buttons</h4>
+            <h4>
+
+                Buttons
+
+            </h4>
 
             <ul>
 
             ${
+
                 buttons.map(
 
                     button=>
@@ -308,6 +396,339 @@ ${body ? body.text : ""}
         footer,
 
         buttons
+
+    );
+
+
+    document
+    .querySelectorAll(
+        ".variable-input"
+    )
+    .forEach(
+
+        input=>{
+
+            input.addEventListener(
+
+                "input",
+
+                ()=>{
+
+                    renderPreview(
+
+                        header,
+
+                        body,
+
+                        footer,
+
+                        buttons
+
+                    );
+
+                }
+
+            );
+
+        }
+
+    );
+
+}
+
+function showTemplate(template){
+
+    let header = null;
+    let body = null;
+    let footer = null;
+    let buttons = [];
+
+    template.components.forEach(component=>{
+
+        switch(component.type){
+
+            case "HEADER":
+                header = component;
+                break;
+
+            case "BODY":
+                body = component;
+                break;
+
+            case "FOOTER":
+                footer = component;
+                break;
+
+            case "BUTTONS":
+                buttons = component.buttons || [];
+                break;
+
+        }
+
+    });
+
+
+    let variablesHtml = "";
+
+    if(
+
+        body &&
+        body.example &&
+        body.example.body_text
+
+    ){
+
+        body.example.body_text[0].forEach(
+
+            (value,index)=>{
+
+                variablesHtml +=
+
+                `
+                <div class="variable">
+
+                    <label>
+
+                        {{${index+1}}}
+
+                    </label>
+
+                    <input
+                    class="variable-input"
+                    data-index="${index}"
+                    value="${value}">
+
+                </div>
+                `;
+
+            }
+
+        );
+
+    }
+
+
+    const details =
+    document.getElementById(
+        "templateDetails"
+    );
+
+
+    details.innerHTML =
+
+    `
+        <h2>
+
+            ${template.name}
+
+        </h2>
+
+
+        <div class="section">
+
+            <h4>
+
+                Information
+
+            </h4>
+
+            <p>
+
+                <b>Category :</b>
+
+                ${template.category}
+
+                <br>
+
+                <b>Language :</b>
+
+                ${template.language}
+
+                <br>
+
+                <b>Status :</b>
+
+                ${template.status}
+
+            </p>
+
+        </div>
+
+
+        <div class="section">
+
+            <h4>
+
+                Header
+
+            </h4>
+
+            <p>
+
+            ${
+                header
+
+                ?
+
+                header.format==="TEXT"
+
+                ?
+
+                header.text
+
+                :
+
+                header.format
+
+                :
+
+                "None"
+
+            }
+
+            </p>
+
+        </div>
+
+
+        <div class="section">
+
+            <h4>
+
+                Body
+
+            </h4>
+
+            <pre>
+
+${body ? body.text : ""}
+
+            </pre>
+
+        </div>
+
+
+        <div class="section">
+
+            <h4>
+
+                Variables
+
+            </h4>
+
+            ${
+
+                variablesHtml ||
+
+                "No variables"
+
+            }
+
+        </div>
+
+
+        <div class="section">
+
+            <h4>
+
+                Footer
+
+            </h4>
+
+            <p>
+
+            ${
+
+                footer
+
+                ?
+
+                footer.text
+
+                :
+
+                "None"
+
+            }
+
+            </p>
+
+        </div>
+
+
+        <div class="section">
+
+            <h4>
+
+                Buttons
+
+            </h4>
+
+            <ul>
+
+            ${
+
+                buttons.map(
+
+                    button=>
+
+                    `<li>${button.type} : ${button.text}</li>`
+
+                ).join("")
+
+            }
+
+            </ul>
+
+        </div>
+
+    `;
+
+
+    renderPreview(
+
+        header,
+
+        body,
+
+        footer,
+
+        buttons
+
+    );
+
+
+    document
+    .querySelectorAll(
+        ".variable-input"
+    )
+    .forEach(
+
+        input=>{
+
+            input.addEventListener(
+
+                "input",
+
+                ()=>{
+
+                    renderPreview(
+
+                        header,
+
+                        body,
+
+                        footer,
+
+                        buttons
+
+                    );
+
+                }
+
+            );
+
+        }
 
     );
 
