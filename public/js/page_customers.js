@@ -31,110 +31,56 @@ document.getElementById(
 async function loadCustomers(){
 
 
-    const name =
-    document.getElementById(
-        "searchName"
-    ).value.trim();
+    const name =document.getElementById("searchName").value.trim();
+    const designation = document.getElementById("filterDesignation").value.trim();
+    const department =  document.getElementById("filterDepartment").value.trim();
+    const city =document.getElementById("filterCity").value.trim();
+    const block =document.getElementById("filterBlock").value.trim();
 
-
-
-    const city =
-    document.getElementById(
-        "filterCity"
-    ).value.trim();
-
-
-
-    const department =
-    document.getElementById(
-        "filterDepartment"
-    ).value.trim();
-
-
-
-
-    let url =
-    API_URL + "/customers?";
-
-
-
+    let url = API_URL + "/customers?";
+    
     if(name){
-
-        url +=
-        "name=" +
-        encodeURIComponent(name)
-        +
-        "&";
-
+        url +=  "name=" + encodeURIComponent(name) + "&";
     }
 
-
+    if(designation){
+        url +=  "Designation=" + encodeURIComponent(designation) + "&";
+    }
+    
+    if(department){
+        url +=  "department=" + encodeURIComponent(department) + "&";
+    }
 
     if(city){
-
-        url +=
-        "city=" +
-        encodeURIComponent(city)
-        +
-        "&";
-
+        url +=  "city=" + encodeURIComponent(city) + "&";
     }
 
-
-
-    if(department){
-
-        url +=
-        "department=" +
-        encodeURIComponent(department);
-
+    if(block){
+        url +=  "block=" + encodeURIComponent(block);
     }
 
 
 
 
 
-    const response =
-    await fetch(
-
+    const response =  await fetch(
         url,
-
         {
-
             headers:{
-
-                "Authorization":
-                "Bearer " + token
-
+                "Authorization": "Bearer " + token
             }
-
         }
-
     );
 
-
-
-
-    const data =
-    await response.json();
-
-
-
+    const data =    await response.json();
 
     table.innerHTML = "";
 
-
-
-
-    if(
-        !data.customers ||
-        data.customers.length === 0
-    ){
-
+    if(!data.customers || data.customers.length === 0){
         table.innerHTML =
-        `
+            `
         <tr>
-            <td colspan="6">
+            <td colspan="7">
                 Nothing to display
             </td>
         </tr>
@@ -151,10 +97,7 @@ async function loadCustomers(){
     data.customers.forEach(
 
         customer => {
-
-
             table.innerHTML +=
-
             `
             <tr>
 
@@ -182,6 +125,10 @@ async function loadCustomers(){
                 ${customer.city || ""}
                 </td>
 
+                <td>
+                ${customer.block || ""}
+                </td>
+
 
                 <td>
                 ${customer.phone || ""}
@@ -203,12 +150,7 @@ async function loadCustomers(){
 
 
 
-document
-.getElementById(
-    "btnSearch"
-)
-.onclick =
-loadCustomers;
+document.getElementById("btnSearch").onclick =loadCustomers;
 
 
 
@@ -219,14 +161,8 @@ loadCustomers;
 // Excel Import
 
 
-document
-.getElementById(
-    "btnImport"
-)
-.onclick =
-
-async function(){
-console.log("importing customers from excel sheet...");
+document.getElementById("btnImport").onclick =async function(){
+    console.log("importing customers from excel sheet...");
 
 
     const fileInput =
@@ -387,7 +323,7 @@ console.log("reading customers...");
 
             phone:
             String(
-                row[4] || ""
+                row[5] || ""
             )
             .trim()
 
@@ -486,7 +422,7 @@ alert("Customers parsed: " + customers.length);
 
     const result =
     await response.json();
-    alert(JSON.stringify(result, null, 2));
+  //  alert(JSON.stringify(result, null, 2));
 
 
 
