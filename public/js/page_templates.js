@@ -435,3 +435,247 @@ ${body ? body.text : ""}
     );
 
 }
+
+function renderPreview(
+
+    header,
+
+    body,
+
+    footer,
+
+    buttons
+
+){
+
+    const preview =
+    document.getElementById(
+        "templatePreview"
+    );
+
+
+
+    let message = "";
+
+
+
+    // HEADER
+
+    if(header){
+
+        if(header.format === "TEXT"){
+
+            message +=
+            `
+            <div
+            style="
+            font-weight:bold;
+            font-size:16px;
+            margin-bottom:10px;
+            ">
+
+                ${header.text}
+
+            </div>
+            `;
+
+        }
+
+        else if(header.format === "IMAGE"){
+
+            const image =
+
+            header.example
+            ?.header_handle
+            ?.[0];
+
+            if(image){
+
+                message +=
+                `
+                <img
+                src="${image}"
+                style="
+                width:100%;
+                border-radius:8px;
+                margin-bottom:10px;
+                ">
+                `;
+
+            }
+
+        }
+
+    }
+
+
+
+    // VARIABLES
+
+    let variables = [];
+
+    document
+    .querySelectorAll(
+        ".variable-input"
+    )
+    .forEach(
+
+        input=>{
+
+            variables.push(
+
+                input.value
+
+            );
+
+        }
+
+    );
+
+
+
+    if(
+
+        variables.length === 0 &&
+
+        body &&
+
+        body.example &&
+
+        body.example.body_text
+
+    ){
+
+        variables =
+
+        body.example.body_text[0];
+
+    }
+
+
+
+    // BODY
+
+    if(body){
+
+        let bodyText =
+        body.text;
+
+
+
+        variables.forEach(
+
+            (value,index)=>{
+
+                bodyText =
+
+                bodyText.replaceAll(
+
+                    `{{${index+1}}}`,
+
+                    `<span
+                    style="
+                    color:#0a7cff;
+                    font-weight:bold;
+                    ">
+
+                    ${value}
+
+                    </span>`
+
+                );
+
+            }
+
+        );
+
+
+
+        message +=
+
+        `
+        <div
+        class="message-body">
+
+            ${bodyText.replace(/\n/g,"<br>")}
+
+        </div>
+        `;
+
+    }
+
+
+
+    // FOOTER
+
+    if(footer){
+
+        message +=
+
+        `
+        <div
+        class="message-footer">
+
+            ${footer.text}
+
+        </div>
+        `;
+
+    }
+
+
+
+    // BUTTONS
+
+    let buttonsHtml = "";
+
+
+
+    buttons.forEach(
+
+        button=>{
+
+            buttonsHtml +=
+
+            `
+            <div
+            class="message-button">
+
+                ${button.text}
+
+            </div>
+            `;
+
+        }
+
+    );
+
+
+
+    preview.innerHTML =
+
+    `
+    <div class="phone-preview">
+
+        <div class="phone-header">
+
+            WhatsApp
+
+        </div>
+
+        <div class="phone-chat">
+
+            <div class="message">
+
+                ${message}
+
+                ${buttonsHtml}
+
+            </div>
+
+        </div>
+
+    </div>
+    `;
+
+}
