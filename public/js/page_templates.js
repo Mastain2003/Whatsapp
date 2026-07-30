@@ -137,13 +137,178 @@ function renderTemplateList(
     );
 
 }
-
 function showTemplate(
     template
 ){
 
-    console.log(
-        template
+    let header = null;
+    let body = null;
+    let footer = null;
+    let buttons = [];
+
+    template.components.forEach(
+
+        component=>{
+
+            switch(component.type){
+
+                case "HEADER":
+
+                    header = component;
+                    break;
+
+                case "BODY":
+
+                    body = component;
+                    break;
+
+                case "FOOTER":
+
+                    footer = component;
+                    break;
+
+                case "BUTTONS":
+
+                    buttons = component.buttons || [];
+                    break;
+
+            }
+
+        }
+
+    );
+
+
+    const details =
+    document.getElementById(
+        "templateDetails"
+    );
+
+    details.innerHTML =
+    `
+        <h2>${template.name}</h2>
+
+        <div class="section">
+
+            <h4>Information</h4>
+
+            <p>
+
+                <b>Category :</b>
+                ${template.category}
+
+                <br>
+
+                <b>Language :</b>
+                ${template.language}
+
+                <br>
+
+                <b>Status :</b>
+                ${template.status}
+
+            </p>
+
+        </div>
+
+        <div class="section">
+
+            <h4>Header</h4>
+
+            <p>
+
+                ${
+                    header
+                    ?
+
+                    header.format==="TEXT"
+
+                    ?
+
+                    header.text
+
+                    :
+
+                    header.format
+
+                    :
+
+                    "None"
+
+                }
+
+            </p>
+
+        </div>
+
+        <div class="section">
+
+            <h4>Body</h4>
+
+            <pre>
+
+${body ? body.text : ""}
+
+            </pre>
+
+        </div>
+
+        <div class="section">
+
+            <h4>Footer</h4>
+
+            <p>
+
+                ${
+                    footer
+                    ?
+
+                    footer.text
+
+                    :
+
+                    "None"
+
+                }
+
+            </p>
+
+        </div>
+
+        <div class="section">
+
+            <h4>Buttons</h4>
+
+            <ul>
+
+            ${
+                buttons.map(
+
+                    button=>
+
+                    `<li>${button.type} : ${button.text}</li>`
+
+                ).join("")
+
+            }
+
+            </ul>
+
+        </div>
+
+    `;
+
+
+    renderPreview(
+
+        header,
+
+        body,
+
+        footer,
+
+        buttons
+
     );
 
 }
