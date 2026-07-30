@@ -5,7 +5,9 @@ export async function handleTemplates(
     request,
     env
 ){
-
+console.log(
+    request.headers.get("Authorization")
+);
     const authorized =
         await checkAuth(
             request,
