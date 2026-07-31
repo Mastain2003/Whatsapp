@@ -1,15 +1,12 @@
 // worker/excel_import.js
 
-
 import {
     jsonResponse
 } from "./cors_helper.js";
 
-
 import {
     checkAuth
 } from "./auth_service.js";
-
 
 
 
@@ -23,80 +20,72 @@ function generateCustomerCode(id){
 
 
 
-
-
 export async function importCustomers(
     request,
     env
 ){
 
+    try{
 
-
-    const authorized =
+        const authorized =
         await checkAuth(
             request,
             env
         );
 
+        if(!authorized){
 
-    if(!authorized){
+            return jsonResponse(
+                {
+                    success:false,
+                    message:"Unauthorized"
+                },
+                401
+            );
 
-        return jsonResponse(
-            {
-                success:false,
-                message:"Unauthorized"
-            },
-            401
-        );
+        }
 
-    }
+        if(request.method !== "POST"){
 
+            return jsonResponse(
+                {
+                    success:false,
+                    message:"Method not allowed"
+                },
+                405
+            );
 
+        }
 
-
-    const data =
+        const data =
         await request.json();
 
+        if(!Array.isArray(data)){
 
+            return jsonResponse(
+                {
+                    success:false,
+                    message:"Invalid data format"
+                },
+                400
+            );
 
+        }
 
-    if(!Array.isArray(data)){
+        let imported = 0;
+        let skipped = 0;
 
-        return jsonResponse(
-            {
-                success:false,
-                message:"Invalid data format"
-            },
-            400
-        );
-
-    }
-
-
-
-
-
-    let imported = 0;
-
-    let skipped = 0;
-
-
-
-
-    for(
-        const customer of data
-    ){
-
-
-
-        const duplicate =
+        for(
+            const customer of data
+        ){            
+            const duplicate =
             await env.DB
             .prepare(
             `
             SELECT id
             FROM customers
             WHERE
-            name = ?
+                name = ?
             AND designation = ?
             AND department = ?
             AND city = ?
@@ -123,20 +112,17 @@ export async function importCustomers(
 
 
 
+            if(duplicate){
 
-        if(duplicate){
+                skipped++;
 
-            skipped++;
+                continue;
 
-            continue;
-
-        }
-
+            }
 
 
 
-
-        const insert =
+            const insert =
             await env.DB
             .prepare(
             `
@@ -183,52 +169,63 @@ export async function importCustomers(
 
 
 
-
-        const id =
+            const id =
             insert.meta.last_row_id;
 
 
 
+            await env.DB
+            .prepare(
+            `
+            UPDATE customers
+            SET customer_code = ?
+            WHERE id = ?
+            `
+            )
+            .bind(
 
-        await env.DB
-        .prepare(
-        `
-        UPDATE customers
-        SET customer_code = ?
-        WHERE id = ?
-        `
-        )
-        .bind(
+                generateCustomerCode(id),
 
-            generateCustomerCode(id),
+                id
 
-            id
-
-        )
-        .run();
-
+            )
+            .run();
 
 
 
-        imported++;
+            imported++;
 
+        }
+
+
+
+        return jsonResponse({
+
+            success:true,
+
+            imported,
+
+            skipped
+
+        });
 
     }
 
+    catch(error){
 
+        console.error(
+            "Customer import failed:",
+            error
+        );
 
+        return jsonResponse(
+            {
+                success:false,
+                message:error.message
+            },
+            500
+        );
 
-
-    return jsonResponse({
-
-        success:true,
-
-        imported,
-
-        skipped
-
-    });
-
-
+    }
 
 }
