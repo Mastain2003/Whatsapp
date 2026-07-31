@@ -85,25 +85,12 @@ export async function importCustomers(
             SELECT id
             FROM customers
             WHERE
-                name = ?
-            AND designation = ?
-            AND department = ?
-            AND city = ?
-            AND block = ?
-            AND phone = ?
+                 phone = ?
             `
             )
             .bind(
 
-                customer.name,
-
-                customer.designation,
-
-                customer.department,
-
-                customer.city,
-
-                customer.block,
+                
 
                 customer.phone
 
