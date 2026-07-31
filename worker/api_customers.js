@@ -133,7 +133,7 @@ export async function handleCustomers(
     if(method === "POST"){
         const body = await request.json();
         const insert = await env.DB.prepare(               `
-                INSERT INTO customers(
+                INSERT OR IGNORE INTO customers(
                    customer_code,name,designation,department,city,block,phone
                 )
                 VALUES(
