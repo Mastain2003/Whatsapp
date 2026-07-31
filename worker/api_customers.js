@@ -134,21 +134,21 @@ export async function handleCustomers(
         const body = await request.json();
         const insert = await env.DB.prepare(               `
                 INSERT OR IGNORE INTO customers(
-                   customer_code,name,designation,department,city,block,phone
+                   name,designation,department,city,block,phone
                 )
                 VALUES(
-                    ?,?,?,?,?,?,?
+                    ?,?,?,?,?,?
                 )
                 `
             ).bind(
-                "TEMP",body.name,body.designation,body.department, body.city,body.block,body.phone
+                body.name,body.designation,body.department, body.city,body.block,body.phone
             ).run();
 
 
 
 
 
-        const id =  insert.meta.last_row_id;
+     /*   const id =  insert.meta.last_row_id;
         
         const code = generateCustomerCode(id);
         
@@ -164,7 +164,7 @@ export async function handleCustomers(
             code,
             id
         )
-        .run();
+        .run();*/
 
 
 
