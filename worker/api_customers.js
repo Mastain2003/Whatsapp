@@ -111,13 +111,13 @@ export async function handleCustomers(
         if(conditions.length > 0){
             query += " WHERE "+ conditions.join(" AND ");
         }
-        query += `ORDER BY id DESC`;
+        query += ` ORDER BY id DESC`;
 
-        return jsonResponse({
+       /* return jsonResponse({
             success:true,
             customers:query
             //result.results
-        });
+        });*/
         
         const result = await env.DB.prepare(query).bind(...values).all();
 
