@@ -673,7 +673,7 @@ async function loadCustomers(){
 
                     <td>
 
-                        ${customer.customer_code || ""}
+                        ${customer.id || ""}
 
                     </td>
 
