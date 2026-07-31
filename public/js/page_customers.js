@@ -759,9 +759,10 @@ const inputs = document.getElementsByClassName("filter");
 for (const input of inputs) {
     input.addEventListener("keyup", (event) => {
         /*if (event.key === "Enter") {
-            console.log("Enter pressed");*/
+            console.log("Enter pressed");
+          }*/
            loadCustomers();
-        }
+      //  }
     });
 }
 
