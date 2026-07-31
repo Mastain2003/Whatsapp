@@ -114,7 +114,7 @@ export async function importCustomers(
 
                 customer.city,
 
-                customer.block
+                customer.block,
 
                 customer.phone
 
