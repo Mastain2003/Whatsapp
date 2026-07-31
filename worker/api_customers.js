@@ -70,11 +70,11 @@ export async function handleCustomers(
     // GET CUSTOMERS
 
     if(method === "GET"){
-        return jsonResponse({
+       /* return jsonResponse({
             success:true,
             customers:" in get"
             //result.results
-        });
+        });*/
         let query = `SELECT * FROM customers`;
         let conditions = [];
         let values = [];
@@ -112,6 +112,12 @@ export async function handleCustomers(
             query += " WHERE "+ conditions.join(" AND ");
         }
         query += `ORDER BY id DESC`;
+
+        return jsonResponse({
+            success:true,
+            customers:query
+            //result.results
+        });
         
         const result = await env.DB.prepare(query).bind(...values).all();
 
