@@ -70,6 +70,11 @@ export async function handleCustomers(
     // GET CUSTOMERS
 
     if(method === "GET"){
+        return jsonResponse({
+            success:true,
+            customers:" in get"
+            //result.results
+        });
         let query = `SELECT * FROM customers`;
         let conditions = [];
         let values = [];
