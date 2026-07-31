@@ -915,7 +915,7 @@ async function(){
             return;
 
         }
-
+        console.log(JSON.stringify(customers) );
         const result =
         await apiFetch(
 
