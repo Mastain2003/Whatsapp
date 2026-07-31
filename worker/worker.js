@@ -184,6 +184,7 @@ if (path === "/broadcast") {
       if(
     path === "/customers/import"
 ){
+       console.log("importing customers");
 
     return importCustomers(
         request,
