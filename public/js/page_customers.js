@@ -754,15 +754,24 @@ async function loadCustomers(){
 }
 
 
+const inputs = document.getElementsByClassName("filter");
+
+for (const input of inputs) {
+    input.addEventListener("keyup", (event) => {
+        /*if (event.key === "Enter") {
+            console.log("Enter pressed");*/
+           loadCustomers();
+        }
+    });
+}
 
 
-
-document
+/*document
 .getElementById(
     "btnSearch"
 )
 .onclick =
-loadCustomers;
+loadCustomers;*/
 
 // Excel Import
 
