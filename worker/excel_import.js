@@ -72,7 +72,7 @@ export async function importCustomers(
 
         }
 
-        let imported = 0;
+       /* let imported = 0;
         let skipped = 0;
 
         for(
@@ -182,7 +182,34 @@ export async function importCustomers(
 
             imported++;
 
-        }
+        }*/
+
+        const statements = [];
+
+for (const customer of data) {
+    statements.push(
+        env.DB.prepare(`
+            INSERT OR IGNORE INTO customers (
+                name,
+                designation,
+                department,
+                city,
+                block,
+                phone
+            )
+            VALUES (?, ?, ?, ?, ?,  ?)
+        `).bind(
+            customer.name,
+            customer.designation,
+            customer.department,
+            customer.city,
+            customer.block,
+            customer.phone
+        )
+    );
+}
+
+const results = await env.DB.batch(statements);
 
 
 
