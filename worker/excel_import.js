@@ -100,6 +100,7 @@ export async function importCustomers(
             AND designation = ?
             AND department = ?
             AND city = ?
+            AND block = ?
             AND phone = ?
             `
             )
@@ -112,6 +113,8 @@ export async function importCustomers(
                 customer.department,
 
                 customer.city,
+
+                customer.block
 
                 customer.phone
 
@@ -144,10 +147,12 @@ export async function importCustomers(
                 designation,
                 department,
                 city,
+                block,
                 phone
             )
             VALUES
             (
+                ?,
                 ?,
                 ?,
                 ?,
@@ -168,6 +173,8 @@ export async function importCustomers(
                 customer.department,
 
                 customer.city,
+
+                customer.block,
 
                 customer.phone
 
