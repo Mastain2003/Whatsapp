@@ -15,6 +15,7 @@ export async function handleTemplates(
         );
 
     if(!authorized){
+        console.log("not authorised");
 
         return jsonResponse(
             {
