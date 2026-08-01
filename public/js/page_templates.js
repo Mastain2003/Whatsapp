@@ -387,7 +387,7 @@ ${body ? body.text : ""}
 
         </div>
 
-    `;
+    
 
     <div class="section send-test-section">
     <h4>
@@ -416,6 +416,7 @@ ${body ? body.text : ""}
 
     </div>
 </div>
+`;
 
     renderPreview(
 
