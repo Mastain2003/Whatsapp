@@ -41,7 +41,8 @@ import {
 from "./api_whatsapp_webhook.js";
 
 import {
-    handleTemplates
+    handleTemplates,
+    handleSendTemplate
 } from "./api_templates.js";
 
 
@@ -265,6 +266,17 @@ if(
 ){
 
     return handleTemplates(
+        request,
+        env
+    );
+
+     }
+
+     if(
+    path === "/templates/send"
+){
+
+    return handleSendTemplate(
         request,
         env
     );
