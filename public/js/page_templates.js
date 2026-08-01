@@ -328,6 +328,36 @@ ${body ? body.text : ""}
 
         </div>
 
+        // Add this inside details.innerHTML, below the Variables section
+
+<div class="section send-test-section">
+    <h4>
+        📱 Send Template
+    </h4>
+
+    <div class="send-test-form">
+
+        <label>
+            WhatsApp Number
+        </label>
+
+        <input
+            type="text"
+            id="testPhone"
+            placeholder="919955160127">
+
+        <button
+            type="button"
+            id="btnSendTemplate"
+            class="btn-send-template">
+            🚀 Send Template
+        </button>
+
+        <div id="sendTemplateResult" class="send-result"></div>
+
+    </div>
+</div>
+
 
         <div class="section">
 
@@ -433,6 +463,98 @@ ${body ? body.text : ""}
         }
 
     );
+
+    // Send Template button
+
+const sendBtn =
+document.getElementById("btnSendTemplate");
+
+if(sendBtn){
+
+    sendBtn.onclick =
+    async function(){
+
+        const phone =
+        document
+        .getElementById("testPhone")
+        .value
+        .trim()
+        .replace(/[^\d]/g,"");
+
+        const resultBox =
+        document.getElementById("sendTemplateResult");
+
+        if(!phone){
+
+            resultBox.innerHTML =
+            "<span style='color:red'>Enter phone number</span>";
+
+            return;
+
+        }
+
+        // Collect variable values
+        const variables = [];
+
+        document
+        .querySelectorAll(".variable-input")
+        .forEach(input=>{
+            variables.push(input.value);
+        });
+
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = "Sending...";
+
+        try{
+
+            const response =
+            await apiFetch(
+                "/templates/send",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify({
+                        phone,
+                        template:template.name,
+                        language:template.language,
+                        variables
+                    })
+                }
+            );
+
+            if(response && response.success){
+
+                resultBox.innerHTML =
+                `<span style="color:green">✅ Template sent successfully</span><br>Message ID: ${response.messageId || ""}`;
+
+            }
+            else{
+
+                resultBox.innerHTML =
+                `<span style="color:red">❌ ${response?.message || "Failed to send template"}</span>`;
+
+            }
+
+        }
+        catch(error){
+
+            console.error(error);
+
+            resultBox.innerHTML =
+            "<span style='color:red'>❌ Unable to send template</span>";
+
+        }
+        finally{
+
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = "🚀 Send Template";
+
+        }
+
+    };
+}
 
 }
 
