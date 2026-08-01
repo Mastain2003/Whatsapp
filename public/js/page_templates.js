@@ -834,6 +834,106 @@ async function sendTemplate(template){
 
     let components = [];
 
+    const header = template.components.find(
+    c => c.type === "HEADER"
+);
+
+if (
+    header &&
+    header.example &&
+    header.example.header_handle
+) {
+
+    const handle =
+    header.example.header_handle[0];
+
+    if (header.format === "IMAGE") {
+
+        components.unshift({
+
+            type: "header",
+
+            parameters: [
+
+                {
+
+                    type: "image",
+
+                    image: {
+
+                        id: handle
+
+                    }
+
+                }
+
+            ]
+
+        });
+
+    }
+
+    else if (header.format === "VIDEO") {
+
+        components.unshift({
+
+            type: "header",
+
+            parameters: [
+
+                {
+
+                    type: "video",
+
+                    video: {
+
+                        id: handle
+
+                    }
+
+                }
+
+            ]
+
+        });
+
+    }
+
+    else if (header.format === "DOCUMENT") {
+
+        components.unshift({
+
+            type: "header",
+
+            parameters: [
+
+                {
+
+                    type: "document",
+
+                    document: {
+
+                        id: handle
+
+                    }
+
+                }
+
+            ]
+
+        });
+
+    }
+
+    else if (header.format === "TEXT") {
+
+        // Don't send anything.
+        // Meta automatically uses the template text.
+
+    }
+
+}
+
     const inputs =
     document.querySelectorAll(
         ".variable-input"
