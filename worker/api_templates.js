@@ -98,3 +98,138 @@ console.log(
     }
 
 }
+
+export async function handleSendTemplate(
+    request,
+    env
+){
+
+    const authorized =
+    await checkAuth(
+        request,
+        env
+    );
+
+    if(!authorized){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"Unauthorized"
+            },
+            401
+        );
+
+    }
+
+    if(request.method !== "POST"){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"Method not allowed"
+            },
+            405
+        );
+
+    }
+
+    try{
+
+        const body =
+        await request.json();
+
+        const response =
+        await fetch(
+
+            "https://graph.facebook.com/v23.0/" +
+            env.WHATSAPP_PHONE_NUMBER_ID +
+            "/messages",
+
+            {
+
+                method:"POST",
+
+                headers:{
+
+                    "Authorization":
+                    "Bearer " +
+                    env.WHATSAPP_SEND_TOKEN,
+
+                    "Content-Type":
+                    "application/json"
+
+                },
+
+                body:JSON.stringify({
+
+                    messaging_product:
+                    "whatsapp",
+
+                    to:
+                    body.phone,
+
+                    type:
+                    "template",
+
+                    template:{
+
+                        name:
+                        body.template,
+
+                        language:{
+
+                            code:
+                            body.language
+
+                        },
+
+                        components:
+                        body.components || []
+
+                    }
+
+                })
+
+            }
+
+        );
+
+        const result =
+        await response.json();
+
+        if(!response.ok){
+
+            return jsonResponse(
+                {
+                    success:false,
+                    error:result
+                },
+                response.status
+            );
+
+        }
+
+        return jsonResponse({
+
+            success:true,
+
+            result
+
+        });
+
+    }
+
+    catch(error){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:error.message
+            },
+            500
+        );
+
+    }
+
+}
