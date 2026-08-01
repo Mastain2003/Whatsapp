@@ -143,7 +143,7 @@ export async function handleSendTemplate(
         await fetch(
 
             "https://graph.facebook.com/v23.0/" +
-            env.WHATSAPP_PHONE_NUMBER_ID +
+            env.PHONE_NUMBER_ID +
             "/messages",
 
             {
