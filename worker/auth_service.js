@@ -130,7 +130,7 @@ export async function checkAuth(
     request,
     env
 ){
-   // alert(request.path);
+   console.log(request);
     const auth =
     request.headers.get(
         "Authorization"
@@ -168,6 +168,7 @@ export async function checkAuth(
     .first();
 
     if(!session){
+        console.log("no session");
 
         return null;
 
@@ -183,7 +184,7 @@ export async function checkAuth(
         new Date(session.expires_at) <
         new Date()
     ){
-
+        console.log("expired");
         await env.DB
         .prepare(
         `
