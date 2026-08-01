@@ -328,35 +328,8 @@ ${body ? body.text : ""}
 
         </div>
 
-        // Add this inside details.innerHTML, below the Variables section
 
-<div class="section send-test-section">
-    <h4>
-        📱 Send Template
-    </h4>
 
-    <div class="send-test-form">
-
-        <label>
-            WhatsApp Number
-        </label>
-
-        <input
-            type="text"
-            id="testPhone"
-            placeholder="919955160127">
-
-        <button
-            type="button"
-            id="btnSendTemplate"
-            class="btn-send-template">
-            🚀 Send Template
-        </button>
-
-        <div id="sendTemplateResult" class="send-result"></div>
-
-    </div>
-</div>
 
 
         <div class="section">
@@ -416,6 +389,33 @@ ${body ? body.text : ""}
 
     `;
 
+    <div class="section send-test-section">
+    <h4>
+        📱 Send Template
+    </h4>
+
+    <div class="send-test-form">
+
+        <label>
+            WhatsApp Number
+        </label>
+
+        <input
+            type="text"
+            id="testPhone"
+            placeholder="919955160127">
+
+        <button
+            type="button"
+            id="btnSendTemplate"
+            class="btn-send-template">
+            🚀 Send Template
+        </button>
+
+        <div id="sendTemplateResult" class="send-result"></div>
+
+    </div>
+</div>
 
     renderPreview(
 
