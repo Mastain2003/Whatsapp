@@ -556,6 +556,24 @@ if(sendBtn){
     };
 }
 
+    const sendButton =
+document.getElementById(
+    "btnSendTemplate"
+);
+
+if(sendButton){
+
+    sendButton.onclick =
+    ()=>{
+
+        sendTemplate(
+            template
+        );
+
+    };
+
+}
+
 }
 
 function renderPreview(
@@ -791,5 +809,125 @@ function renderPreview(
 
     </div>
     `;
+
+}
+
+
+async function sendTemplate(template){
+
+    const phone =
+    document
+    .getElementById("testPhone")
+    .value
+    .trim();
+
+    if(!phone){
+
+        alert(
+            "Enter WhatsApp number"
+        );
+
+        return;
+
+    }
+
+    let components = [];
+
+    const inputs =
+    document.querySelectorAll(
+        ".variable-input"
+    );
+
+    if(inputs.length){
+
+        components.push({
+
+            type:"body",
+
+            parameters:
+
+            [...inputs].map(
+
+                input=>({
+
+                    type:"text",
+
+                    text:input.value
+
+                })
+
+            )
+
+        });
+
+    }
+
+    const result =
+    await apiFetch(
+
+        "/templates/send",
+
+        {
+
+            method:"POST",
+
+            headers:{
+
+                "Content-Type":
+                "application/json"
+
+            },
+
+            body:JSON.stringify({
+
+                phone,
+
+                template:
+                template.name,
+
+                language:
+                template.language,
+
+                components
+
+            })
+
+        }
+
+    );
+
+    const message =
+    document.getElementById(
+        "sendTemplateResult"
+    );
+
+    if(!result){
+
+        return;
+
+    }
+
+    if(result.success){
+
+        message.style.color =
+        "green";
+
+        message.innerHTML =
+        "✅ Template sent successfully";
+
+    }
+
+    else{
+
+        message.style.color =
+        "red";
+
+        message.innerHTML =
+
+        result.message ||
+
+        JSON.stringify(result.error);
+
+    }
 
 }
