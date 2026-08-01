@@ -63,7 +63,7 @@ console.log(
             await response.json();
 
         if(!response.ok){
-
+            console.log(response);
             return jsonResponse(
                 {
                     success:false,
