@@ -112,3 +112,35 @@ async function(){
     }
 
 };
+
+const password =
+document.getElementById(
+    "password"
+);
+
+const toggle =
+document.getElementById(
+    "togglePassword"
+);
+
+toggle.onclick = () => {
+
+    if(
+        password.type === "password"
+    ){
+
+        password.type = "text";
+
+        toggle.textContent = "🙈";
+
+    }
+
+    else{
+
+        password.type = "password";
+
+        toggle.textContent = "👁";
+
+    }
+
+};
