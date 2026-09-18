@@ -1,236 +1,303 @@
 import { jsonResponse } from "./cors_helper.js";
 import { checkAuth } from "./auth_service.js";
 
-export async function handleTemplates(
-    request,
-    env
-){
-console.log(
-    request.headers.get("Authorization")
-);
-    const authorized =
-        await checkAuth(
-            request,
-            env
-        );
+const GRAPH_API_VERSION = "v23.0";
 
-    if(!authorized){
-        console.log("not authorised");
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Unauthorized"
-            },
-            401
-        );
-
-    }
-
-    if(request.method !== "GET"){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Method not allowed"
-            },
-            405
-        );
-
-    }
-
-    try{
-
-        const response =
-            await fetch(
-
-                `https://graph.facebook.com/v23.0/${env.WHATSAPP_BUSINESS_ACCOUNT_ID}/message_templates`,
-
-                {
-
-                    headers:{
-
-                        Authorization:
-                        `Bearer ${env.WHATSAPP_SEND_TOKEN}`
-
-                    }
-
-                }
-
-            );
-
-        const result =
-            await response.json();
-
-        if(!response.ok){
-            console.log(response);
-            return jsonResponse(
-                {
-                    success:false,
-                    message:"Meta API Error",
-                    error:result
-                },
-                response.status
-            );
-
-        }
-
-        return jsonResponse({
-
-            success:true,
-
-            templates:
-            result.data || []
-
-        });
-
-    }
-
-    catch(error){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:error.message
-            },
-            500
-        );
-
-    }
-
+function normalizePhone(phone) {
+    return String(phone || "").replace(/[^\d]/g, "");
 }
 
-export async function handleSendTemplate(
-    request,
-    env
-){
+function isValidLanguageCode(language) {
+    return typeof language === "string" && /^[a-z]{2,3}(?:[_-][A-Z]{2})?$/.test(language);
+}
 
-    const authorized =
-    await checkAuth(
-        request,
-        env
-    );
-
-    if(!authorized){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Unauthorized"
-            },
-            401
-        );
-
+function cleanComponents(components) {
+    if (!Array.isArray(components)) {
+        return [];
     }
 
-    if(request.method !== "POST"){
+    return components
+        .filter(component => component && typeof component === "object")
+        .map(component => {
+            const cleaned = {
+                type: component.type
+            };
 
-        return jsonResponse(
-            {
-                success:false,
-                message:"Method not allowed"
-            },
-            405
-        );
+            if (Array.isArray(component.parameters) && component.parameters.length) {
+                cleaned.parameters = component.parameters
+                    .filter(parameter => parameter && typeof parameter === "object")
+                    .map(parameter => {
+                        const result = {
+                            type: parameter.type
+                        };
 
-    }
+                        if (parameter.text !== undefined) {
+                            result.text = String(parameter.text);
+                        }
 
-    try{
+                        if (parameter.image) {
+                            result.image = parameter.image;
+                        }
 
-        const body =
-        await request.json();
+                        if (parameter.video) {
+                            result.video = parameter.video;
+                        }
 
-        const response =
-        await fetch(
+                        if (parameter.document) {
+                            result.document = parameter.document;
+                        }
 
-            "https://graph.facebook.com/v23.0/" +
-            env.PHONE_NUMBER_ID +
-            "/messages",
+                        if (parameter.currency) {
+                            result.currency = parameter.currency;
+                        }
 
-            {
+                        if (parameter.date_time) {
+                            result.date_time = parameter.date_time;
+                        }
 
-                method:"POST",
-
-                headers:{
-
-                    "Authorization":
-                    "Bearer " +
-                    env.WHATSAPP_SEND_TOKEN,
-
-                    "Content-Type":
-                    "application/json"
-
-                },
-
-                body:JSON.stringify({
-
-                    messaging_product:
-                    "whatsapp",
-
-                    to:
-                    body.phone,
-
-                    type:
-                    "template",
-
-                    template:{
-
-                        name:
-                        body.template,
-
-                        language:{
-
-                            code:
-                            body.language
-
-                        },
-
-                        components:
-                        body.components || []
-
-                    }
-
-                })
-
+                        return result;
+                    });
             }
 
+            return cleaned;
+        })
+        .filter(component =>
+            component.type &&
+            (
+                !component.parameters ||
+                component.parameters.length > 0
+            )
         );
+}
 
-        const result =
-        await response.json();
+async function getGraphError(response) {
+    try {
+        return await response.json();
+    } catch {
+        return {
+            message: `Meta API returned HTTP ${response.status}`
+        };
+    }
+}
 
-        if(!response.ok){
+export async function handleTemplates(request, env) {
 
-            return jsonResponse(
-                {
-                    success:false,
-                    error:result
-                },
-                response.status
-            );
+    const authorized = await checkAuth(request, env);
 
-        }
-
+    if (!authorized) {
         return jsonResponse({
+            success: false,
+            message: "Unauthorized"
+        }, 401);
+    }
 
-            success:true,
+    if (request.method !== "GET") {
+        return jsonResponse({
+            success: false,
+            message: "Method not allowed"
+        }, 405);
+    }
 
-            result
+    if (!env.WHATSAPP_BUSINESS_ACCOUNT_ID) {
+        return jsonResponse({
+            success: false,
+            message: "WHATSAPP_BUSINESS_ACCOUNT_ID is not configured"
+        }, 500);
+    }
 
+    if (!env.WHATSAPP_SEND_TOKEN) {
+        return jsonResponse({
+            success: false,
+            message: "WHATSAPP_SEND_TOKEN is not configured"
+        }, 500);
+    }
+
+    try {
+        const url =
+            `https://graph.facebook.com/${GRAPH_API_VERSION}/` +
+            `${env.WHATSAPP_BUSINESS_ACCOUNT_ID}/message_templates`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${env.WHATSAPP_SEND_TOKEN}`
+            }
         });
 
+        if (!response.ok) {
+            const error = await getGraphError(response);
+
+            return jsonResponse({
+                success: false,
+                message: "Meta API Error",
+                error
+            }, response.status);
+        }
+
+        const result = await response.json();
+
+        return jsonResponse({
+            success: true,
+            templates: result.data || [],
+            paging: result.paging || null
+        });
+
+    } catch (error) {
+        console.error("Get templates error:", error);
+
+        return jsonResponse({
+            success: false,
+            message: error.message || "Unable to load templates"
+        }, 500);
+    }
+}
+
+export async function handleSendTemplate(request, env) {
+
+    const authorized = await checkAuth(request, env);
+
+    if (!authorized) {
+        return jsonResponse({
+            success: false,
+            message: "Unauthorized"
+        }, 401);
     }
 
-    catch(error){
+    if (request.method !== "POST") {
+        return jsonResponse({
+            success: false,
+            message: "Method not allowed"
+        }, 405);
+    }
 
-        return jsonResponse(
+    if (!env.PHONE_NUMBER_ID) {
+        return jsonResponse({
+            success: false,
+            message: "PHONE_NUMBER_ID is not configured"
+        }, 500);
+    }
+
+    if (!env.WHATSAPP_SEND_TOKEN) {
+        return jsonResponse({
+            success: false,
+            message: "WHATSAPP_SEND_TOKEN is not configured"
+        }, 500);
+    }
+
+    try {
+        const body = await request.json();
+
+        const phone = normalizePhone(body.phone);
+        const templateName = String(body.template || "").trim();
+        const language = String(body.language || "").trim();
+
+        if (!phone) {
+            return jsonResponse({
+                success: false,
+                message: "Phone number is required"
+            }, 400);
+        }
+
+        if (!/^\d{8,15}$/.test(phone)) {
+            return jsonResponse({
+                success: false,
+                message: "Invalid WhatsApp phone number"
+            }, 400);
+        }
+
+        if (!templateName) {
+            return jsonResponse({
+                success: false,
+                message: "Template name is required"
+            }, 400);
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(templateName)) {
+            return jsonResponse({
+                success: false,
+                message: "Invalid template name"
+            }, 400);
+        }
+
+        if (!isValidLanguageCode(language)) {
+            return jsonResponse({
+                success: false,
+                message: "Valid template language code is required"
+            }, 400);
+        }
+
+        const components = cleanComponents(body.components);
+
+        const payload = {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: phone,
+            type: "template",
+            template: {
+                name: templateName,
+                language: {
+                    code: language
+                }
+            }
+        };
+
+        if (components.length > 0) {
+            payload.template.components = components;
+        }
+
+        console.log("Sending WhatsApp template:", {
+            to: phone,
+            template: templateName,
+            language,
+            componentCount: components.length
+        });
+
+        const response = await fetch(
+            `https://graph.facebook.com/${GRAPH_API_VERSION}/` +
+            `${env.PHONE_NUMBER_ID}/messages`,
             {
-                success:false,
-                message:error.message
-            },
-            500
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${env.WHATSAPP_SEND_TOKEN}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }
         );
 
-    }
+        const result = response.ok
+            ? await response.json()
+            : await getGraphError(response);
 
+        if (!response.ok) {
+            console.error("Meta send template error:", result);
+
+            return jsonResponse({
+                success: false,
+                message:
+                    result?.error?.message ||
+                    result?.message ||
+                    "Meta API Error",
+                error: result
+            }, response.status);
+        }
+
+        const messageId =
+            result?.messages?.[0]?.id || null;
+
+        return jsonResponse({
+            success: true,
+            messageId,
+            result
+        });
+
+    } catch (error) {
+        console.error("Send template error:", error);
+
+        return jsonResponse({
+            success: false,
+            message: error.message || "Unable to send template"
+        }, 500);
+    }
 }
+
