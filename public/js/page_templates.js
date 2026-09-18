@@ -461,6 +461,8 @@ function renderPreview(
         }
 
         else if (header.format === "IMAGE") {
+            const image = header.example ?.header_handle?.[0];
+            if(image){
             message += `
                 <div
                     style="
@@ -470,9 +472,15 @@ function renderPreview(
                         border-radius:8px;
                         margin-bottom:10px;
                     ">
-                    🖼️ Image header
+                    <img
+                src="${image}"
+                style="
+                width:100%;
+                border-radius:8px;
+                margin-bottom:10px;
+                ">
                 </div>
-            `;
+            `;}
         }
 
         else if (header.format === "VIDEO") {
