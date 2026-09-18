@@ -610,7 +610,7 @@ function buildHeaderComponent(template) {
      *     type: "image" | "video" | "document",
      *     id: "MEDIA_ID"
      * }
-     */
+     
 
     if (template._sendMedia?.id) {
         const media =
@@ -630,6 +630,20 @@ function buildHeaderComponent(template) {
                     type: media.type,
                     [media.type]: {
                        // id: media.id
+                        "link": "https://whatsapp.mastain.in/img/1784960031243.png"
+                    }
+                }
+            ]
+        };
+    }*/
+
+    if (header.format === "IMAGE") {
+        return {
+            type: "header",
+            parameters: [
+                {
+                    type: "image",
+                    image: {
                         "link": "https://whatsapp.mastain.in/img/1784960031243.png"
                     }
                 }
