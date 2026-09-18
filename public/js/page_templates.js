@@ -8,1027 +8,800 @@ import {
 } from "./sidebar.js";
 
 requireLogin();
-
 loadSidebar("templates");
+
+let selectedTemplate = null;
 
 init();
 
-async function init(){
+async function init() {
+    try {
+        const result = await apiFetch("/templates");
 
-    try{
-
-        const result =
-        await apiFetch(
-            "/templates"
-        );
-
-        if(!result){
-
+        if (!result) {
             return;
-
         }
 
-        if(!result.success){
-
-            alert(
-                result.message
-            );
-
+        if (!result.success) {
+            alert(result.message || "Unable to load templates");
             return;
-
         }
 
-        window.templates =
-        result.templates;
+        window.templates = Array.isArray(result.templates)
+            ? result.templates
+            : [];
 
-        renderTemplateList(
-            result.templates
-        );
+        renderTemplateList(window.templates);
 
+        if (!window.templates.length) {
+            showEmptyTemplateState();
+        }
+
+    } catch (error) {
+        console.error("Template loading error:", error);
+        alert("Unable to load WhatsApp templates");
     }
-
-    catch(error){
-
-        console.error(error);
-
-    }
-
 }
 
-function renderTemplateList(
-    templates
-){
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
+function escapeAttribute(value) {
+    return escapeHtml(value);
+}
+
+function showEmptyTemplateState() {
+    const list = document.getElementById("templateList");
+
+    if (list) {
+        list.innerHTML =
+            `<div class="no-templates">Nothing to display</div>`;
+    }
+}
+
+function renderTemplateList(templates) {
     const list =
-    document.getElementById(
-        "templateList"
-    );
+        document.getElementById("templateList");
+
+    if (!list) {
+        return;
+    }
 
     list.innerHTML = "";
 
-    templates.forEach(
+    if (!Array.isArray(templates) || templates.length === 0) {
+        showEmptyTemplateState();
+        return;
+    }
 
-        template=>{
+    templates.forEach(template => {
+        const card =
+            document.createElement("div");
 
-            const card =
-            document.createElement(
-                "div"
-            );
+        card.className = "template-card";
 
-            card.className =
-            "template-card";
-
-            card.innerHTML =
-
-            `
+        card.innerHTML = `
             <div class="template-name">
-
-                ${template.name}
-
+                ${escapeHtml(template.name)}
             </div>
 
             <div class="template-info">
-
-                ${template.category}
+                ${escapeHtml(template.category || "")}
                 <br>
-
-                ${template.language}
-
+                ${escapeHtml(template.language || "")}
             </div>
 
             <div class="template-status">
-
-                ${template.status}
-
+                ${escapeHtml(template.status || "")}
             </div>
-            `;
+        `;
 
-            card.onclick =
-            ()=>{
+        card.addEventListener("click", () => {
+            document
+                .querySelectorAll(".template-card")
+                .forEach(c => c.classList.remove("active"));
 
-                document
-                .querySelectorAll(
-                    ".template-card"
-                )
-                .forEach(
+            card.classList.add("active");
 
-                    c=>c.classList.remove(
-                        "active"
-                    )
+            selectedTemplate = template;
+            showTemplate(template);
+        });
 
-                );
-
-                card.classList.add(
-                    "active"
-                );
-
-                showTemplate(
-                    template
-                );
-
-            };
-
-            list.appendChild(
-                card
-            );
-
-        }
-
-    );
-
+        list.appendChild(card);
+    });
 }
 
-function showTemplate(template){
+function getComponents(template) {
+    return Array.isArray(template?.components)
+        ? template.components
+        : [];
+}
 
-    let header = null;
-    let body = null;
-    let footer = null;
-    let buttons = [];
+function getComponent(template, type) {
+    return getComponents(template)
+        .find(component => component.type === type);
+}
 
-    template.components.forEach(component=>{
+function getBodyVariableCount(template) {
+    const body = getComponent(template, "BODY");
 
-        switch(component.type){
+    if (!body) {
+        return 0;
+    }
 
-            case "HEADER":
-                header = component;
-                break;
+    const text = body.text || "";
 
-            case "BODY":
-                body = component;
-                break;
+    const matches =
+        text.match(/\{\{\s*\d+\s*\}\}/g) || [];
 
-            case "FOOTER":
-                footer = component;
-                break;
+    return matches.length;
+}
 
-            case "BUTTONS":
-                buttons = component.buttons || [];
-                break;
+function getHeaderVariableCount(template) {
+    const header = getComponent(template, "HEADER");
 
-        }
+    if (!header || header.format !== "TEXT") {
+        return 0;
+    }
 
-    });
+    const text = header.text || "";
 
+    const matches =
+        text.match(/\{\{\s*\d+\s*\}\}/g) || [];
+
+    return matches.length;
+}
+
+function getVariableExamples(template, componentType) {
+    const component =
+        getComponent(template, componentType);
+
+    if (!component?.example) {
+        return [];
+    }
+
+    if (
+        componentType === "BODY" &&
+        Array.isArray(component.example.body_text) &&
+        Array.isArray(component.example.body_text[0])
+    ) {
+        return component.example.body_text[0];
+    }
+
+    if (
+        componentType === "HEADER" &&
+        Array.isArray(component.example.header_text)
+    ) {
+        return component.example.header_text;
+    }
+
+    return [];
+}
+
+function showTemplate(template) {
+    const components = getComponents(template);
+
+    const header =
+        components.find(c => c.type === "HEADER");
+
+    const body =
+        components.find(c => c.type === "BODY");
+
+    const footer =
+        components.find(c => c.type === "FOOTER");
+
+    const buttons =
+        components.find(c => c.type === "BUTTONS")?.buttons || [];
+
+    const bodyVariableCount =
+        getBodyVariableCount(template);
+
+    const headerVariableCount =
+        getHeaderVariableCount(template);
+
+    const bodyExamples =
+        getVariableExamples(template, "BODY");
+
+    const headerExamples =
+        getVariableExamples(template, "HEADER");
 
     let variablesHtml = "";
 
-    if(
+    if (headerVariableCount > 0) {
+        for (let index = 0; index < headerVariableCount; index++) {
+            const value =
+                headerExamples[index] ?? "";
 
-        body &&
-        body.example &&
-        body.example.body_text
-
-    ){
-
-        body.example.body_text[0].forEach(
-
-            (value,index)=>{
-
-                variablesHtml +=
-
-                `
+            variablesHtml += `
                 <div class="variable">
-
-                    <label>
-
-                        {{${index+1}}}
-
-                    </label>
+                    <label>Header {{${index + 1}}}</label>
 
                     <input
-                    class="variable-input"
-                    data-index="${index}"
-                    value="${value}">
-
+                        class="variable-input header-variable-input"
+                        data-component="header"
+                        data-index="${index}"
+                        value="${escapeAttribute(value)}"
+                        placeholder="Enter value">
                 </div>
-                `;
-
-            }
-
-        );
-
+            `;
+        }
     }
 
+    if (bodyVariableCount > 0) {
+        for (let index = 0; index < bodyVariableCount; index++) {
+            const value =
+                bodyExamples[index] ?? "";
+
+            variablesHtml += `
+                <div class="variable">
+                    <label>Body {{${index + 1}}}</label>
+
+                    <input
+                        class="variable-input body-variable-input"
+                        data-component="body"
+                        data-index="${index}"
+                        value="${escapeAttribute(value)}"
+                        placeholder="Enter value">
+                </div>
+            `;
+        }
+    }
+
+    if (!variablesHtml) {
+        variablesHtml = "No variables";
+    }
 
     const details =
-    document.getElementById(
-        "templateDetails"
-    );
+        document.getElementById("templateDetails");
 
+    if (!details) {
+        return;
+    }
 
-    details.innerHTML =
-
-    `
-        <h2>
-
-            ${template.name}
-
-        </h2>
-
+    details.innerHTML = `
+        <h2>${escapeHtml(template.name)}</h2>
 
         <div class="section">
-
-            <h4>
-
-                Information
-
-            </h4>
+            <h4>Information</h4>
 
             <p>
-
                 <b>Category :</b>
-
-                ${template.category}
-
+                ${escapeHtml(template.category || "")}
                 <br>
 
                 <b>Language :</b>
-
-                ${template.language}
-
+                ${escapeHtml(template.language || "")}
                 <br>
 
                 <b>Status :</b>
-
-                ${template.status}
-
+                ${escapeHtml(template.status || "")}
             </p>
-
         </div>
 
-
         <div class="section">
-
-            <h4>
-
-                Header
-
-            </h4>
+            <h4>Header</h4>
 
             <p>
-
-            ${
-                header
-
-                ?
-
-                header.format==="TEXT"
-
-                ?
-
-                header.text
-
-                :
-
-                header.format
-
-                :
-
-                "None"
-
-            }
-
+                ${
+                    header
+                        ? header.format === "TEXT"
+                            ? escapeHtml(header.text || "")
+                            : escapeHtml(header.format || "")
+                        : "None"
+                }
             </p>
-
         </div>
 
-
         <div class="section">
+            <h4>Body</h4>
 
-            <h4>
-
-                Body
-
-            </h4>
-
-            <pre>
-
-${body ? body.text : ""}
-
-            </pre>
-
+            <pre>${escapeHtml(body?.text || "")}</pre>
         </div>
 
-
         <div class="section">
+            <h4>Variables</h4>
 
-            <h4>
-
-                Variables
-
-            </h4>
-
-            ${
-
-                variablesHtml ||
-
-                "No variables"
-
-            }
-
+            ${variablesHtml}
         </div>
 
-
-
-
-
         <div class="section">
-
-            <h4>
-
-                Footer
-
-            </h4>
+            <h4>Footer</h4>
 
             <p>
-
-            ${
-
-                footer
-
-                ?
-
-                footer.text
-
-                :
-
-                "None"
-
-            }
-
+                ${
+                    footer
+                        ? escapeHtml(footer.text || "")
+                        : "None"
+                }
             </p>
-
         </div>
-
 
         <div class="section">
-
-            <h4>
-
-                Buttons
-
-            </h4>
-
-            <ul>
+            <h4>Buttons</h4>
 
             ${
-
-                buttons.map(
-
-                    button=>
-
-                    `<li>${button.type} : ${button.text}</li>`
-
-                ).join("")
-
+                buttons.length
+                    ? `<ul>
+                        ${buttons.map(button => `
+                            <li>
+                                ${escapeHtml(button.type || "")}
+                                :
+                                ${escapeHtml(button.text || "")}
+                            </li>
+                        `).join("")}
+                    </ul>`
+                    : "<p>No buttons</p>"
             }
-
-            </ul>
-
         </div>
 
-    
+        <div class="section send-test-section">
+            <h4>📱 Send Template</h4>
 
-    <div class="section send-test-section">
-    <h4>
-        📱 Send Template
-    </h4>
+            <div class="send-test-form">
+                <label>WhatsApp Number</label>
 
-    <div class="send-test-form">
+                <input
+                    type="text"
+                    id="testPhone"
+                    inputmode="numeric"
+                    placeholder="919955160127">
 
-        <label>
-            WhatsApp Number
-        </label>
+                <button
+                    type="button"
+                    id="btnSendTemplate"
+                    class="btn-send-template">
+                    🚀 Send Template
+                </button>
 
-        <input
-            type="text"
-            id="testPhone"
-            placeholder="919955160127">
-
-        <button
-            type="button"
-            id="btnSendTemplate"
-            class="btn-send-template">
-            🚀 Send Template
-        </button>
-
-        <div id="sendTemplateResult" class="send-result"></div>
-
-    </div>
-</div>
-`;
+                <div
+                    id="sendTemplateResult"
+                    class="send-result">
+                </div>
+            </div>
+        </div>
+    `;
 
     renderPreview(
-
         header,
-
         body,
-
         footer,
-
         buttons
-
     );
-
 
     document
-    .querySelectorAll(
-        ".variable-input"
-    )
-    .forEach(
-
-        input=>{
-
-            input.addEventListener(
-
-                "input",
-
-                ()=>{
-
-                    renderPreview(
-
-                        header,
-
-                        body,
-
-                        footer,
-
-                        buttons
-
-                    );
-
-                }
-
-            );
-
-        }
-
-    );
-
-    // Send Template button
-
-const sendBtn =
-document.getElementById("btnSendTemplate");
-
-if(sendBtn){
-
-    sendBtn.onclick =
-    async function(){
-
-        const phone =
-        document
-        .getElementById("testPhone")
-        .value
-        .trim()
-        .replace(/[^\d]/g,"");
-
-        const resultBox =
-        document.getElementById("sendTemplateResult");
-
-        if(!phone){
-
-            resultBox.innerHTML =
-            "<span style='color:red'>Enter phone number</span>";
-
-            return;
-
-        }
-
-        // Collect variable values
-        const variables = [];
-
-        document
         .querySelectorAll(".variable-input")
-        .forEach(input=>{
-            variables.push(input.value);
+        .forEach(input => {
+            input.addEventListener("input", () => {
+                renderPreview(
+                    header,
+                    body,
+                    footer,
+                    buttons
+                );
+            });
         });
 
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = "Sending...";
+    const sendButton =
+        document.getElementById("btnSendTemplate");
 
-        try{
+    if (sendButton) {
+        sendButton.addEventListener(
+            "click",
+            () => sendTemplate(template)
+        );
+    }
+}
 
-            const response =
+function collectVariables(componentType) {
+    return [
+        ...document.querySelectorAll(
+            `.variable-input[data-component="${componentType}"]`
+        )
+    ]
+        .sort(
+            (a, b) =>
+                Number(a.dataset.index) -
+                Number(b.dataset.index)
+        )
+        .map(input => input.value.trim());
+}
+
+function renderPreview(
+    header,
+    body,
+    footer,
+    buttons
+) {
+    const preview =
+        document.getElementById("templatePreview");
+
+    if (!preview) {
+        return;
+    }
+
+    const headerVariables =
+        collectVariables("header");
+
+    const bodyVariables =
+        collectVariables("body");
+
+    let message = "";
+
+    if (header) {
+        if (header.format === "TEXT") {
+            let headerText =
+                header.text || "";
+
+            headerVariables.forEach(
+                (value, index) => {
+                    headerText =
+                        headerText.replaceAll(
+                            `{{${index + 1}}}`,
+                            escapeHtml(value)
+                        );
+                }
+            );
+
+            message += `
+                <div
+                    style="
+                        font-weight:bold;
+                        font-size:16px;
+                        margin-bottom:10px;
+                    ">
+                    ${headerText}
+                </div>
+            `;
+        }
+
+        else if (header.format === "IMAGE") {
+            message += `
+                <div
+                    style="
+                        padding:20px;
+                        text-align:center;
+                        background:#eee;
+                        border-radius:8px;
+                        margin-bottom:10px;
+                    ">
+                    🖼️ Image header
+                </div>
+            `;
+        }
+
+        else if (header.format === "VIDEO") {
+            message += `
+                <div
+                    style="
+                        padding:20px;
+                        text-align:center;
+                        background:#eee;
+                        border-radius:8px;
+                        margin-bottom:10px;
+                    ">
+                    🎥 Video header
+                </div>
+            `;
+        }
+
+        else if (header.format === "DOCUMENT") {
+            message += `
+                <div
+                    style="
+                        padding:20px;
+                        text-align:center;
+                        background:#eee;
+                        border-radius:8px;
+                        margin-bottom:10px;
+                    ">
+                    📄 Document header
+                </div>
+            `;
+        }
+    }
+
+    if (body) {
+        let bodyText =
+            body.text || "";
+
+        bodyVariables.forEach(
+            (value, index) => {
+                bodyText =
+                    bodyText.replaceAll(
+                        `{{${index + 1}}}`,
+                        escapeHtml(value)
+                    );
+            }
+        );
+
+        message += `
+            <div class="message-body">
+                ${bodyText.replace(/\n/g, "<br>")}
+            </div>
+        `;
+    }
+
+    if (footer) {
+        message += `
+            <div class="message-footer">
+                ${escapeHtml(footer.text || "")}
+            </div>
+        `;
+    }
+
+    let buttonsHtml = "";
+
+    buttons.forEach(button => {
+        buttonsHtml += `
+            <div class="message-button">
+                ${escapeHtml(button.text || "")}
+            </div>
+        `;
+    });
+
+    preview.innerHTML = `
+        <div class="phone-preview">
+            <div class="phone-header">
+                WhatsApp
+            </div>
+
+            <div class="phone-chat">
+                <div class="message">
+                    ${message}
+                    ${buttonsHtml}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function buildHeaderComponent(template) {
+    const header =
+        getComponent(template, "HEADER");
+
+    if (!header) {
+        return null;
+    }
+
+    /*
+     * TEXT headers with variables.
+     */
+    if (header.format === "TEXT") {
+        const values =
+            collectVariables("header");
+
+        if (!values.length) {
+            return null;
+        }
+
+        return {
+            type: "header",
+            parameters: values.map(value => ({
+                type: "text",
+                text: value
+            }))
+        };
+    }
+
+    /*
+     * Media headers cannot safely use the template example
+     * handle as the real message media.
+     *
+     * We therefore don't send an example media ID.
+     *
+     * If your application has an actual uploaded WhatsApp
+     * media ID, set it on the template as:
+     *
+     * template._sendMedia = {
+     *     type: "image" | "video" | "document",
+     *     id: "MEDIA_ID"
+     * }
+     */
+
+    if (template._sendMedia?.id) {
+        const media =
+            template._sendMedia;
+
+        if (
+            !["image", "video", "document"]
+                .includes(media.type)
+        ) {
+            return null;
+        }
+
+        return {
+            type: "header",
+            parameters: [
+                {
+                    type: media.type,
+                    [media.type]: {
+                        id: media.id
+                    }
+                }
+            ]
+        };
+    }
+
+    return null;
+}
+
+function buildBodyComponent(template) {
+    const body =
+        getComponent(template, "BODY");
+
+    const count =
+        getBodyVariableCount(template);
+
+    if (!body || count === 0) {
+        return null;
+    }
+
+    const values =
+        collectVariables("body");
+
+    if (values.length !== count) {
+        throw new Error(
+            `This template requires ${count} body variable(s).`
+        );
+    }
+
+    const parameters =
+        values.map(value => ({
+            type: "text",
+            text: value
+        }));
+
+    return {
+        type: "body",
+        parameters
+    };
+}
+
+function buildTemplatePayload(template) {
+    const components = [];
+
+    const headerComponent =
+        buildHeaderComponent(template);
+
+    if (headerComponent) {
+        components.push(headerComponent);
+    }
+
+    const bodyComponent =
+        buildBodyComponent(template);
+
+    if (bodyComponent) {
+        components.push(bodyComponent);
+    }
+
+    return components;
+}
+
+async function sendTemplate(template) {
+    const phoneInput =
+        document.getElementById("testPhone");
+
+    const resultBox =
+        document.getElementById("sendTemplateResult");
+
+    const sendButton =
+        document.getElementById("btnSendTemplate");
+
+    if (!phoneInput || !resultBox || !sendButton) {
+        return;
+    }
+
+    const phone =
+        phoneInput.value
+            .trim()
+            .replace(/[^\d]/g, "");
+
+    if (!phone) {
+        resultBox.style.color = "red";
+        resultBox.innerHTML =
+            "❌ Enter WhatsApp number";
+        return;
+    }
+
+    if (!/^\d{8,15}$/.test(phone)) {
+        resultBox.style.color = "red";
+        resultBox.innerHTML =
+            "❌ Enter a valid WhatsApp number with country code";
+        return;
+    }
+
+    let components;
+
+    try {
+        components =
+            buildTemplatePayload(template);
+    } catch (error) {
+        resultBox.style.color = "red";
+        resultBox.innerHTML =
+            `❌ ${escapeHtml(error.message)}`;
+        return;
+    }
+
+    sendButton.disabled = true;
+    sendButton.innerHTML = "Sending...";
+
+    resultBox.style.color = "";
+    resultBox.innerHTML = "Sending template...";
+
+    try {
+        const result =
             await apiFetch(
                 "/templates/send",
                 {
-                    method:"POST",
-                    headers:{
-                        "Content-Type":"application/json"
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
                     },
-                    body:JSON.stringify({
+
+                    body: JSON.stringify({
                         phone,
-                        template:template.name,
-                        language:template.language,
-                        variables
+                        template: template.name,
+                        language: template.language,
+                        components
                     })
                 }
             );
 
-            if(response && response.success){
+        console.log(
+            "Send template response:",
+            result
+        );
 
-                resultBox.innerHTML =
-                `<span style="color:green">✅ Template sent successfully</span><br>Message ID: ${response.messageId || ""}`;
-
-            }
-            else{
-
-                resultBox.innerHTML =
-                `<span style="color:red">❌ ${response?.message || "Failed to send template"}</span>`;
-
-            }
-
-        }
-        catch(error){
-
-            console.error(error);
+        if (result?.success) {
+            resultBox.style.color = "green";
 
             resultBox.innerHTML =
-            "<span style='color:red'>❌ Unable to send template</span>";
-
-        }
-        finally{
-
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = "🚀 Send Template";
-
-        }
-
-    };
-}
-
-    const sendButton =
-document.getElementById(
-    "btnSendTemplate"
-);
-
-if(sendButton){
-
-    sendButton.onclick =
-    ()=>{
-
-        sendTemplate(
-            template
-        );
-
-    };
-
-}
-
-}
-
-function renderPreview(
-
-    header,
-
-    body,
-
-    footer,
-
-    buttons
-
-){
-
-    const preview =
-    document.getElementById(
-        "templatePreview"
-    );
-
-
-
-    let message = "";
-
-
-
-    // HEADER
-
-    if(header){
-
-        if(header.format === "TEXT"){
-
-            message +=
-            `
-            <div
-            style="
-            font-weight:bold;
-            font-size:16px;
-            margin-bottom:10px;
-            ">
-
-                ${header.text}
-
-            </div>
-            `;
-
-        }
-
-        else if(header.format === "IMAGE"){
-
-            const image =
-
-            header.example
-            ?.header_handle
-            ?.[0];
-
-            if(image){
-
-                message +=
-                `
-                <img
-                src="${image}"
-                style="
-                width:100%;
-                border-radius:8px;
-                margin-bottom:10px;
-                ">
-                `;
-
-            }
-
-        }
-
-    }
-
-
-
-    // VARIABLES
-
-    let variables = [];
-
-    document
-    .querySelectorAll(
-        ".variable-input"
-    )
-    .forEach(
-
-        input=>{
-
-            variables.push(
-
-                input.value
-
-            );
-
-        }
-
-    );
-
-
-
-    if(
-
-        variables.length === 0 &&
-
-        body &&
-
-        body.example &&
-
-        body.example.body_text
-
-    ){
-
-        variables =
-
-        body.example.body_text[0];
-
-    }
-
-
-
-    // BODY
-
-    if(body){
-
-        let bodyText =
-        body.text;
-
-
-
-        variables.forEach(
-
-            (value,index)=>{
-
-                bodyText =
-
-                bodyText.replaceAll(
-
-                    `{{${index+1}}}`,
-
-                    `${value}`
-
+                `✅ Template sent successfully` +
+                (
+                    result.messageId
+                        ? `<br>Message ID: ${escapeHtml(result.messageId)}`
+                        : ""
                 );
 
-            }
+        } else {
+            resultBox.style.color = "red";
 
-        );
+            const errorText =
+                result?.message ||
+                result?.error?.error?.message ||
+                result?.error?.message ||
+                "Failed to send template";
 
-
-
-        message +=
-
-        `
-        <div
-        class="message-body">
-
-            ${bodyText.replace(/\n/g,"<br>")}
-
-        </div>
-        `;
-
-    }
-
-
-
-    // FOOTER
-
-    if(footer){
-
-        message +=
-
-        `
-        <div
-        class="message-footer">
-
-            ${footer.text}
-
-        </div>
-        `;
-
-    }
-
-
-
-    // BUTTONS
-
-    let buttonsHtml = "";
-
-
-
-    buttons.forEach(
-
-        button=>{
-
-            buttonsHtml +=
-
-            `
-            <div
-            class="message-button">
-
-                ${button.text}
-
-            </div>
-            `;
-
+            resultBox.innerHTML =
+                `❌ ${escapeHtml(errorText)}`;
         }
 
-    );
-
-
-
-    preview.innerHTML =
-
-    `
-    <div class="phone-preview">
-
-        <div class="phone-header">
-
-            WhatsApp
-
-        </div>
-
-        <div class="phone-chat">
-
-            <div class="message">
-
-                ${message}
-
-                ${buttonsHtml}
-
-            </div>
-
-        </div>
-
-    </div>
-    `;
-
-}
-
-
-async function sendTemplate(template){
-
-    const phone =
-    document
-    .getElementById("testPhone")
-    .value
-    .trim();
-
-    if(!phone){
-
-        alert(
-            "Enter WhatsApp number"
+    } catch (error) {
+        console.error(
+            "Send template error:",
+            error
         );
 
-        return;
+        resultBox.style.color = "red";
 
+        resultBox.innerHTML =
+            `❌ ${escapeHtml(
+                error.message ||
+                "Unable to send template"
+            )}`;
+
+    } finally {
+        sendButton.disabled = false;
+        sendButton.innerHTML =
+            "🚀 Send Template";
     }
-
-    let components = [];
-
-    const header = template.components.find(
-    c => c.type === "HEADER"
-);
-
-if (
-    header &&
-    header.example &&
-    header.example.header_handle
-) {
-
-    const handle =
-    header.example.header_handle[0];
-
-    if (header.format === "IMAGE") {
-
-        components.unshift({
-
-            type: "header",
-
-            parameters: [
-
-                {
-
-                    type: "image",
-
-                    image: {
-
-                        id: handle
-
-                    }
-
-                }
-
-            ]
-
-        });
-
-    }
-
-    else if (header.format === "VIDEO") {
-
-        components.unshift({
-
-            type: "header",
-
-            parameters: [
-
-                {
-
-                    type: "video",
-
-                    video: {
-
-                        id: handle
-
-                    }
-
-                }
-
-            ]
-
-        });
-
-    }
-
-    else if (header.format === "DOCUMENT") {
-
-        components.unshift({
-
-            type: "header",
-
-            parameters: [
-
-                {
-
-                    type: "document",
-
-                    document: {
-
-                        id: handle
-
-                    }
-
-                }
-
-            ]
-
-        });
-
-    }
-
-    else if (header.format === "TEXT") {
-
-        // Don't send anything.
-        // Meta automatically uses the template text.
-
-    }
-
 }
 
-    const inputs =
-    document.querySelectorAll(
-        ".variable-input"
-    );
-
-    if(inputs.length){
-
-        components.push({
-
-            type:"body",
-
-            parameters:
-
-            [...inputs].map(
-
-                input=>({
-
-                    type:"text",
-
-                    text:input.value
-
-                })
-
-            )
-
-        });
-
-    }
-
-    const result =
-    await apiFetch(
-
-        "/templates/send",
-
-        {
-
-            method:"POST",
-
-            headers:{
-
-                "Content-Type":
-                "application/json"
-
-            },
-
-            body:JSON.stringify({
-
-                phone,
-
-                template:
-                template.name,
-
-                language:
-                template.language,
-
-                components
-
-            })
-
-        }
-
-    );
-
-    const message =
-    document.getElementById(
-        "sendTemplateResult"
-    );
-
-    if(!result){
-
-        return;
-
-    }
-
-    if(result.success){
-
-        message.style.color =
-        "green";
-
-        message.innerHTML =
-        "✅ Template sent successfully";
-
-    }
-
-    else{
-
-        message.style.color =
-        "red";
-
-        message.innerHTML =
-
-        result.message ||
-
-        JSON.stringify(result.error);
-
-    }
-
-}
