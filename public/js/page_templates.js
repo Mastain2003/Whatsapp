@@ -629,7 +629,8 @@ function buildHeaderComponent(template) {
                 {
                     type: media.type,
                     [media.type]: {
-                        id: media.id
+                       // id: media.id
+                        "link": "https://whatsapp.mastain.in/img/1784960031243.png"
                     }
                 }
             ]
