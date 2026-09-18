@@ -263,7 +263,7 @@ async function handleIncomingMessage(
 ){
 
     const phone =
-    message.from;
+    message.from.slice(2);
 
 
     let messageText = "";
