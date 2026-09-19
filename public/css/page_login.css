@@ -117,7 +117,7 @@ body{
 }
 
 .toggle-password{
-
+    width: 10%;
     position:absolute;
 
     right:10%;
