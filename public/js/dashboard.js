@@ -9,7 +9,7 @@ import {
 
 requireLogin();
 
-loadSidebar("dashboard");
+//loadSidebar("dashboard");
 
 loadDashboard();
 
