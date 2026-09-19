@@ -153,3 +153,186 @@ th{
 
 
 }
+
+/* =========================
+   CUSTOMER HEADER
+========================= */
+
+.customer-header {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+
+.customer-header h2 {
+
+    margin:0;
+
+}
+
+
+/* =========================
+   ADD BUTTON
+========================= */
+
+.btn-add {
+
+    background:#25D366;
+
+    color:white;
+
+    font-weight:bold;
+
+}
+
+
+/* =========================
+   ADD / EDIT FORM
+========================= */
+
+.customer-form-box {
+
+    border:1px solid #ddd;
+
+    background:#fafafa;
+
+    padding:20px;
+
+    border-radius:8px;
+
+    margin-bottom:20px;
+
+}
+
+
+.customer-form-box h3 {
+
+    margin-top:0;
+
+    margin-bottom:15px;
+
+}
+
+
+.customer-form-grid {
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap:10px;
+
+}
+
+
+.customer-form-grid input {
+
+    width:100%;
+
+    box-sizing:border-box;
+
+}
+
+
+.customer-form-buttons {
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:15px;
+
+}
+
+
+.btn-cancel {
+
+    background:#777;
+
+    color:white;
+
+}
+
+
+#customerFormResult {
+
+    margin-top:10px;
+
+    font-weight:bold;
+
+}
+
+
+/* =========================
+   TABLE ACTION BUTTONS
+========================= */
+
+.action-buttons {
+
+    display:flex;
+
+    gap:6px;
+
+}
+
+
+.btn-edit {
+
+    background:#2196F3;
+
+    color:white;
+
+    padding:6px 10px;
+
+}
+
+
+.btn-delete {
+
+    background:#e53935;
+
+    color:white;
+
+    padding:6px 10px;
+
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:700px){
+
+    .customer-form-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+    .customer-header {
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:10px;
+
+    }
+
+    .action-buttons {
+
+        flex-direction:column;
+
+    }
+
+}
