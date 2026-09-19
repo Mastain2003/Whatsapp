@@ -81,6 +81,7 @@
     box-sizing:border-box;
     width:auto;
     margin:20px;
+    align-self:stretch;
    /* margin-top:auto;*/
 
     background:#dc2626;
