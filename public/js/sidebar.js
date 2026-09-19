@@ -4,7 +4,7 @@ import {
 
 export async function loadSidebar(activePage){
 
-    const container =
+   const container =
     document.getElementById(
         "sidebarContainer"
     );
@@ -21,7 +21,7 @@ export async function loadSidebar(activePage){
     }
 
 
-    const response =
+   /* const response =
     await fetch(
         "../components/sidebar.html"
     );
@@ -32,7 +32,7 @@ export async function loadSidebar(activePage){
 
 
     container.innerHTML =
-    html;
+    html;*/
 
 
 
