@@ -2,113 +2,260 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"  content="width=device-width, initial-scale=1.0">
-    <title>  Customers </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customers</title>
+
     <link rel="stylesheet" href="../css/sidebar.css">
-    <link rel="stylesheet"  href="../css/page_customers.css">
+    <link rel="stylesheet" href="../css/page_customers.css">
 </head>
+
 <body>
+
     <div id="sidebarContainer">
+
         <div class="sidebar">
 
-    <div class="logo">
+            <div class="logo">
+                <h2>WhatsApp CRM</h2>
+            </div>
 
-        <h2>WhatsApp CRM</h2>
+            <nav>
 
-    </div>
+                <a href="dashboard.html"
+                   data-page="dashboard">
+                    🏠 Dashboard
+                </a>
 
+                <a href="customers.html"
+                   data-page="customers">
+                    👥 Customers
+                </a>
 
-    <nav>
+                <a href="products.html"
+                   data-page="products">
+                    📦 Products
+                </a>
 
-        <a href="dashboard.html"
-           data-page="dashboard">
+                <a href="broadcast.html"
+                   data-page="broadcast">
+                    Broadcast
+                </a>
 
-            🏠 Dashboard
+                <a href="templates.html"
+                   data-page="templates">
+                    Templates
+                </a>
 
-        </a>
+                <a href="#">
+                    📊 Reports
+                </a>
 
+            </nav>
 
-        <a href="customers.html"
-           data-page="customers">
-
-            👥 Customers
-
-        </a>
-
-
-        <a href="products.html"
-           data-page="products">
-
-            📦 Products
-
-        </a>
-
-
-        <a href="broadcast.html" data-page="broadcast">
-    Broadcast
-        </a>
-        <a href="templates.html" data-page="templates">
-    Templates
-        </a>
-
-        
-
-
-        <a href="#">
-
-            📊 Reports
-
-        </a>
-
-    </nav>
-
-
-    <button id="sidebarLogout">
-
-        Logout
-
-    </button>
+            <button id="sidebarLogout">
+                Logout
+            </button>
 
         </div>
+
     </div>
+
+
     <div class="page-content">
+
         <div class="customer-container">
-            <h2>
-                Customers
-            </h2>
+
+            <div class="customer-header">
+
+                <h2>
+                    Customers
+                </h2>
+
+                <button
+                    id="btnAddCustomer"
+                    class="btn-add">
+                    + Add Customer
+                </button>
+
+            </div>
+
+
+            <!-- ADD / EDIT CUSTOMER FORM -->
+
+            <div
+                id="customerFormBox"
+                class="customer-form-box"
+                style="display:none;">
+
+                <h3 id="customerFormTitle">
+                    Add Customer
+                </h3>
+
+                <input
+                    type="hidden"
+                    id="customerId">
+
+
+                <div class="customer-form-grid">
+
+                    <input
+                        type="text"
+                        id="customerName"
+                        placeholder="Name">
+
+                    <input
+                        type="text"
+                        id="customerDesignation"
+                        placeholder="Post">
+
+                    <input
+                        type="text"
+                        id="customerDepartment"
+                        placeholder="Department">
+
+                    <input
+                        type="text"
+                        id="customerCity"
+                        placeholder="City">
+
+                    <input
+                        type="text"
+                        id="customerBlock"
+                        placeholder="Block">
+
+                    <input
+                        type="text"
+                        id="customerPhone"
+                        placeholder="Phone Number">
+
+                </div>
+
+
+                <div class="customer-form-buttons">
+
+                    <button
+                        id="btnSaveCustomer">
+                        Save Customer
+                    </button>
+
+                    <button
+                        id="btnCancelCustomer"
+                        class="btn-cancel">
+                        Cancel
+                    </button>
+
+                </div>
+
+                <div id="customerFormResult"></div>
+
+            </div>
+
+
+            <!-- SEARCH -->
+
             <div class="toolbar">
-                <input type="text"  id="searchName" class="filter" placeholder="Search name">
-                <input type="text"  id="filterDesignation" class="filter"   placeholder="Post">                
-                <input type="text"  id="filterDepartment" class="filter"  placeholder="Department">
-                <input type="text"  id="filterCity" class="filter"   placeholder="City">
-                <input type="text"  id="filterBlock" class="filter"   placeholder="Block">
-                
-                <button id="btnSearch">Search </button>
+
+                <input
+                    type="text"
+                    id="searchName"
+                    class="filter"
+                    placeholder="Search name">
+
+                <input
+                    type="text"
+                    id="filterDesignation"
+                    class="filter"
+                    placeholder="Post">
+
+                <input
+                    type="text"
+                    id="filterDepartment"
+                    class="filter"
+                    placeholder="Department">
+
+                <input
+                    type="text"
+                    id="filterCity"
+                    class="filter"
+                    placeholder="City">
+
+                <input
+                    type="text"
+                    id="filterBlock"
+                    class="filter"
+                    placeholder="Block">
+
+                <button id="btnSearch">
+                    Search
+                </button>
+
             </div>
+
+
+            <!-- IMPORT -->
+
             <div class="import-box">
-                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
-                <button id="btnImport">Import Customers</button>
+
+                <input
+                    type="file"
+                    id="excelFile"
+                    accept=".xlsx,.xls,.csv">
+
+                <button id="btnImport">
+                    Import Customers
+                </button>
+
                 <div id="importResult"></div>
+
             </div>
+
+
+            <!-- CUSTOMER TABLE -->
+
             <table>
+
                 <thead>
+
                     <tr>
+
                         <th>Code</th>
+
                         <th>Name</th>
+
                         <th>Post</th>
+
                         <th>Department</th>
+
                         <th>City</th>
-                        <th>Teritory</th>
+
+                        <th>Territory</th>
+
                         <th>Phone Number</th>
+
+                        <th>Actions</th>
+
                     </tr>
+
                 </thead>
+
                 <tbody id="customerTable">
-                    
+
                 </tbody>
+
             </table>
+
         </div>
+
     </div>
+
+
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <script type="module" src="../js/page_customers.js"></script>
+
+    <script
+        type="module"
+        src="../js/page_customers.js">
+    </script>
+
 </body>
 </html>
