@@ -1,20 +1,16 @@
 // worker/api_customers.js
 
-
 import {
     jsonResponse
 } from "./cors_helper.js";
-
 
 import {
     checkAuth
 } from "./auth_service.js";
 
 
-
-
-
 function generateCustomerCode(id) {
+
     return "CUS" +
         String(id)
         .padStart(6, "0");
@@ -22,21 +18,16 @@ function generateCustomerCode(id) {
 }
 
 
-
-
-
-
 export async function handleCustomers(
     request,
     env
 ) {
 
-
     const user =
-        await checkAuth(
-            request,
-            env
-        );
+    await checkAuth(
+        request,
+        env
+    );
 
 
     if(!user){
@@ -52,106 +43,330 @@ export async function handleCustomers(
     }
 
 
-
-
     const url =
-        new URL(request.url);
-
+    new URL(request.url);
 
 
     const method =
-        request.method;
+    request.method;
 
 
+    /*
+     * CUSTOMER ID
+     *
+     * /customers/123
+     */
+
+    const pathParts =
+    url.pathname
+    .split("/")
+    .filter(Boolean);
 
 
+    const lastPart =
+    pathParts[pathParts.length - 1];
 
 
-    // GET CUSTOMERS
+    const customerId =
+    (
+        lastPart &&
+        lastPart !== "customers" &&
+        !isNaN(lastPart)
+    )
+    ?
+    Number(lastPart)
+    :
+    null;
+
+
+    /* =========================
+       GET CUSTOMERS
+    ========================= */
 
     if(method === "GET"){
-       /* return jsonResponse({
-            success:true,
-            customers:" in get"
-            //result.results
-        });*/
-        let query = `SELECT * FROM customers`;
-        let conditions = [];
-        let values = [];
-        const name =url.searchParams.get("name");
-        const designation =url.searchParams.get("designation");
-        const department =url.searchParams.get("department");
-        const city =url.searchParams.get("city");
-        const block =url.searchParams.get("block");
-        const phone =url.searchParams.get("phone");
-        
-        if(name){
-            conditions.push("name LIKE ?");
-            values.push(`%${name}%`);
-        }
-        if(designation){
-            conditions.push("designation LIKE ?");
-            values.push(`%${designation}%`);
-        }
-        if(department){
-            conditions.push("department LIKE ?");
-            values.push(`%${department}%`);
-        }
-        if(city){
-            conditions.push("city LIKE ?");
-            values.push(`%${city}%`);
-        }if(block){
-            conditions.push("block LIKE ?");
-            values.push(`%${block}%`);
-        }
-        if(phone){
-            conditions.push("phone LIKE ?");
-            values.push(`%${phone}%`);
-        }
-        if(conditions.length > 0){
-            query += " WHERE "+ conditions.join(" AND ");
-        }
-        query += ` ORDER BY id DESC`;
 
-       /* return jsonResponse({
-            success:true,
-            customers:query
-            //result.results
-        });*/
-        
-        const result = await env.DB.prepare(query).bind(...values).all();
+        /*
+         * GET /customers/123
+         */
+
+        if(customerId !== null){
+
+            const result =
+            await env.DB
+            .prepare(
+                `
+                SELECT *
+                FROM customers
+                WHERE id = ?
+                `
+            )
+            .bind(
+                customerId
+            )
+            .first();
+
+
+            if(!result){
+
+                return jsonResponse(
+                    {
+                        success:false,
+                        message:"Customer not found"
+                    },
+                    404
+                );
+
+            }
+
+
+            return jsonResponse({
+
+                success:true,
+
+                customer:result
+
+            });
+
+        }
+
+
+        /*
+         * GET /customers
+         */
+
+        let query =
+        `
+        SELECT *
+        FROM customers
+        `;
+
+
+        const conditions = [];
+
+        const values = [];
+
+
+        const name =
+        url.searchParams.get("name");
+
+
+        const designation =
+        url.searchParams.get("designation");
+
+
+        const department =
+        url.searchParams.get("department");
+
+
+        const city =
+        url.searchParams.get("city");
+
+
+        const block =
+        url.searchParams.get("block");
+
+
+        const phone =
+        url.searchParams.get("phone");
+
+
+        if(name){
+
+            conditions.push(
+                "name LIKE ?"
+            );
+
+            values.push(
+                `%${name}%`
+            );
+
+        }
+
+
+        if(designation){
+
+            conditions.push(
+                "designation LIKE ?"
+            );
+
+            values.push(
+                `%${designation}%`
+            );
+
+        }
+
+
+        if(department){
+
+            conditions.push(
+                "department LIKE ?"
+            );
+
+            values.push(
+                `%${department}%`
+            );
+
+        }
+
+
+        if(city){
+
+            conditions.push(
+                "city LIKE ?"
+            );
+
+            values.push(
+                `%${city}%`
+            );
+
+        }
+
+
+        if(block){
+
+            conditions.push(
+                "block LIKE ?"
+            );
+
+            values.push(
+                `%${block}%`
+            );
+
+        }
+
+
+        if(phone){
+
+            conditions.push(
+                "phone LIKE ?"
+            );
+
+            values.push(
+                `%${phone}%`
+            );
+
+        }
+
+
+        if(conditions.length > 0){
+
+            query +=
+            " WHERE " +
+            conditions.join(" AND ");
+
+        }
+
+
+        query +=
+        " ORDER BY id DESC";
+
+
+        const result =
+        await env.DB
+        .prepare(query)
+        .bind(...values)
+        .all();
+
 
         return jsonResponse({
+
             success:true,
+
             customers:
             result.results
+
         });
+
     }
 
-    // ADD CUSTOMER
 
-    if(method === "POST"){
-        const body = await request.json();
-        const insert = await env.DB.prepare(               `
-                INSERT OR IGNORE INTO customers(
-                   name,designation,department,city,block,phone
-                )
-                VALUES(
-                    ?,?,?,?,?,?
-                )
-                `
-            ).bind(
-                body.name,body.designation,body.department, body.city,body.block,body.phone
-            ).run();
+    /* =========================
+       ADD CUSTOMER
+    ========================= */
+
+    if(
+        method === "POST" &&
+        customerId === null
+    ){
+
+        const body =
+        await request.json();
 
 
+        if(
+            !body.name ||
+            !body.phone
+        ){
+
+            return jsonResponse(
+                {
+                    success:false,
+                    message:
+                    "Name and phone are required"
+                },
+                400
+            );
+
+        }
 
 
+        const insert =
+        await env.DB
+        .prepare(
+            `
+            INSERT OR IGNORE INTO customers(
+                name,
+                designation,
+                department,
+                city,
+                block,
+                phone
+            )
+            VALUES(
+                ?,?,?,?,?,?
+            )
+            `
+        )
+        .bind(
+            body.name,
+            body.designation || "",
+            body.department || "",
+            body.city || "",
+            body.block || "",
+            body.phone
+        )
+        .run();
 
-     /*   const id =  insert.meta.last_row_id;
-        
-        const code = generateCustomerCode(id);
-        
+
+        /*
+         * If INSERT OR IGNORE skipped
+         * the record.
+         */
+
+        if(
+            !insert.meta.changes
+        ){
+
+            return jsonResponse(
+                {
+                    success:false,
+                    message:
+                    "Customer already exists"
+                },
+                409
+            );
+
+        }
+
+
+        const id =
+        insert.meta.last_row_id;
+
+
+        const code =
+        generateCustomerCode(id);
+
+
         await env.DB
         .prepare(
             `
@@ -164,10 +379,7 @@ export async function handleCustomers(
             code,
             id
         )
-        .run();*/
-
-
-
+        .run();
 
 
         return jsonResponse({
@@ -180,29 +392,166 @@ export async function handleCustomers(
             customer_code:
             code,
 
-            id
+            id:id
 
         });
-
-
 
     }
 
 
+    /* =========================
+       EDIT CUSTOMER
+    ========================= */
+
+    if(
+        method === "PUT" &&
+        customerId !== null
+    ){
+
+        const body =
+        await request.json();
 
 
+        if(
+            !body.name ||
+            !body.phone
+        ){
 
+            return jsonResponse(
+                {
+                    success:false,
+                    message:
+                    "Name and phone are required"
+                },
+                400
+            );
+
+        }
+
+
+        const result =
+        await env.DB
+        .prepare(
+            `
+            UPDATE customers
+
+            SET
+                name = ?,
+                designation = ?,
+                department = ?,
+                city = ?,
+                block = ?,
+                phone = ?
+
+            WHERE id = ?
+            `
+        )
+        .bind(
+
+            body.name,
+
+            body.designation || "",
+
+            body.department || "",
+
+            body.city || "",
+
+            body.block || "",
+
+            body.phone,
+
+            customerId
+
+        )
+        .run();
+
+
+        if(
+            !result.meta.changes
+        ){
+
+            return jsonResponse(
+                {
+                    success:false,
+                    message:
+                    "Customer not found"
+                },
+                404
+            );
+
+        }
+
+
+        return jsonResponse({
+
+            success:true,
+
+            message:
+            "Customer updated"
+
+        });
+
+    }
+
+
+    /* =========================
+       DELETE CUSTOMER
+    ========================= */
+
+    if(
+        method === "DELETE" &&
+        customerId !== null
+    ){
+
+        const result =
+        await env.DB
+        .prepare(
+            `
+            DELETE FROM customers
+            WHERE id = ?
+            `
+        )
+        .bind(
+            customerId
+        )
+        .run();
+
+
+        if(
+            !result.meta.changes
+        ){
+
+            return jsonResponse(
+                {
+                    success:false,
+                    message:
+                    "Customer not found"
+                },
+                404
+            );
+
+        }
+
+
+        return jsonResponse({
+
+            success:true,
+
+            message:
+            "Customer deleted"
+
+        });
+
+    }
 
 
     return jsonResponse(
-
         {
             success:false,
-            message:"Method not allowed"
+            message:
+            "Method not allowed"
         },
-
         405
-
     );
 
 }
