@@ -1176,7 +1176,7 @@ async function loadCustomers(){
                 <tr>
 
                     <td>
-                        ${customer.customer_code || ""}
+                        ${customer.id || ""}
                     </td>
 
                     <td>
