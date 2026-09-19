@@ -105,6 +105,9 @@
 
 
 .page-content{
+    height:100vh;
+    height:100dvh;
+    overflow-y:auto;
 
     margin-left:240px;
 
