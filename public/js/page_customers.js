@@ -1015,6 +1015,59 @@ loadSidebar(
     "customers"
 );
 
+function showToast(
+    message,
+    type = "success",
+    duration = 3000
+){
+
+    const container =
+    document.getElementById(
+        "toastContainer"
+    );
+
+
+    const toast =
+    document.createElement(
+        "div"
+    );
+
+
+    toast.className =
+        `toast ${type}`;
+
+
+    toast.textContent =
+        message;
+
+
+    container.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        () => {
+
+            toast.classList.add(
+                "hide"
+            );
+
+
+            setTimeout(
+                () => {
+
+                    toast.remove();
+
+                },
+                300
+            );
+
+        },
+        duration
+    );
+
+}
 
 const table =
 document.getElementById(
@@ -1284,11 +1337,10 @@ async function loadCustomers(){
 
         console.error(error);
 
-        showMessage(
-            "importResult",
-            "Unable to load customers",
-            "red"
-        );
+        showToast(
+    "Unable to load customers",
+    "error"
+);
 
     }
 
@@ -1596,11 +1648,10 @@ async function saveCustomer(){
 
         if(!name){
 
-            showMessage(
-                "customerFormResult",
-                "Name is required",
-                "red"
-            );
+            showToast(
+    "Name is required",
+    "error"
+);
 
             return;
 
@@ -1609,11 +1660,10 @@ async function saveCustomer(){
 
         if(!phone){
 
-            showMessage(
-                "customerFormResult",
-                "Phone number is required",
-                "red"
-            );
+            showToast(
+    "Phone number is required.",
+    "error"
+);
 
             return;
 
@@ -1699,19 +1749,17 @@ async function saveCustomer(){
         }
 
 
-        showMessage(
+        showToast(
 
-            "customerFormResult",
+    id
+    ?
+    "Customer updated successfully"
+    :
+    "Customer added successfully",
 
-            id
-            ?
-            "Customer updated successfully"
-            :
-            "Customer added successfully",
+    "success"
 
-            "green"
-
-        );
+);
 
 
         setTimeout(
@@ -1737,11 +1785,10 @@ async function saveCustomer(){
 
         console.error(error);
 
-        showMessage(
-            "customerFormResult",
-            "Unable to save customer",
-            "red"
-        );
+        showToast(
+    "Unable to save customer",
+    "error"
+);
 
     }
 
@@ -1782,11 +1829,10 @@ async function editCustomer(id){
 
         if(!customer){
 
-            showMessage(
-                "importResult",
-                "Customer not found",
-                "red"
-            );
+            showToast(
+    "Customer not found.",
+    "error"
+);
 
             return;
 
@@ -1803,11 +1849,10 @@ async function editCustomer(id){
 
         console.error(error);
 
-        showMessage(
-            "importResult",
-            "Unable to load customer",
-            "red"
-        );
+        showToast(
+    "Unable to load customer",
+    "error"
+);
 
     }
 
@@ -1851,11 +1896,10 @@ async function deleteCustomer(id){
         }
 
 
-        showMessage(
-            "importResult",
-            "Customer deleted successfully",
-            "green"
-        );
+        showToast(
+    "Customer deleted successfully",
+    "success"
+);
 
 
         loadCustomers();
@@ -1866,11 +1910,10 @@ async function deleteCustomer(id){
 
         console.error(error);
 
-        showMessage(
-            "importResult",
-            "Unable to delete customer",
-            "red"
-        );
+        showToast(
+    "Unable to delete customer",
+    "error"
+);
 
     }
 
@@ -2017,11 +2060,10 @@ async function(){
             customers.length === 0
         ){
 
-            showMessage(
-                "importResult",
-                "No valid customer rows found",
-                "red"
-            );
+            showToast(
+    "No valid customer rowsfound",
+    "error"
+);
 
             return;
 
@@ -2058,17 +2100,14 @@ async function(){
 
         }
 
-
-        showMessage(
-
-            "importResult",
-
-            `Imported: ${result.imported || 0}
+        showToast(
+        `Imported: ${result.imported || 0}
              | Skipped: ${result.skipped || 0}`,
+    "success"
+);
 
-            "green"
 
-        );
+        
 
 
         loadCustomers();
@@ -2079,11 +2118,10 @@ async function(){
 
         console.error(error);
 
-        showMessage(
-            "importResult",
-            "Import failed",
-            "red"
-        );
+        showToast(
+    "Import failed.",
+    "error"
+);
 
     }
 
