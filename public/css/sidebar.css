@@ -14,9 +14,9 @@
 
     top:0;
 
-    /*display:flex;
+    display:flex;
 
-    flex-direction:column;*/
+    flex-direction:column;
 
 }
 
@@ -79,9 +79,10 @@
 
 #sidebarLogout{
     box-sizing:border-box;
-    width:auto;
+   /* width:auto;*/
     margin:20px;
-    align-self:stretch;
+    margin-top:auto;
+   /* align-self:stretch;*/
    /* margin-top:auto;*/
 
     background:#dc2626;
@@ -95,10 +96,10 @@
     border-radius:6px;
 
     cursor:pointer;
-    display:box;
+   /* display:box;
 
     position:absolute;
-    bottom:5%;
+    bottom:5%;*/
 }
 
 
