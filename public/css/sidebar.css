@@ -81,7 +81,7 @@
     box-sizing:border-box;
     width:100%;
     margin:20px;
-    margin-top:auto;
+   /* margin-top:auto;*/
 
     background:#dc2626;
 
@@ -95,8 +95,8 @@
 
     cursor:pointer;
 
-  /*  position:absolute;
-    bottom:5%;*/
+    position:absolute;
+    bottom:5%;
 }
 
 
