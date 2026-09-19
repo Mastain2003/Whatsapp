@@ -95,6 +95,7 @@
     border-radius:6px;
 
     cursor:pointer;
+    display:box;
 
     position:absolute;
     bottom:5%;
