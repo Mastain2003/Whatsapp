@@ -650,7 +650,7 @@ function buildButtonComponents(template) {
 
         // 1. Catalog Button
         if (button.type === "CATALOG") {
-        const sku = template.thumbnailProductSku || button.thumbnail_product_retailer_id;
+        const sku ="9n871107qr";// template.thumbnailProductSku || button.thumbnail_product_retailer_id;
 
         const catalogPayload = {
             type: "button",
