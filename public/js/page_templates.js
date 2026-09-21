@@ -648,31 +648,31 @@ function buildButtonComponents(template) {
     buttonsComponent.buttons.forEach((button, index) => {
         const idxStr = String(index);
 
-        // 1. Catalog Button
+        // 1. CATALOG Button
         if (button.type === "CATALOG") {
-        const sku =(template.thumbnailProductSku || button.thumbnail_product_retailer_id||"").trim();
+            const sku = (template.thumbnailProductSku || button.thumbnail_product_retailer_id || "").trim();
 
-        const catalogPayload = {
-            type: "button",
-            sub_type: "CATALOG",
-            index: idxStr,
-            parameters: [
-                {
-                    type: "action",
-                    action: sku ? { thumbnail_product_retailer_id: sku } : {}
-                }
-            ]
-        };
-
-        components.push(catalogPayload);
-        }
-
-        // 2. URL Button (with dynamic parameter)
-        else if (button.type === "URL" && (button.url || "").includes("{{1}}")) {
-            const inputVal = buttonInputs.find(i => i.index === index)?.value || "";
             components.push({
                 type: "button",
-                sub_type: "URL",
+                sub_type: "CATALOG",
+                index: idxStr,
+                parameters: [
+                    {
+                        type: "action",
+                        action: sku ? { thumbnail_product_retailer_id: sku } : {}
+                    }
+                ]
+            });
+        }
+
+        // 2. Dynamic URL Button (Only if it contains {{1}})
+        else if (button.type === "URL" && (button.url || "").includes("{{1}}")) {
+            const inputObj = buttonInputs.find(i => i.index === index);
+            const inputVal = inputObj ? inputObj.value : "";
+
+            components.push({
+                type: "button",
+                sub_type: "url",
                 index: idxStr,
                 parameters: [
                     {
@@ -683,28 +683,14 @@ function buildButtonComponents(template) {
             });
         }
 
-        // 3. Quick Reply Button (with custom payload)
-        else if (button.type === "QUICK_REPLY") {
-            const inputVal = buttonInputs.find(i => i.index === index)?.value || "PAYLOAD";
-            components.push({
-                type: "button",
-                sub_type: "QUICK_REPLY",
-                index: idxStr,
-                parameters: [
-                    {
-                        type: "payload",
-                        payload: inputVal
-                    }
-                ]
-            });
-        }
-
-        // 4. Copy Code / Coupon Button
+        // 3. COPY CODE / Coupon Button
         else if (button.type === "COPY_CODE") {
-            const inputVal = buttonInputs.find(i => i.index === index)?.value || button.example?.[0] || "";
+            const inputObj = buttonInputs.find(i => i.index === index);
+            const inputVal = inputObj ? inputObj.value : (button.example?.[0] || "");
+
             components.push({
                 type: "button",
-                sub_type: "COPY_CODE",
+                sub_type: "copy_code",
                 index: idxStr,
                 parameters: [
                     {
@@ -715,27 +701,31 @@ function buildButtonComponents(template) {
             });
         }
 
-        // 5. Multi-Product Message (MPM) Button
-        else if (button.type === "MPM") {
+        // 4. Dynamic Quick Reply (Only if explicit payload required)
+        else if (button.type === "QUICK_REPLY" && button.type === "DYNAMIC") {
+            const inputObj = buttonInputs.find(i => i.index === index);
+            const inputVal = inputObj ? inputObj.value : "PAYLOAD";
+
             components.push({
                 type: "button",
-                sub_type: "MPM",
+                sub_type: "quick_reply",
                 index: idxStr,
                 parameters: [
                     {
-                        type: "action",
-                        action: {
-                            thumbnail_product_retailer_id: template.thumbnailProductSku || "",
-                            sections: template.sections || []
-                        }
+                        type: "payload",
+                        payload: inputVal
                     }
                 ]
             });
         }
+
+        // Standard static buttons (PHONE_NUMBER, Static URL, Static Quick Reply) 
+        // are intentionally ignored here as required by Meta Cloud API.
     });
 
     return components;
 }
+
 
 function buildTemplatePayload(template) {
     const components = [];
