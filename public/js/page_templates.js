@@ -650,19 +650,21 @@ function buildButtonComponents(template) {
 
         // 1. Catalog Button
         if (button.type === "CATALOG") {
-            components.push({
-                type: "button",
-                sub_type: "CATALOG",
-                index: idxStr,
-                parameters: [
-                    {
-                        type: "action",
-                        action: {
-                            thumbnail_product_retailer_id: template.thumbnailProductSku || ""
-                        }
-                    }
-                ]
-            });
+        const sku = template.thumbnailProductSku || button.thumbnail_product_retailer_id;
+
+        const catalogPayload = {
+            type: "button",
+            sub_type: "CATALOG",
+            index: idxStr,
+            parameters: [
+                {
+                    type: "action",
+                    action: sku ? { thumbnail_product_retailer_id: sku } : {}
+                }
+            ]
+        };
+
+        components.push(catalogPayload);
         }
 
         // 2. URL Button (with dynamic parameter)
