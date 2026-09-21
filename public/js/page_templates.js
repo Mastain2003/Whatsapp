@@ -750,10 +750,10 @@ function buildTemplatePayload(template) {
         components.push(bodyComponent);
     }
 
-    const buttonComponents = buildButtonComponents(template);
+   /* const buttonComponents = buildButtonComponents(template);
     if (buttonComponents.length > 0) {
         components.push(...buttonComponents);
-    }
+    }*/
 
     return components;
 }
