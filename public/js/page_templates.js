@@ -650,18 +650,18 @@ function buildButtonComponents(template) {
 
         // 1. Catalog Button
         if (button.type === "CATALOG") {
-        const sku =template.thumbnailProductSku || button.thumbnail_product_retailer_id;
+        const sku =(template.thumbnailProductSku || button.thumbnail_product_retailer_id||"").trim();
 
         const catalogPayload = {
             type: "button",
             sub_type: "CATALOG",
-            index: idxStr/*,
+            index: idxStr,
             parameters: [
                 {
                     type: "action",
                     action: sku ? { thumbnail_product_retailer_id: sku } : {}
                 }
-            ]*/
+            ]
         };
 
         components.push(catalogPayload);
@@ -750,10 +750,10 @@ function buildTemplatePayload(template) {
         components.push(bodyComponent);
     }
 
-   /* const buttonComponents = buildButtonComponents(template);
+   const buttonComponents = buildButtonComponents(template);
     if (buttonComponents.length > 0) {
         components.push(...buttonComponents);
-    }*/
+    }
 
     return components;
 }
