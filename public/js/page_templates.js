@@ -66,8 +66,7 @@ function showEmptyTemplateState() {
 }
 
 function renderTemplateList(templates) {
-    const list =
-        document.getElementById("templateList");
+    const list = document.getElementById("templateList");
 
     if (!list) {
         return;
@@ -81,8 +80,7 @@ function renderTemplateList(templates) {
     }
 
     templates.forEach(template => {
-        const card =
-            document.createElement("div");
+        const card = document.createElement("div");
 
         card.className = "template-card";
 
@@ -159,8 +157,7 @@ function getHeaderVariableCount(template) {
 }
 
 function getVariableExamples(template, componentType) {
-    const component =
-        getComponent(template, componentType);
+    const component = getComponent(template, componentType);
 
     if (!component?.example) {
         return [];
@@ -187,36 +184,28 @@ function getVariableExamples(template, componentType) {
 function showTemplate(template) {
     const components = getComponents(template);
 
-    const header =
-        components.find(c => c.type === "HEADER");
+    const header = components.find(c => c.type === "HEADER");
 
-    const body =
-        components.find(c => c.type === "BODY");
+    const body = components.find(c => c.type === "BODY");
 
-    const footer =
-        components.find(c => c.type === "FOOTER");
+    const footer = components.find(c => c.type === "FOOTER");
 
-    const buttons =
-        components.find(c => c.type === "BUTTONS")?.buttons || [];
+    const buttonsComponent = components.find(c => c.type === "BUTTONS");
+    const buttons = buttonsComponent?.buttons || [];
 
-    const bodyVariableCount =
-        getBodyVariableCount(template);
+    const bodyVariableCount = getBodyVariableCount(template);
 
-    const headerVariableCount =
-        getHeaderVariableCount(template);
+    const headerVariableCount = getHeaderVariableCount(template);
 
-    const bodyExamples =
-        getVariableExamples(template, "BODY");
+    const bodyExamples = getVariableExamples(template, "BODY");
 
-    const headerExamples =
-        getVariableExamples(template, "HEADER");
+    const headerExamples = getVariableExamples(template, "HEADER");
 
     let variablesHtml = "";
 
     if (headerVariableCount > 0) {
         for (let index = 0; index < headerVariableCount; index++) {
-            const value =
-                headerExamples[index] ?? "";
+            const value = headerExamples[index] ?? "";
 
             variablesHtml += `
                 <div class="variable">
@@ -235,8 +224,7 @@ function showTemplate(template) {
 
     if (bodyVariableCount > 0) {
         for (let index = 0; index < bodyVariableCount; index++) {
-            const value =
-                bodyExamples[index] ?? "";
+            const value = bodyExamples[index] ?? "";
 
             variablesHtml += `
                 <div class="variable">
@@ -253,12 +241,62 @@ function showTemplate(template) {
         }
     }
 
+    /* -------------------------------------------------------------
+     * Dynamic inputs for URL / Quick Reply / Coupon Code Buttons
+     * ------------------------------------------------------------- */
+    buttons.forEach((btn, idx) => {
+        if (btn.type === "URL" && (btn.url || "").includes("{{1}}")) {
+            const exampleValue = btn.example?.[0] || "";
+            variablesHtml += `
+                <div class="variable">
+                    <label>Button #${idx + 1} URL Variable ({{1}})</label>
+
+                    <input
+                        class="variable-input button-variable-input"
+                        data-component="button"
+                        data-type="URL"
+                        data-index="${idx}"
+                        value="${escapeAttribute(exampleValue)}"
+                        placeholder="e.g. order-123">
+                </div>
+            `;
+        } else if (btn.type === "QUICK_REPLY" && (btn.text || "").includes("{{1}}")) {
+            variablesHtml += `
+                <div class="variable">
+                    <label>Button #${idx + 1} Quick Reply Payload</label>
+
+                    <input
+                        class="variable-input button-variable-input"
+                        data-component="button"
+                        data-type="QUICK_REPLY"
+                        data-index="${idx}"
+                        value="CUSTOM_PAYLOAD_${idx}"
+                        placeholder="Enter payload">
+                </div>
+            `;
+        } else if (btn.type === "COPY_CODE") {
+            const exampleCode = btn.example?.[0] || "";
+            variablesHtml += `
+                <div class="variable">
+                    <label>Button #${idx + 1} Coupon Code</label>
+
+                    <input
+                        class="variable-input button-variable-input"
+                        data-component="button"
+                        data-type="COPY_CODE"
+                        data-index="${idx}"
+                        value="${escapeAttribute(exampleCode)}"
+                        placeholder="Enter code (e.g. OFFER50)">
+                </div>
+            `;
+        }
+    });
+
     if (!variablesHtml) {
         variablesHtml = "No variables";
     }
 
-    const details =
-        document.getElementById("templateDetails");
+    const details = document.getElementById("templateDetails");
 
     if (!details) {
         return;
@@ -332,7 +370,7 @@ function showTemplate(template) {
                             <li>
                                 ${escapeHtml(button.type || "")}
                                 :
-                                ${escapeHtml(button.text || "")}
+                                ${escapeHtml(button.text || button.url || "")}
                             </li>
                         `).join("")}
                     </ul>`
@@ -387,8 +425,7 @@ function showTemplate(template) {
             });
         });
 
-    const sendButton =
-        document.getElementById("btnSendTemplate");
+    const sendButton = document.getElementById("btnSendTemplate");
 
     if (sendButton) {
         sendButton.addEventListener(
@@ -409,7 +446,11 @@ function collectVariables(componentType) {
                 Number(a.dataset.index) -
                 Number(b.dataset.index)
         )
-        .map(input => input.value.trim());
+        .map(input => ({
+            index: Number(input.dataset.index),
+            type: input.dataset.type,
+            value: input.value.trim()
+        }));
 }
 
 function renderPreview(
@@ -418,96 +459,51 @@ function renderPreview(
     footer,
     buttons
 ) {
-    const preview =
-        document.getElementById("templatePreview");
+    const preview = document.getElementById("templatePreview");
 
     if (!preview) {
         return;
     }
 
-    const headerVariables =
-        collectVariables("header");
-
-    const bodyVariables =
-        collectVariables("body");
+    const headerVariables = collectVariables("header").map(v => v.value);
+    const bodyVariables = collectVariables("body").map(v => v.value);
 
     let message = "";
 
     if (header) {
         if (header.format === "TEXT") {
-            let headerText =
-                header.text || "";
+            let headerText = header.text || "";
 
-            headerVariables.forEach(
-                (value, index) => {
-                    headerText =
-                        headerText.replaceAll(
-                            `{{${index + 1}}}`,
-                            escapeHtml(value)
-                        );
-                }
-            );
+            headerVariables.forEach((value, index) => {
+                headerText = headerText.replaceAll(
+                    `{{${index + 1}}}`,
+                    escapeHtml(value)
+                );
+            });
 
             message += `
-                <div
-                    style="
-                        font-weight:bold;
-                        font-size:16px;
-                        margin-bottom:10px;
-                    ">
+                <div style="font-weight:bold; font-size:16px; margin-bottom:10px;">
                     ${headerText}
                 </div>
             `;
-        }
-
-        else if (header.format === "IMAGE") {
-            const image = header.example ?.header_handle?.[0];
-            if(image){
+        } else if (header.format === "IMAGE") {
+            const image = header.example?.header_handle?.[0];
+            if (image) {
+                message += `
+                    <div style="padding:20px; text-align:center; background:#eee; border-radius:8px; margin-bottom:10px;">
+                        <img src="${image}" style="width:100%; border-radius:8px; margin-bottom:10px;">
+                    </div>
+                `;
+            }
+        } else if (header.format === "VIDEO") {
             message += `
-                <div
-                    style="
-                        padding:20px;
-                        text-align:center;
-                        background:#eee;
-                        border-radius:8px;
-                        margin-bottom:10px;
-                    ">
-                    <img
-                src="${image}"
-                style="
-                width:100%;
-                border-radius:8px;
-                margin-bottom:10px;
-                ">
-                </div>
-            `;}
-        }
-
-        else if (header.format === "VIDEO") {
-            message += `
-                <div
-                    style="
-                        padding:20px;
-                        text-align:center;
-                        background:#eee;
-                        border-radius:8px;
-                        margin-bottom:10px;
-                    ">
+                <div style="padding:20px; text-align:center; background:#eee; border-radius:8px; margin-bottom:10px;">
                     🎥 Video header
                 </div>
             `;
-        }
-
-        else if (header.format === "DOCUMENT") {
+        } else if (header.format === "DOCUMENT") {
             message += `
-                <div
-                    style="
-                        padding:20px;
-                        text-align:center;
-                        background:#eee;
-                        border-radius:8px;
-                        margin-bottom:10px;
-                    ">
+                <div style="padding:20px; text-align:center; background:#eee; border-radius:8px; margin-bottom:10px;">
                     📄 Document header
                 </div>
             `;
@@ -515,18 +511,14 @@ function renderPreview(
     }
 
     if (body) {
-        let bodyText =
-            body.text || "";
+        let bodyText = body.text || "";
 
-        bodyVariables.forEach(
-            (value, index) => {
-                bodyText =
-                    bodyText.replaceAll(
-                        `{{${index + 1}}}`,
-                        escapeHtml(value)
-                    );
-            }
-        );
+        bodyVariables.forEach((value, index) => {
+            bodyText = bodyText.replaceAll(
+                `{{${index + 1}}}`,
+                escapeHtml(value)
+            );
+        });
 
         message += `
             <div class="message-body">
@@ -546,9 +538,14 @@ function renderPreview(
     let buttonsHtml = "";
 
     buttons.forEach(button => {
+        let text = button.text || "";
+        if (button.type === "CATALOG") text = "View Catalog";
+        if (button.type === "MPM") text = "View Items";
+        if (button.type === "COPY_CODE") text = `Copy Code: ${button.example?.[0] || 'CODE'}`;
+
         buttonsHtml += `
             <div class="message-button">
-                ${escapeHtml(button.text || "")}
+                ${escapeHtml(text)}
             </div>
         `;
     });
@@ -570,19 +567,14 @@ function renderPreview(
 }
 
 function buildHeaderComponent(template) {
-    const header =
-        getComponent(template, "HEADER");
+    const header = getComponent(template, "HEADER");
 
     if (!header) {
         return null;
     }
 
-    /*
-     * TEXT headers with variables.
-     */
     if (header.format === "TEXT") {
-        const values =
-            collectVariables("header");
+        const values = collectVariables("header").map(v => v.value);
 
         if (!values.length) {
             return null;
@@ -596,46 +588,6 @@ function buildHeaderComponent(template) {
             }))
         };
     }
-
-    /*
-     * Media headers cannot safely use the template example
-     * handle as the real message media.
-     *
-     * We therefore don't send an example media ID.
-     *
-     * If your application has an actual uploaded WhatsApp
-     * media ID, set it on the template as:
-     *
-     * template._sendMedia = {
-     *     type: "image" | "video" | "document",
-     *     id: "MEDIA_ID"
-     * }
-     
-
-    if (template._sendMedia?.id) {
-        const media =
-            template._sendMedia;
-
-        if (
-            !["image", "video", "document"]
-                .includes(media.type)
-        ) {
-            return null;
-        }
-
-        return {
-            type: "header",
-            parameters: [
-                {
-                    type: media.type,
-                    [media.type]: {
-                       // id: media.id
-                        "link": "https://whatsapp.mastain.in/img/1784960031243.png"
-                    }
-                }
-            ]
-        };
-    }*/
 
     if (header.format === "IMAGE") {
         return {
@@ -655,30 +607,23 @@ function buildHeaderComponent(template) {
 }
 
 function buildBodyComponent(template) {
-    const body =
-        getComponent(template, "BODY");
-
-    const count =
-        getBodyVariableCount(template);
+    const body = getComponent(template, "BODY");
+    const count = getBodyVariableCount(template);
 
     if (!body || count === 0) {
         return null;
     }
 
-    const values =
-        collectVariables("body");
+    const values = collectVariables("body").map(v => v.value);
 
     if (values.length !== count) {
-        throw new Error(
-            `This template requires ${count} body variable(s).`
-        );
+        throw new Error(`This template requires ${count} body variable(s).`);
     }
 
-    const parameters =
-        values.map(value => ({
-            type: "text",
-            text: value
-        }));
+    const parameters = values.map(value => ({
+        type: "text",
+        text: value
+    }));
 
     return {
         type: "body",
@@ -686,68 +631,161 @@ function buildBodyComponent(template) {
     };
 }
 
+/* -------------------------------------------------------------
+ * Universal Button Component Builder
+ * Handles CATALOG, URL, QUICK_REPLY, COPY_CODE, and MPM
+ * ------------------------------------------------------------- */
+function buildButtonComponents(template) {
+    const buttonsComponent = getComponent(template, "BUTTONS");
+
+    if (!buttonsComponent || !Array.isArray(buttonsComponent.buttons)) {
+        return [];
+    }
+
+    const buttonInputs = collectVariables("button");
+    const components = [];
+
+    buttonsComponent.buttons.forEach((button, index) => {
+        const idxStr = String(index);
+
+        // 1. Catalog Button
+        if (button.type === "CATALOG") {
+            components.push({
+                type: "button",
+                sub_type: "CATALOG",
+                index: idxStr,
+                parameters: [
+                    {
+                        type: "action",
+                        action: {
+                            thumbnail_product_retailer_id: template.thumbnailProductSku || ""
+                        }
+                    }
+                ]
+            });
+        }
+
+        // 2. URL Button (with dynamic parameter)
+        else if (button.type === "URL" && (button.url || "").includes("{{1}}")) {
+            const inputVal = buttonInputs.find(i => i.index === index)?.value || "";
+            components.push({
+                type: "button",
+                sub_type: "URL",
+                index: idxStr,
+                parameters: [
+                    {
+                        type: "text",
+                        text: inputVal
+                    }
+                ]
+            });
+        }
+
+        // 3. Quick Reply Button (with custom payload)
+        else if (button.type === "QUICK_REPLY") {
+            const inputVal = buttonInputs.find(i => i.index === index)?.value || "PAYLOAD";
+            components.push({
+                type: "button",
+                sub_type: "QUICK_REPLY",
+                index: idxStr,
+                parameters: [
+                    {
+                        type: "payload",
+                        payload: inputVal
+                    }
+                ]
+            });
+        }
+
+        // 4. Copy Code / Coupon Button
+        else if (button.type === "COPY_CODE") {
+            const inputVal = buttonInputs.find(i => i.index === index)?.value || button.example?.[0] || "";
+            components.push({
+                type: "button",
+                sub_type: "COPY_CODE",
+                index: idxStr,
+                parameters: [
+                    {
+                        type: "coupon_code",
+                        coupon_code: inputVal
+                    }
+                ]
+            });
+        }
+
+        // 5. Multi-Product Message (MPM) Button
+        else if (button.type === "MPM") {
+            components.push({
+                type: "button",
+                sub_type: "MPM",
+                index: idxStr,
+                parameters: [
+                    {
+                        type: "action",
+                        action: {
+                            thumbnail_product_retailer_id: template.thumbnailProductSku || "",
+                            sections: template.sections || []
+                        }
+                    }
+                ]
+            });
+        }
+    });
+
+    return components;
+}
+
 function buildTemplatePayload(template) {
     const components = [];
 
-    const headerComponent =
-        buildHeaderComponent(template);
-
+    const headerComponent = buildHeaderComponent(template);
     if (headerComponent) {
         components.push(headerComponent);
     }
 
-    const bodyComponent =
-        buildBodyComponent(template);
-
+    const bodyComponent = buildBodyComponent(template);
     if (bodyComponent) {
         components.push(bodyComponent);
+    }
+
+    const buttonComponents = buildButtonComponents(template);
+    if (buttonComponents.length > 0) {
+        components.push(...buttonComponents);
     }
 
     return components;
 }
 
 async function sendTemplate(template) {
-    const phoneInput =
-        document.getElementById("testPhone");
-
-    const resultBox =
-        document.getElementById("sendTemplateResult");
-
-    const sendButton =
-        document.getElementById("btnSendTemplate");
+    const phoneInput = document.getElementById("testPhone");
+    const resultBox = document.getElementById("sendTemplateResult");
+    const sendButton = document.getElementById("btnSendTemplate");
 
     if (!phoneInput || !resultBox || !sendButton) {
         return;
     }
 
-    const phone =
-        phoneInput.value
-            .trim()
-            .replace(/[^\d]/g, "");
+    const phone = phoneInput.value.trim().replace(/[^\d]/g, "");
 
     if (!phone) {
         resultBox.style.color = "red";
-        resultBox.innerHTML =
-            "❌ Enter WhatsApp number";
+        resultBox.innerHTML = "❌ Enter WhatsApp number";
         return;
     }
 
     if (!/^\d{8,15}$/.test(phone)) {
         resultBox.style.color = "red";
-        resultBox.innerHTML =
-            "❌ Enter a valid WhatsApp number with country code";
+        resultBox.innerHTML = "❌ Enter a valid WhatsApp number with country code";
         return;
     }
 
     let components;
 
     try {
-        components =
-            buildTemplatePayload(template);
+        components = buildTemplatePayload(template);
     } catch (error) {
         resultBox.style.color = "red";
-        resultBox.innerHTML =
-            `❌ ${escapeHtml(error.message)}`;
+        resultBox.innerHTML = `❌ ${escapeHtml(error.message)}`;
         return;
     }
 
@@ -758,34 +796,26 @@ async function sendTemplate(template) {
     resultBox.innerHTML = "Sending template...";
 
     try {
-        const result =
-            await apiFetch(
-                "/templates/send",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        phone,
-                        template: template.name,
-                        language: template.language,
-                        components
-                    })
-                }
-            );
-
-        console.log(
-            "Send template response:",
-            result
+        const result = await apiFetch(
+            "/templates/send",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    phone,
+                    template: template.name,
+                    language: template.language,
+                    components
+                })
+            }
         );
+
+        console.log("Send template response:", result);
 
         if (result?.success) {
             resultBox.style.color = "green";
-
             resultBox.innerHTML =
                 `✅ Template sent successfully` +
                 (
@@ -793,38 +823,26 @@ async function sendTemplate(template) {
                         ? `<br>Message ID: ${escapeHtml(result.messageId)}`
                         : ""
                 );
-
         } else {
             resultBox.style.color = "red";
-
             const errorText =
                 result?.message ||
                 result?.error?.error?.message ||
                 result?.error?.message ||
                 "Failed to send template";
 
-            resultBox.innerHTML =
-                `❌ ${escapeHtml(errorText)}`;
+            resultBox.innerHTML = `❌ ${escapeHtml(errorText)}`;
         }
-
     } catch (error) {
-        console.error(
-            "Send template error:",
-            error
-        );
+        console.error("Send template error:", error);
 
         resultBox.style.color = "red";
-
-        resultBox.innerHTML =
-            `❌ ${escapeHtml(
-                error.message ||
-                "Unable to send template"
-            )}`;
-
+        resultBox.innerHTML = `❌ ${escapeHtml(
+            error.message || "Unable to send template"
+        )}`;
     } finally {
         sendButton.disabled = false;
-        sendButton.innerHTML =
-            "🚀 Send Template";
+        sendButton.innerHTML = "🚀 Send Template";
     }
 }
 
