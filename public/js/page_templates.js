@@ -660,7 +660,7 @@ function buildButtonComponents(template) {
                     {
                         type: "action",
                         action:{
-                            thumbnail_product_retailer_id: "9n871107qr"
+                            thumbnail_product_retailer_id: "lo2e1m5miz"
                         }
                     }
                 ]
