@@ -655,13 +655,15 @@ function buildButtonComponents(template) {
             components.push({
                 type: "button",
                 sub_type: "CATALOG",
-                index: idxStr/*,
+                index: idxStr,
                 parameters: [
                     {
                         type: "action",
-                        action: sku ? { thumbnail_product_retailer_id: sku } : {}
+                        action:{
+                            thumbnail_product_retailer_id: "9n871107qr"
+                        }
                     }
-                ]*/
+                ]
             });
         }
 
