@@ -11,6 +11,90 @@ function isValidLanguageCode(language) {
     return typeof language === "string" && /^[a-z]{2,3}(?:[_-][A-Z]{2})?$/.test(language);
 }
 
+function cleanComponentsFinal(components) {
+    if (!Array.isArray(components)) {
+        return [];
+    }
+
+    return components
+        .filter(component => component && typeof component === "object")
+        .map(component => {
+            const cleaned = {
+                type: component.type
+            };
+
+            // Preserve button-specific top-level properties required by Meta
+            if (component.sub_type !== undefined) {
+                cleaned.sub_type = component.sub_type;
+            }
+
+            if (component.index !== undefined) {
+                cleaned.index = String(component.index);
+            }
+
+            if (Array.isArray(component.parameters) && component.parameters.length) {
+                cleaned.parameters = component.parameters
+                    .filter(parameter => parameter && typeof parameter === "object")
+                    .map(parameter => {
+                        const result = {
+                            type: parameter.type
+                        };
+
+                        if (parameter.text !== undefined) {
+                            result.text = String(parameter.text);
+                        }
+
+                        if (parameter.image) {
+                            result.image = parameter.image;
+                        }
+
+                        if (parameter.video) {
+                            result.video = parameter.video;
+                        }
+
+                        if (parameter.document) {
+                            result.document = parameter.document;
+                        }
+
+                        if (parameter.currency) {
+                            result.currency = parameter.currency;
+                        }
+
+                        if (parameter.date_time) {
+                            result.date_time = parameter.date_time;
+                        }
+
+                        // Preserves CATALOG and MPM button action parameters
+                        if (parameter.action) {
+                            result.action = parameter.action;
+                        }
+
+                        // Preserves COPY_CODE button parameters
+                        if (parameter.coupon_code !== undefined) {
+                            result.coupon_code = String(parameter.coupon_code);
+                        }
+
+                        // Preserves QUICK_REPLY button parameters
+                        if (parameter.payload !== undefined) {
+                            result.payload = String(parameter.payload);
+                        }
+
+                        return result;
+                    });
+            }
+
+            return cleaned;
+        })
+        .filter(component =>
+            component.type &&
+            (
+                !component.parameters ||
+                component.parameters.length > 0
+            )
+        );
+}
+
+
 function cleanComponents(components) {
     if (!Array.isArray(components)) {
         return [];
@@ -226,7 +310,7 @@ export async function handleSendTemplate(request, env) {
             }, 400);
         }
 
-        const components = cleanComponents(body.components);
+        const components = cleanComponentsFinal(body.components);
 
         const payload = {
             messaging_product: "whatsapp",
