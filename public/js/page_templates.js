@@ -655,7 +655,7 @@ function buildButtonComponents(template) {
             components.push({
                 type: "button",
                 sub_type: "CATALOG",
-                index: idxStr,
+                index: 0,
                 parameters: [
                     {
                         type: "action",
