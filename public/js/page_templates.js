@@ -655,11 +655,12 @@ function buildButtonComponents(template) {
             components.push({
                 type: "button",
                 sub_type: "CATALOG",
-                index: 0,
+                index: idxStr,
                 parameters: [
                     {
                         type: "action",
                         action:{
+                            catalog_id: button.action?.catalog_id || "28131037926518815",
                             thumbnail_product_retailer_id: "lo2e1m5miz"
                         }
                     }
