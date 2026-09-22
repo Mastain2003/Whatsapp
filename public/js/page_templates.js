@@ -650,7 +650,7 @@ function buildButtonComponents(template) {
 
         // 1. CATALOG Button
         if (button.type === "CATALOG") {
-            const sku = "9n871107qr";// (template.thumbnailProductSku || button.thumbnail_product_retailer_id || "").trim();
+            const sku = (template.thumbnailProductSku || button.thumbnail_product_retailer_id || "").trim();
 
             components.push({
                 type: "button",
@@ -659,10 +659,7 @@ function buildButtonComponents(template) {
                 parameters: [
                     {
                         type: "action",
-                        action:{
-                            catalog_id: button.action?.catalog_id || "28131037926518815",
-                            thumbnail_product_retailer_id: "lo2e1m5miz"
-                        }
+                        action: sku ? { thumbnail_product_retailer_id: sku } : {}
                     }
                 ]
             });
