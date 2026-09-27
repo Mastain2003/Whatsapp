@@ -1,416 +1,419 @@
 import {
     apiFetch,
-    requireLogin,
-    logout,
-    showMessage
+    requireLogin
 } from "./core.js";
 
-import { loadSidebar } from "./sidebar.js";
+import {
+    loadSidebar
+} from "./sidebar.js";
 
 
 requireLogin();
+
 loadSidebar("products");
 
 
 const list =
-document.getElementById("productList");
+    document.getElementById("productList");
 
-const saveBtn =
-document.getElementById("saveProduct");
+const searchInput =
+    document.getElementById("search");
 
 const searchBtn =
-document.getElementById("searchBtn");
+    document.getElementById("searchBtn");
+
+const message =
+    document.getElementById("message");
+
+
+let products = [];
 
 
 
+function escapeHtml(value){
+
+    if(value === null || value === undefined){
+
+        return "";
+
+    }
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
 
 
-async function loadProducts(search = ""){
 
-    let url = "/products";
+function showMessage(text, type = ""){
+
+    message.innerText = text;
+
+    message.className = type;
+
+}
 
 
-    if(search){
 
-        url +=
-        "?name=" +
-        encodeURIComponent(search);
+function formatPrice(product){
+
+    if(
+        product.price === undefined ||
+        product.price === null ||
+        product.price === ""
+    ){
+
+        return "";
 
     }
 
 
-    const data =
-    await apiFetch(url);
+    const price =
+        Number(product.price);
 
 
-    if(!data || !data.success){
+    if(Number.isNaN(price)){
+
+        return escapeHtml(product.price);
+
+    }
+
+
+    const currency =
+        product.currency || "INR";
+
+
+    try{
+
+        return new Intl.NumberFormat(
+            "en-IN",
+            {
+                style:"currency",
+                currency
+            }
+        ).format(price);
+
+    }
+    catch{
+
+        return `${currency} ${price}`;
+
+    }
+
+}
+
+
+
+function renderProducts(items){
+
+    list.innerHTML = "";
+
+
+    if(!items.length){
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+            <td
+                colspan="6"
+                class="empty-message">
+
+                Nothing to display
+
+            </td>
+        `;
+
+        list.appendChild(row);
 
         return;
 
     }
 
 
-    list.innerHTML = "";
-
-
-    data.products.forEach(product => {
-
+    items.forEach(product => {
 
         const row =
-        document.createElement("tr");
+            document.createElement("tr");
+
+
+        const imageUrl =
+            product.image_url || "";
+
+
+        const imageHtml =
+            imageUrl
+
+            ?
+
+            `
+            <img
+                class="product-image"
+                src="${escapeHtml(imageUrl)}"
+                alt="${escapeHtml(product.name || "Product")}"
+                loading="lazy"
+            >
+            `
+
+            :
+
+            `
+            <div class="no-image">
+                No image
+            </div>
+            `;
 
 
         row.innerHTML = `
 
-        <td>${product.product_code}</td>
+            <td>
 
-        <td>${product.name}</td>
+                ${imageHtml}
 
-        <td>${product.category || ""}</td>
-
-        <td>${product.brand || ""}</td>
-
-        <td>${product.unit || ""}</td>
-
-        <td>₹${product.price}</td>
+            </td>
 
 
-        <td>
+            <td>
 
-        <button
-        onclick="editProduct(${product.id})">
-        Edit
-        </button>
+                <div class="product-id">
+
+                    ${escapeHtml(
+                        product.id || ""
+                    )}
+
+                </div>
+
+            </td>
 
 
-        <button
-        class="action-btn"
-        onclick="deleteProduct(${product.id})">
-        Delete
-        </button>
+            <td>
 
-        </td>
+                <div class="product-name">
+
+                    ${escapeHtml(
+                        product.name || ""
+                    )}
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="product-description">
+
+                    ${escapeHtml(
+                        product.description || ""
+                    )}
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="price">
+
+                    ${formatPrice(product)}
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="availability">
+
+                    ${escapeHtml(
+                        product.availability || ""
+                    )}
+
+                </div>
+
+            </td>
 
         `;
 
 
         list.appendChild(row);
 
-
     });
-
 
 }
 
 
 
+async function loadProducts(){
 
-
-
-saveBtn.onclick =
-async function(){
-
-
-    const body = {
-
-
-        name:
-        document.getElementById("name").value,
-
-
-        category:
-        document.getElementById("category").value,
-
-
-        brand:
-        document.getElementById("brand").value,
-
-
-        unit:
-        document.getElementById("unit").value,
-
-
-        price:
-        Number(
-            document.getElementById("price").value
-        ),
-
-
-        description:
-        document.getElementById("description").value
-
-    };
-
-
-
-    const editId = saveBtn.dataset.editId;
-
-
-
-    let method =
-    "POST";
-
-
-
-    if(editId){
-
-        method = "PUT";
-
-        body.id =
-        Number(editId);
-
-    }
-
-
-
-    const result =
-    await apiFetch(
-
-        "/products",
-
-        {
-
-            method,
-
-
-            headers:{
-
-                "Content-Type":
-                "application/json"
-
-            },
-
-
-            body:
-            JSON.stringify(body)
-
-        }
-
+    showMessage(
+        "Loading catalog products...",
+        "loading-message"
     );
 
 
+    list.innerHTML = "";
 
-    if(
-        result &&
-        result.success
-    ){
+
+    try{
+
+        const data =
+            await apiFetch("/products");
+
+
+        if(
+            !data ||
+            !data.success
+        ){
+
+            showMessage(
+                data?.message ||
+                "Unable to load catalog products.",
+                "error-message"
+            );
+
+            return;
+
+        }
+
+
+        products =
+            Array.isArray(data.products)
+            ?
+            data.products
+            :
+            [];
 
 
         showMessage(
-            "message",
-            editId
-            ?
-            "Product updated"
-            :
-            "Product saved"
+            `${products.length} catalog product(s)`
         );
 
 
-        saveBtn.innerText =
-        "Save Product";
-
-
-        delete saveBtn.dataset.editId;
-
-
-        clearForm();
-
-
-        loadProducts();
+        renderProducts(products);
 
     }
+    catch(error){
+
+        console.error(
+            "Catalog products error:",
+            error
+        );
 
 
-};
+        showMessage(
+            "Unable to load catalog products.",
+            "error-message"
+        );
 
-
-
-
-
-
-
-function clearForm(){
-
-
-    document.getElementById("name").value="";
-
-    document.getElementById("category").value="";
-
-    document.getElementById("brand").value="";
-
-    document.getElementById("unit").value="";
-
-    document.getElementById("price").value="";
-
-    document.getElementById("description").value="";
-
+    }
 
 }
 
 
 
+function searchProducts(){
+
+    const search =
+        searchInput.value
+            .trim()
+            .toLowerCase();
 
 
+    if(!search){
+
+        renderProducts(products);
+
+        return;
+
+    }
 
 
+    const filtered =
+        products.filter(product => {
 
-searchBtn.onclick =
-function(){
-
-    const value =
-    document.getElementById("search").value;
-
-
-    loadProducts(value);
-
-};
+            const name =
+                String(
+                    product.name || ""
+                ).toLowerCase();
 
 
+            const description =
+                String(
+                    product.description || ""
+                ).toLowerCase();
 
 
+            const id =
+                String(
+                    product.id || ""
+                ).toLowerCase();
 
 
+            return (
+                name.includes(search) ||
+                description.includes(search) ||
+                id.includes(search)
+            );
+
+        });
 
 
-window.editProduct =
-async function(id){
+    renderProducts(filtered);
 
 
-    const data =
-    await apiFetch(
-        "/products"
+    showMessage(
+        `${filtered.length} product(s) found`
     );
 
-
-    if(
-        !data ||
-        !data.success
-    ){
-
-        return;
-
-    }
+}
 
 
 
-    const product =
-    data.products.find(
-        p => p.id === id
-    );
+searchBtn.addEventListener(
+    "click",
+    searchProducts
+);
 
 
-    if(!product){
+searchInput.addEventListener(
+    "keydown",
+    event => {
 
-        return;
+        if(event.key === "Enter"){
 
-    }
-
-
-
-    document.getElementById("name").value =
-    product.name;
-
-
-    document.getElementById("category").value =
-    product.category || "";
-
-
-    document.getElementById("brand").value =
-    product.brand || "";
-
-
-    document.getElementById("unit").value =
-    product.unit || "";
-
-
-    document.getElementById("price").value =
-    product.price;
-
-
-    document.getElementById("description").value =
-    product.description || "";
-
-
-
-    saveBtn.dataset.editId =
-    product.id;
-
-
-    saveBtn.innerText =
-    "Update Product";
-
-
-};
-
-
-
-
-
-
-
-
-
-window.deleteProduct =
-async function(id){
-
-
-    if(
-        !confirm("Delete product?")
-    ){
-
-        return;
-
-    }
-
-
-
-    const result =
-    await apiFetch(
-
-        "/products",
-
-        {
-
-            method:"DELETE",
-
-
-            headers:{
-
-                "Content-Type":
-                "application/json"
-
-            },
-
-
-            body:
-            JSON.stringify({
-
-                id
-
-            })
+            searchProducts();
 
         }
 
-    );
+    }
+);
 
 
+searchInput.addEventListener(
+    "input",
+    () => {
 
-    if(
-        result &&
-        result.success
-    ){
+        if(
+            searchInput.value.trim() === ""
+        ){
 
-        loadProducts();
+            renderProducts(products);
+
+            showMessage(
+                `${products.length} catalog product(s)`
+            );
+
+        }
 
     }
-
-
-};
-
-
-
-
-
+);
 
 
 loadProducts();
