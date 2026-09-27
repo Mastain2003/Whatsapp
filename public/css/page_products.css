@@ -17,17 +17,15 @@ body{
 }
 
 
-
 .page-container{
 
     width:95%;
 
-    max-width:1200px;
+    max-width:1400px;
 
     margin:30px auto;
 
 }
-
 
 
 .header{
@@ -43,13 +41,22 @@ body{
 }
 
 
-
 .header h2{
 
     margin:0;
 
 }
 
+
+.subtitle{
+
+    margin:6px 0 0;
+
+    color:#6b7280;
+
+    font-size:14px;
+
+}
 
 
 button{
@@ -69,7 +76,6 @@ button{
 }
 
 
-
 button:hover{
 
     opacity:.9;
@@ -77,60 +83,11 @@ button:hover{
 }
 
 
-
-.product-form{
-
-    background:white;
-
-    padding:20px;
-
-    border-radius:10px;
-
-    margin-bottom:20px;
-
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
-
-}
-
-
-
-.product-form input,
-.product-form textarea{
-
-    width:100%;
-
-    padding:10px;
-
-    margin-bottom:12px;
-
-    border:1px solid #ccc;
-
-    border-radius:5px;
-
-}
-
-
-
-.product-form textarea{
-
-    height:80px;
-
-}
-
-
-
-#message{
-
-    margin-top:10px;
-
-    font-weight:bold;
-
-}
-
-
-
-
 .search-box{
+
+    display:flex;
+
+    gap:10px;
 
     background:white;
 
@@ -140,24 +97,57 @@ button:hover{
 
     border-radius:10px;
 
-}
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
 
+}
 
 
 .search-box input{
 
-    padding:10px;
+    flex:1;
 
-    width:70%;
+    padding:10px;
 
     border:1px solid #ccc;
 
     border-radius:5px;
 
+    outline:none;
+
 }
 
 
+.search-box input:focus{
 
+    border-color:#2563eb;
+
+}
+
+
+#message{
+
+    margin-bottom:15px;
+
+    font-weight:bold;
+
+    color:#555;
+
+}
+
+
+.table-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    background:white;
+
+    border-radius:10px;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+
+}
 
 
 table{
@@ -166,10 +156,9 @@ table{
 
     border-collapse:collapse;
 
-    background:white;
+    min-width:900px;
 
 }
-
 
 
 th,
@@ -181,24 +170,154 @@ td{
 
     text-align:left;
 
-}
+    vertical-align:middle;
 
+}
 
 
 th{
 
     background:#f0f2f5;
 
+    font-weight:600;
+
 }
 
 
+.product-image{
 
-.action-btn{
+    width:70px;
 
-    background:#dc2626;
+    height:70px;
 
-    padding:6px 10px;
+    object-fit:cover;
 
-    font-size:13px;
+    border-radius:8px;
+
+    border:1px solid #ddd;
+
+    background:#f5f5f5;
+
+}
+
+
+.no-image{
+
+    width:70px;
+
+    height:70px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#f3f4f6;
+
+    border-radius:8px;
+
+    color:#9ca3af;
+
+    font-size:12px;
+
+    text-align:center;
+
+}
+
+
+.product-name{
+
+    font-weight:600;
+
+}
+
+
+.product-description{
+
+    max-width:350px;
+
+    color:#666;
+
+    font-size:14px;
+
+}
+
+
+.product-id{
+
+    font-size:12px;
+
+    color:#6b7280;
+
+    word-break:break-all;
+
+}
+
+
+.price{
+
+    font-weight:600;
+
+    white-space:nowrap;
+
+}
+
+
+.availability{
+
+    white-space:nowrap;
+
+}
+
+
+.empty-message{
+
+    text-align:center;
+
+    padding:30px;
+
+    color:#777;
+
+}
+
+
+.error-message{
+
+    color:#dc2626;
+
+}
+
+
+.loading-message{
+
+    color:#2563eb;
+
+}
+
+
+@media(max-width:700px){
+
+    .page-container{
+
+        width:98%;
+
+        margin:20px auto;
+
+    }
+
+
+    .search-box{
+
+        flex-direction:column;
+
+    }
+
+
+    .search-box button{
+
+        width:100%;
+
+    }
 
 }
