@@ -1,12 +1,6 @@
 import { jsonResponse } from "./cors_helper.js";
 import { checkAuth } from "./auth_service.js";
 
-function generateProductCode(id){
-
-    return "PRD" +
-    String(id).padStart(6,"0");
-
-}
 
 export async function handleProducts(
     request,
@@ -14,10 +8,11 @@ export async function handleProducts(
 ){
 
     const user =
-    await checkAuth(
-        request,
-        env
-    );
+        await checkAuth(
+            request,
+            env
+        );
+
 
     if(!user){
 
@@ -31,589 +26,217 @@ export async function handleProducts(
 
     }
 
+
+    if(request.method !== "GET"){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"Only GET is allowed for catalog products"
+            },
+            405
+        );
+
+    }
+
+
+    return getCatalogProducts(
+        request,
+        env
+    );
+
+}
+
+
+
+async function getCatalogProducts(
+    request,
+    env
+){
+
+    if(!env.META_ACCESS_TOKEN){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"META_ACCESS_TOKEN is not configured"
+            },
+            500
+        );
+
+    }
+
+
+    if(!env.META_CATALOG_ID){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:"META_CATALOG_ID is not configured"
+            },
+            500
+        );
+
+    }
+
+
+    const version =
+        env.META_GRAPH_API_VERSION ||
+        "vXX.X";
+
+
+    if(version === "vXX.X"){
+
+        return jsonResponse(
+            {
+                success:false,
+                message:
+                    "META_GRAPH_API_VERSION is not configured"
+            },
+            500
+        );
+
+    }
+
+
     const url =
-    new URL(request.url);
+        new URL(request.url);
 
-    const method =
-    request.method;
 
-    if(
-        method === "GET"
-    ){
+    const after =
+        url.searchParams.get("after");
 
-        return getProducts(
-            url,
-            env
+
+    const graphUrl =
+        new URL(
+            `https://graph.facebook.com/${version}/${env.META_CATALOG_ID}/products`
         );
 
-    }
 
-    if(
-    method === "POST" &&
-    url.pathname.endsWith("/import")
-){
-
-    return importProducts(
-        request,
-        env
+    graphUrl.searchParams.set(
+        "fields",
+        [
+            "id",
+            "name",
+            "description",
+            "price",
+            "currency",
+            "image_url",
+            "availability",
+            "retailer_id"
+        ].join(",")
     );
 
-    }
 
-    if(
-        method === "POST"
-    ){
-
-        return addProduct(
-            request,
-            env
-        );
-
-    }
-
-    
-
-    if(
-    method === "PUT"
-){
-
-    return updateProduct(
-        request,
-        env
+    graphUrl.searchParams.set(
+        "limit",
+        "100"
     );
 
+
+    if(after){
+
+        graphUrl.searchParams.set(
+            "after",
+            after
+        );
+
     }
 
 
-    if(
-    method === "DELETE"
-){
-
-    return deleteProduct(
-        request,
-        env
+    graphUrl.searchParams.set(
+        "access_token",
+        env.META_ACCESS_TOKEN
     );
 
-    }
 
-    return jsonResponse(
-        {
-            success:false,
-            message:"Method Not Allowed"
-        },
-        405
-    );
+    try{
 
-}
+        const response =
+            await fetch(
+                graphUrl.toString()
+            );
 
 
-async function getProducts(
-    url,
-    env
-){
+        const data =
+            await response.json();
 
-    const name =
-    url.searchParams.get("name") || "";
 
-    const category =
-    url.searchParams.get("category") || "";
+        if(!response.ok){
 
-    const brand =
-    url.searchParams.get("brand") || "";
+            console.error(
+                "Meta Catalog API error:",
+                data
+            );
 
 
-    let sql =
-    `
-    SELECT *
-    FROM products
-    WHERE 1=1
-    `;
-
-    const params = [];
-
-
-    if(name){
-
-        sql +=
-        " AND name LIKE ?";
-
-        params.push(
-            "%" + name + "%"
-        );
-
-    }
-
-
-    if(category){
-
-        sql +=
-        " AND category = ?";
-
-        params.push(
-            category
-        );
-
-    }
-
-
-    if(brand){
-
-        sql +=
-        " AND brand = ?";
-
-        params.push(
-            brand
-        );
-
-    }
-
-
-    sql +=
-    " ORDER BY name";
-
-
-    const stmt =
-    env.DB.prepare(sql);
-
-    const result =
-    await stmt
-    .bind(...params)
-    .all();
-
-
-    return jsonResponse({
-
-        success:true,
-
-        products:
-        result.results
-
-    });
-
-}
-
-async function addProduct(
-    request,
-    env
-){
-
-    const data =
-    await request.json();
-
-
-    if(
-        !data.name
-    ){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Product name is required"
-            },
-            400
-        );
-
-    }
-
-
-    const duplicate =
-    await env.DB
-    .prepare(
-    `
-    SELECT id
-    FROM products
-    WHERE name = ?
-    AND category = ?
-    AND brand = ?
-    `
-    )
-    .bind(
-
-        data.name,
-
-        data.category || "",
-
-        data.brand || ""
-
-    )
-    .first();
-
-
-    if(duplicate){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Product already exists"
-            },
-            409
-        );
-
-    }
-
-
-    const insert =
-    await env.DB
-    .prepare(
-    `
-    INSERT INTO products
-    (
-        product_code,
-        name,
-        category,
-        brand,
-        unit,
-        price,
-        image_url,
-        description
-    )
-    VALUES
-    (
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?,
-        ?
-    )
-    `
-    )
-    .bind(
-
-        "TEMP",
-
-        data.name,
-
-        data.category || "",
-
-        data.brand || "",
-
-        data.unit || "",
-
-        data.price || 0,
-
-        data.image_url || "",
-
-        data.description || ""
-
-    )
-    .run();
-
-
-    const id =
-    insert.meta.last_row_id;
-
-
-    const productCode =
-    generateProductCode(id);
-
-
-    await env.DB
-    .prepare(
-    `
-    UPDATE products
-    SET product_code = ?
-    WHERE id = ?
-    `
-    )
-    .bind(
-
-        productCode,
-
-        id
-
-    )
-    .run();
-
-
-    return jsonResponse({
-
-        success:true,
-
-        product_code:
-        productCode
-
-    });
-
-}
-
-async function updateProduct(
-    request,
-    env
-){
-
-    const data =
-    await request.json();
-
-
-    if(!data.id){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Product id required"
-            },
-            400
-        );
-
-    }
-
-
-    await env.DB
-    .prepare(
-    `
-    UPDATE products
-    SET
-        name = ?,
-        category = ?,
-        brand = ?,
-        unit = ?,
-        price = ?,
-        image_url = ?,
-        description = ?,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-    `
-    )
-    .bind(
-
-        data.name || "",
-
-        data.category || "",
-
-        data.brand || "",
-
-        data.unit || "",
-
-        data.price || 0,
-
-        data.image_url || "",
-
-        data.description || "",
-
-        data.id
-
-    )
-    .run();
-
-
-
-    return jsonResponse({
-
-        success:true,
-
-        message:"Product updated"
-
-    });
-
-}
-
-
-async function deleteProduct(
-    request,
-    env
-){
-
-    const data =
-    await request.json();
-
-
-    if(!data.id){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Product id required"
-            },
-            400
-        );
-
-    }
-
-
-    await env.DB
-    .prepare(
-    `
-    DELETE FROM products
-    WHERE id = ?
-    `
-    )
-    .bind(
-        data.id
-    )
-    .run();
-
-
-
-    return jsonResponse({
-
-        success:true,
-
-        message:"Product deleted"
-
-    });
-
-}
-
-async function importProducts(
-    request,
-    env
-){
-
-    const data =
-    await request.json();
-
-
-    if(
-        !Array.isArray(data.rows)
-    ){
-
-        return jsonResponse(
-            {
-                success:false,
-                message:"Rows required"
-            },
-            400
-        );
-
-    }
-
-
-    let imported = 0;
-    let skipped = 0;
-
-
-    for(
-        const row of data.rows
-    ){
-
-        if(
-            !row.name
-        ){
-
-            skipped++;
-            continue;
+            return jsonResponse(
+                {
+                    success:false,
+                    message:
+                        data?.error?.message ||
+                        "Unable to fetch Meta catalog products"
+                },
+                response.status
+            );
 
         }
 
 
-        const exists =
-        await env.DB
-        .prepare(
-        `
-        SELECT id
-        FROM products
-        WHERE name = ?
-        AND brand = ?
-        `
-        )
-        .bind(
-
-            row.name,
-
-            row.brand || ""
-
-        )
-        .first();
-
-
-
-        if(exists){
-
-            skipped++;
-            continue;
-
-        }
-
-
-
-        const insert =
-        await env.DB
-        .prepare(
-        `
-        INSERT INTO products
-        (
-            product_code,
-            name,
-            category,
-            brand,
-            unit,
-            price,
-            description
-        )
-        VALUES
-        (
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
+        const products =
+            Array.isArray(data.data)
             ?
-        )
-        `
-        )
-        .bind(
-
-            "TMP_" + Date.now(),
-
-            row.name,
-
-            row.category || "",
-
-            row.brand || "",
-
-            row.unit || "",
-
-            row.price || 0,
-
-            row.description || ""
-
-        )
-        .run();
+            data.data
+            :
+            [];
 
 
+        return jsonResponse({
 
-        const id =
-        insert.meta.last_row_id;
+            success:true,
 
+            products,
 
+            paging:{
 
-        await env.DB
-        .prepare(
-        `
-        UPDATE products
-        SET product_code = ?
-        WHERE id = ?
-        `
-        )
-        .bind(
+                next:
+                    data.paging?.next ||
+                    null,
 
-            generateProductCode(id),
+                cursors:{
 
-            id
+                    before:
+                        data.paging?.cursors?.before ||
+                        null,
 
-        )
-        .run();
+                    after:
+                        data.paging?.cursors?.after ||
+                        null
 
+                }
 
+            }
 
-        imported++;
+        });
 
     }
+    catch(error){
+
+        console.error(
+            "Meta Catalog request failed:",
+            error
+        );
 
 
+        return jsonResponse(
+            {
+                success:false,
+                message:
+                    "Failed to connect to Meta Commerce Catalog"
+            },
+            500
+        );
 
-    return jsonResponse({
-
-        success:true,
-
-        imported,
-
-        skipped
-
-    });
+    }
 
 }
