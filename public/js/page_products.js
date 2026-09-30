@@ -50,36 +50,36 @@ const modalOverlay =
     document.getElementById("modalOverlay");
 
 
+
 let products = [];
 
 let currentView =
     localStorage.getItem("productsView") || "tiles";
 
 
-/* =========================================================
-   HELPERS
-========================================================= */
+
+/* =========================================
+   BASIC HELPERS
+========================================= */
 
 
 function escapeHtml(value){
 
-    if(
-        value === null ||
-        value === undefined
-    ){
+    if(value === null || value === undefined){
 
         return "";
 
     }
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
 }
+
 
 
 function showMessage(
@@ -94,10 +94,19 @@ function showMessage(
 }
 
 
-function formatPrice(
-    value,
-    currency = "INR"
-){
+
+/*
+ * Meta is returning prices such as:
+ *
+ * "₹120.00"
+ *
+ * instead of:
+ *
+ * "120.00"
+ *
+ * So remove currency symbols before formatting.
+ */
+function numericPrice(value){
 
     if(
         value === null ||
@@ -105,16 +114,52 @@ function formatPrice(
         value === ""
     ){
 
-        return "";
+        return null;
+
+    }
+
+
+    if(typeof value === "number"){
+
+        return value;
+
+    }
+
+
+    const cleaned =
+        String(value)
+            .replace(/[^\d.-]/g,"");
+
+
+    if(!cleaned){
+
+        return null;
 
     }
 
 
     const number =
-        Number(value);
+        Number(cleaned);
 
 
-    if(Number.isNaN(number)){
+    return Number.isNaN(number)
+        ? null
+        : number;
+
+}
+
+
+
+function formatPrice(
+    value,
+    currency = "INR"
+){
+
+    const number =
+        numericPrice(value);
+
+
+    if(number === null){
 
         return escapeHtml(value);
 
@@ -141,6 +186,7 @@ function formatPrice(
 }
 
 
+
 function formatDate(value){
 
     if(!value){
@@ -161,23 +207,20 @@ function formatDate(value){
     }
 
 
-    return date.toLocaleString(
-        "en-IN"
-    );
+    return date.toLocaleString("en-IN");
 
 }
+
 
 
 function formatLabel(key){
 
     return String(key)
-        .replaceAll("_", " ")
-        .replace(
-            /\b\w/g,
-            char => char.toUpperCase()
-        );
+        .replaceAll("_"," ")
+        .replace(/\b\w/g,char => char.toUpperCase());
 
 }
+
 
 
 function formatValue(value){
@@ -192,9 +235,7 @@ function formatValue(value){
     }
 
 
-    if(
-        typeof value === "object"
-    ){
+    if(typeof value === "object"){
 
         try{
 
@@ -228,6 +269,7 @@ function formatValue(value){
 }
 
 
+
 function isUrl(value){
 
     return (
@@ -240,9 +282,9 @@ function isUrl(value){
 }
 
 
-/* =========================================================
+/* =========================================
    IMAGE
-========================================================= */
+========================================= */
 
 
 function productImage(
@@ -251,26 +293,62 @@ function productImage(
 ){
 
     const image =
-        product.image_url;
+        product?.image_url || "";
 
 
     if(!image){
 
-        return `
-            <div class="${className}-no-image">
-                No image
-            </div>
-        `;
+        if(
+            className ===
+            "product-card-image"
+        ){
+
+            return `
+                <div class="product-card-no-image">
+                    No image
+                </div>
+            `;
+
+        }
+
+
+        if(
+            className ===
+            "product-image"
+        ){
+
+            return `
+                <div class="product-no-image">
+                    No image
+                </div>
+            `;
+
+        }
+
+
+        if(
+            className ===
+            "modal-product-image"
+        ){
+
+            return `
+                <div class="modal-product-no-image">
+                    No image
+                </div>
+            `;
+
+        }
 
     }
 
 
     return `
         <img
-            class="${className}"
+            class="${escapeHtml(className)}"
             src="${escapeHtml(image)}"
             alt="${escapeHtml(
-                product.name || "Product"
+                product?.name ||
+                "Product"
             )}"
             loading="lazy"
         >
@@ -279,9 +357,119 @@ function productImage(
 }
 
 
-/* =========================================================
+/* =========================================
+   VARIANT GROUPING
+========================================= */
+
+
+/*
+ * Products with the same
+ * retailer_product_group_id
+ * belong to the same variant group.
+ *
+ * If the field is missing, the product
+ * becomes its own group.
+ */
+
+
+function getGroupId(product){
+
+    const groupId =
+        product?.retailer_product_group_id;
+
+
+    if(
+        groupId !== null &&
+        groupId !== undefined &&
+        String(groupId).trim() !== ""
+    ){
+
+        return String(groupId);
+
+    }
+
+
+    /*
+     * Standalone products get a unique
+     * internal group ID.
+     */
+
+    return `single:${product?.id || Math.random()}`;
+
+}
+
+
+
+function buildVariantGroups(){
+
+    const groups =
+        new Map();
+
+
+    products.forEach(product => {
+
+        const groupId =
+            getGroupId(product);
+
+
+        if(!groups.has(groupId)){
+
+            groups.set(
+                groupId,
+                []
+            );
+
+        }
+
+
+        groups.get(groupId).push(product);
+
+    });
+
+
+    return groups;
+
+}
+
+
+
+function getVariantsForProduct(
+    product
+){
+
+    const groupId =
+        getGroupId(product);
+
+
+    const groups =
+        buildVariantGroups();
+
+
+    return groups.get(groupId) || [product];
+
+}
+
+
+
+/*
+ * Returns true only when this product
+ * actually has siblings.
+ */
+
+function hasVariants(product){
+
+    return (
+        getVariantsForProduct(product)
+            .length > 1
+    );
+
+}
+
+
+
+/* =========================================
    TILE VIEW
-========================================================= */
+========================================= */
 
 
 function renderTiles(items){
@@ -312,6 +500,10 @@ function renderTiles(items){
             "product-card";
 
 
+        const variants =
+            getVariantsForProduct(product);
+
+
         const image =
             productImage(
                 product,
@@ -319,10 +511,62 @@ function renderTiles(items){
             );
 
 
+        const variantBadge =
+            variants.length > 1
+            ?
+            `
+            <div class="variant-badge">
+
+                Variant
+
+                <span class="variant-count">
+
+                    ${variants.length}
+                    options
+
+                </span>
+
+            </div>
+            `
+            :
+            "";
+
+
+        const price =
+            product.price !== undefined &&
+            product.price !== null &&
+            product.price !== ""
+            ?
+            formatPrice(
+                product.price,
+                product.currency
+            )
+            :
+            "";
+
+
+        const salePrice =
+            product.sale_price !== undefined &&
+            product.sale_price !== null &&
+            product.sale_price !== ""
+            ?
+            formatPrice(
+                product.sale_price,
+                product.currency
+            )
+            :
+            "";
+
+
+        const displayPrice =
+            salePrice
+                ? salePrice
+                : price;
+
+
         card.innerHTML = `
 
             ${image}
-
 
             <div class="product-card-body">
 
@@ -336,10 +580,16 @@ function renderTiles(items){
                 </div>
 
 
+                ${
+                    variantBadge
+                }
+
+
                 <div class="product-card-description">
 
                     ${escapeHtml(
-                        product.description || ""
+                        product.description ||
+                        ""
                     )}
 
                 </div>
@@ -349,33 +599,18 @@ function renderTiles(items){
 
                     <div class="product-card-price">
 
-                        ${
-                            product.price !== undefined &&
-                            product.price !== null &&
-                            product.price !== ""
-
-                            ?
-
-                            formatPrice(
-                                product.price,
-                                product.currency
-                            )
-
-                            :
-
-                            ""
-                        }
+                        ${displayPrice}
 
                     </div>
 
 
                     ${
                         product.availability
-
                         ?
-
                         `
-                        <div class="product-card-availability">
+                        <div class="
+                            product-card-availability
+                        ">
 
                             ${escapeHtml(
                                 product.availability
@@ -383,11 +618,8 @@ function renderTiles(items){
 
                         </div>
                         `
-
                         :
-
                         ""
-
                     }
 
                 </div>
@@ -410,9 +642,9 @@ function renderTiles(items){
 }
 
 
-/* =========================================================
+/* =========================================
    LIST VIEW
-========================================================= */
+========================================= */
 
 
 function renderList(items){
@@ -447,6 +679,63 @@ function renderList(items){
 
         const row =
             document.createElement("tr");
+
+
+        const variants =
+            getVariantsForProduct(product);
+
+
+        const variantBadge =
+            variants.length > 1
+            ?
+            `
+            <div class="variant-badge">
+
+                Variant
+
+                <span class="variant-count">
+
+                    ${variants.length}
+                    options
+
+                </span>
+
+            </div>
+            `
+            :
+            "";
+
+
+        const price =
+            product.price !== undefined &&
+            product.price !== null &&
+            product.price !== ""
+            ?
+            formatPrice(
+                product.price,
+                product.currency
+            )
+            :
+            "";
+
+
+        const salePrice =
+            product.sale_price !== undefined &&
+            product.sale_price !== null &&
+            product.sale_price !== ""
+            ?
+            formatPrice(
+                product.sale_price,
+                product.currency
+            )
+            :
+            "";
+
+
+        const displayPrice =
+            salePrice
+                ? salePrice
+                : price;
 
 
         row.innerHTML = `
@@ -485,6 +774,9 @@ function renderList(items){
 
                 </div>
 
+
+                ${variantBadge}
+
             </td>
 
 
@@ -493,7 +785,8 @@ function renderList(items){
                 <div class="product-description">
 
                     ${escapeHtml(
-                        product.description || ""
+                        product.description ||
+                        ""
                     )}
 
                 </div>
@@ -505,22 +798,7 @@ function renderList(items){
 
                 <div class="price">
 
-                    ${
-                        product.price !== undefined &&
-                        product.price !== null &&
-                        product.price !== ""
-
-                        ?
-
-                        formatPrice(
-                            product.price,
-                            product.currency
-                        )
-
-                        :
-
-                        ""
-                    }
+                    ${displayPrice}
 
                 </div>
 
@@ -532,7 +810,8 @@ function renderList(items){
                 <div class="availability">
 
                     ${escapeHtml(
-                        product.availability || ""
+                        product.availability ||
+                        ""
                     )}
 
                 </div>
@@ -555,9 +834,9 @@ function renderList(items){
 }
 
 
-/* =========================================================
-   RENDER
-========================================================= */
+/* =========================================
+   RENDER BOTH VIEWS
+========================================= */
 
 
 function renderProducts(items){
@@ -569,14 +848,16 @@ function renderProducts(items){
 }
 
 
-/* =========================================================
-   VIEW SWITCH
-========================================================= */
+/* =========================================
+   VIEW SWITCHING
+========================================= */
 
 
 function setView(view){
 
-    currentView = view;
+    currentView =
+        view;
+
 
     localStorage.setItem(
         "productsView",
@@ -586,33 +867,49 @@ function setView(view){
 
     if(view === "list"){
 
-        tileView.classList.add("hidden");
+        tileView.classList.add(
+            "hidden"
+        );
 
-        listView.classList.remove("hidden");
+        listView.classList.remove(
+            "hidden"
+        );
 
-        tileViewBtn.classList.remove("active");
+        tileViewBtn.classList.remove(
+            "active"
+        );
 
-        listViewBtn.classList.add("active");
+        listViewBtn.classList.add(
+            "active"
+        );
 
     }
     else{
 
-        listView.classList.add("hidden");
+        listView.classList.add(
+            "hidden"
+        );
 
-        tileView.classList.remove("hidden");
+        tileView.classList.remove(
+            "hidden"
+        );
 
-        listViewBtn.classList.remove("active");
+        listViewBtn.classList.remove(
+            "active"
+        );
 
-        tileViewBtn.classList.add("active");
+        tileViewBtn.classList.add(
+            "active"
+        );
 
     }
 
 }
 
 
-/* =========================================================
-   MODAL
-========================================================= */
+/* =========================================
+   MODAL DETAIL ITEM
+========================================= */
 
 
 function detailItem(
@@ -684,7 +981,202 @@ function detailItem(
 }
 
 
-function openProductModal(product){
+/* =========================================
+   VARIANT SELECTOR
+========================================= */
+
+
+function renderVariantSection(
+    product
+){
+
+    const variants =
+        getVariantsForProduct(product);
+
+
+    /*
+     * Don't show a variant section for
+     * products that don't have siblings.
+     */
+
+    if(variants.length <= 1){
+
+        return "";
+
+    }
+
+
+    const variantHtml =
+        variants
+            .map(variant => {
+
+                const selected =
+                    String(
+                        variant.id
+                    ) === String(
+                        product.id
+                    );
+
+
+                const image =
+                    variant.image_url
+                    ?
+                    `
+                    <img
+                        class="variant-option-image"
+                        src="${escapeHtml(
+                            variant.image_url
+                        )}"
+                        alt="${escapeHtml(
+                            variant.name ||
+                            "Variant"
+                        )}"
+                        loading="lazy"
+                    >
+                    `
+                    :
+                    `
+                    <div class="
+                        variant-option-no-image
+                    ">
+
+                        No image
+
+                    </div>
+                    `;
+
+
+                const salePrice =
+                    variant.sale_price !== undefined &&
+                    variant.sale_price !== null &&
+                    variant.sale_price !== ""
+                    ?
+                    formatPrice(
+                        variant.sale_price,
+                        variant.currency
+                    )
+                    :
+                    "";
+
+
+                const normalPrice =
+                    variant.price !== undefined &&
+                    variant.price !== null &&
+                    variant.price !== ""
+                    ?
+                    formatPrice(
+                        variant.price,
+                        variant.currency
+                    )
+                    :
+                    "";
+
+
+                const price =
+                    salePrice ||
+                    normalPrice;
+
+
+                return `
+
+                    <button
+                        type="button"
+                        class="
+                            variant-option
+                            ${selected ? "selected" : ""}
+                        "
+                        data-variant-id="${escapeHtml(
+                            variant.id
+                        )}">
+
+                        ${image}
+
+
+                        <div class="
+                            variant-option-body
+                        ">
+
+                            <div class="
+                                variant-option-name
+                            ">
+
+                                ${escapeHtml(
+                                    variant.name ||
+                                    "Unnamed Variant"
+                                )}
+
+                            </div>
+
+
+                            <div class="
+                                variant-option-price
+                            ">
+
+                                ${price}
+
+                            </div>
+
+
+                            ${
+                                selected
+                                ?
+                                `
+                                <div class="
+                                    variant-option-selected
+                                ">
+
+                                    Selected
+
+                                </div>
+                                `
+                                :
+                                ""
+                            }
+
+                        </div>
+
+                    </button>
+
+                `;
+
+            })
+            .join("");
+
+
+    return `
+
+        <div class="variants-section">
+
+            <h3 class="
+                variants-section-title
+            ">
+
+                Variants
+
+            </h3>
+
+
+            <div class="variant-list">
+
+                ${variantHtml}
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+   OPEN MODAL
+========================================= */
+
+
+function openProductModal(
+    product
+){
 
     const image =
         productImage(
@@ -693,22 +1185,57 @@ function openProductModal(product){
         );
 
 
+    const salePrice =
+        product.sale_price !== undefined &&
+        product.sale_price !== null &&
+        product.sale_price !== ""
+        ?
+        formatPrice(
+            product.sale_price,
+            product.currency
+        )
+        :
+        "";
+
+
+    const normalPrice =
+        product.price !== undefined &&
+        product.price !== null &&
+        product.price !== ""
+        ?
+        formatPrice(
+            product.price,
+            product.currency
+        )
+        :
+        "";
+
+
+    const displayPrice =
+        salePrice ||
+        normalPrice;
+
+
     /*
-     * Header
+     * Product header
      */
 
     const header = `
 
         <div class="modal-product-header">
 
-            <div class="modal-product-image-wrap">
+            <div class="
+                modal-product-image-wrap
+            ">
 
                 ${image}
 
             </div>
 
 
-            <div class="modal-product-summary">
+            <div class="
+                modal-product-summary
+            ">
 
                 <h2
                     id="modalProductName"
@@ -723,37 +1250,29 @@ function openProductModal(product){
 
 
                 ${
-                    product.price !== undefined &&
-                    product.price !== null &&
-                    product.price !== ""
-
+                    displayPrice
                     ?
-
                     `
-                    <div class="modal-product-price">
+                    <div class="
+                        modal-product-price
+                    ">
 
-                        ${formatPrice(
-                            product.price,
-                            product.currency
-                        )}
+                        ${displayPrice}
 
                     </div>
                     `
-
                     :
-
                     ""
-
                 }
 
 
                 ${
                     product.availability
-
                     ?
-
                     `
-                    <div class="modal-product-availability">
+                    <div class="
+                        modal-product-availability
+                    ">
 
                         ${escapeHtml(
                             product.availability
@@ -761,11 +1280,8 @@ function openProductModal(product){
 
                     </div>
                     `
-
                     :
-
                     ""
-
                 }
 
             </div>
@@ -773,6 +1289,16 @@ function openProductModal(product){
         </div>
 
     `;
+
+
+    /*
+     * Variant section
+     */
+
+    const variantsSection =
+        renderVariantSection(
+            product
+        );
 
 
     /*
@@ -789,6 +1315,11 @@ function openProductModal(product){
         detailItem(
             "Retailer ID",
             product.retailer_id
+        ),
+
+        detailItem(
+            "Product Group",
+            product.retailer_product_group_id
         ),
 
         detailItem(
@@ -814,14 +1345,16 @@ function openProductModal(product){
     ].join("");
 
 
-    const basicSection = basic
+    const basicSection =
+        basic
         ?
-
         `
 
         <div class="details-section">
 
-            <h3 class="details-section-title">
+            <h3 class="
+                details-section-title
+            ">
 
                 Basic Information
 
@@ -837,9 +1370,7 @@ function openProductModal(product){
         </div>
 
         `
-
         :
-
         "";
 
 
@@ -849,21 +1380,23 @@ function openProductModal(product){
 
     const descriptionSection =
         product.description
-
         ?
-
         `
 
         <div class="details-section">
 
-            <h3 class="details-section-title">
+            <h3 class="
+                details-section-title
+            ">
 
                 Description
 
             </h3>
 
 
-            <p class="description-text">
+            <p class="
+                description-text
+            ">
 
                 ${escapeHtml(
                     product.description
@@ -874,9 +1407,7 @@ function openProductModal(product){
         </div>
 
         `
-
         :
-
         "";
 
 
@@ -891,22 +1422,13 @@ function openProductModal(product){
             product.price !== undefined &&
             product.price !== null &&
             product.price !== ""
-
                 ?
-
                 formatPrice(
                     product.price,
                     product.currency
                 )
-
                 :
-
                 ""
-        ),
-
-        detailItem(
-            "Currency",
-            product.currency
         ),
 
         detailItem(
@@ -914,17 +1436,18 @@ function openProductModal(product){
             product.sale_price !== undefined &&
             product.sale_price !== null &&
             product.sale_price !== ""
-
                 ?
-
                 formatPrice(
                     product.sale_price,
                     product.currency
                 )
-
                 :
-
                 ""
+        ),
+
+        detailItem(
+            "Currency",
+            product.currency
         ),
 
         detailItem(
@@ -937,14 +1460,16 @@ function openProductModal(product){
     ].join("");
 
 
-    const pricingSection = pricing
+    const pricingSection =
+        pricing
         ?
-
         `
 
         <div class="details-section">
 
-            <h3 class="details-section-title">
+            <h3 class="
+                details-section-title
+            ">
 
                 Pricing
 
@@ -960,26 +1485,24 @@ function openProductModal(product){
         </div>
 
         `
-
         :
-
         "";
 
 
     /*
-     * URL
+     * Product URL
      */
 
     const urlSection =
         product.url
-
         ?
-
         `
 
         <div class="details-section">
 
-            <h3 class="details-section-title">
+            <h3 class="
+                details-section-title
+            ">
 
                 Product Link
 
@@ -998,20 +1521,20 @@ function openProductModal(product){
         </div>
 
         `
-
         :
-
         "";
 
 
     /*
-     * Extra fields returned by Meta
+     * Automatically display unknown
+     * fields returned by Meta.
      */
 
     const knownFields = [
 
         "id",
         "retailer_id",
+        "retailer_product_group_id",
         "name",
         "description",
         "price",
@@ -1029,31 +1552,33 @@ function openProductModal(product){
 
     const extraFields =
         Object.entries(product)
-            .filter(([key, value]) => {
+            .filter(
+                ([key,value]) => {
 
-                if(
-                    knownFields.includes(key)
-                ){
+                    if(
+                        knownFields.includes(key)
+                    ){
 
-                    return false;
+                        return false;
+
+                    }
+
+
+                    if(
+                        value === null ||
+                        value === undefined ||
+                        value === ""
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    return true;
 
                 }
-
-
-                if(
-                    value === null ||
-                    value === undefined ||
-                    value === ""
-                ){
-
-                    return false;
-
-                }
-
-
-                return true;
-
-            });
+            );
 
 
     let extraSection = "";
@@ -1063,49 +1588,63 @@ function openProductModal(product){
 
         const extraHtml =
             extraFields
-                .map(([key, value]) => {
+                .map(
+                    ([key,value]) => {
 
-                    return `
+                        return `
 
-                        <div class="extra-field">
+                            <div class="
+                                extra-field
+                            ">
 
-                            <div class="extra-field-label">
+                                <div class="
+                                    extra-field-label
+                                ">
 
-                                ${escapeHtml(
-                                    formatLabel(key)
-                                )}
+                                    ${escapeHtml(
+                                        formatLabel(key)
+                                    )}
+
+                                </div>
+
+
+                                <div class="
+                                    extra-field-value
+                                ">
+
+                                    ${escapeHtml(
+                                        formatValue(value)
+                                    )}
+
+                                </div>
 
                             </div>
 
+                        `;
 
-                            <div class="extra-field-value">
-
-                                ${escapeHtml(
-                                    formatValue(value)
-                                )}
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                })
+                    }
+                )
                 .join("");
 
 
         extraSection = `
 
-            <div class="details-section">
+            <div class="
+                details-section
+            ">
 
-                <h3 class="details-section-title">
+                <h3 class="
+                    details-section-title
+                ">
 
                     Additional Catalog Information
 
                 </h3>
 
 
-                <div class="extra-fields-grid">
+                <div class="
+                    extra-fields-grid
+                ">
 
                     ${extraHtml}
 
@@ -1119,12 +1658,14 @@ function openProductModal(product){
 
 
     /*
-     * Put everything into modal
+     * Put everything together.
      */
 
     productDetails.innerHTML =
 
         header +
+
+        variantsSection +
 
         descriptionSection +
 
@@ -1137,6 +1678,55 @@ function openProductModal(product){
         extraSection;
 
 
+    /*
+     * Attach variant click handlers.
+     */
+
+    const variantButtons =
+        productDetails.querySelectorAll(
+            ".variant-option"
+        );
+
+
+    variantButtons.forEach(button => {
+
+        button.addEventListener(
+            "click",
+            event => {
+
+                event.stopPropagation();
+
+
+                const variantId =
+                    button.dataset.variantId;
+
+
+                const selectedProduct =
+                    products.find(
+                        item =>
+                            String(item.id) ===
+                            String(variantId)
+                    );
+
+
+                if(selectedProduct){
+
+                    openProductModal(
+                        selectedProduct
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+
+    /*
+     * Show modal.
+     */
+
     productModal.classList.remove(
         "hidden"
     );
@@ -1146,6 +1736,11 @@ function openProductModal(product){
         "hidden";
 
 }
+
+
+/* =========================================
+   CLOSE MODAL
+========================================= */
 
 
 function closeProductModal(){
@@ -1161,9 +1756,9 @@ function closeProductModal(){
 }
 
 
-/* =========================================================
+/* =========================================
    SEARCH
-========================================================= */
+========================================= */
 
 
 function matchesSearch(
@@ -1184,9 +1779,7 @@ function matchesSearch(
             }
 
 
-            if(
-                typeof value === "object"
-            ){
+            if(typeof value === "object"){
 
                 try{
 
@@ -1215,6 +1808,7 @@ function matchesSearch(
 }
 
 
+
 function searchProducts(){
 
     const search =
@@ -1225,11 +1819,15 @@ function searchProducts(){
 
     if(!search){
 
-        renderProducts(products);
+        renderProducts(
+            products
+        );
+
 
         showMessage(
             `${products.length} catalog product(s)`
         );
+
 
         return;
 
@@ -1246,7 +1844,9 @@ function searchProducts(){
         );
 
 
-    renderProducts(filtered);
+    renderProducts(
+        filtered
+    );
 
 
     showMessage(
@@ -1256,9 +1856,9 @@ function searchProducts(){
 }
 
 
-/* =========================================================
+/* =========================================
    LOAD PRODUCTS
-========================================================= */
+========================================= */
 
 
 async function loadProducts(){
@@ -1299,18 +1899,25 @@ async function loadProducts(){
                 "error-message"
             );
 
+
             return;
 
         }
 
 
         products =
-            Array.isArray(data.products)
-                ? data.products
-                : [];
+            Array.isArray(
+                data.products
+            )
+            ?
+            data.products
+            :
+            [];
 
 
-        renderProducts(products);
+        renderProducts(
+            products
+        );
 
 
         showMessage(
@@ -1336,9 +1943,9 @@ async function loadProducts(){
 }
 
 
-/* =========================================================
+/* =========================================
    EVENTS
-========================================================= */
+========================================= */
 
 
 searchBtn.addEventListener(
@@ -1369,7 +1976,10 @@ searchInput.addEventListener(
             searchInput.value.trim() === ""
         ){
 
-            renderProducts(products);
+            renderProducts(
+                products
+            );
+
 
             showMessage(
                 `${products.length} catalog product(s)`
@@ -1383,13 +1993,21 @@ searchInput.addEventListener(
 
 tileViewBtn.addEventListener(
     "click",
-    () => setView("tiles")
+    () => {
+
+        setView("tiles");
+
+    }
 );
 
 
 listViewBtn.addEventListener(
     "click",
-    () => setView("list")
+    () => {
+
+        setView("list");
+
+    }
 );
 
 
@@ -1424,11 +2042,14 @@ document.addEventListener(
 );
 
 
-/* =========================================================
+/* =========================================
    START
-========================================================= */
+========================================= */
 
 
-setView(currentView);
+setView(
+    currentView
+);
+
 
 loadProducts();
