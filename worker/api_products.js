@@ -135,7 +135,8 @@ async function getCatalogProducts(
             "condition",
             "url",
             "sale_price",
-            "sale_price_effective_date"
+            "sale_price_effective_date",
+            "item_group_id"
         ].join(",")
     );
 
