@@ -14,11 +14,6 @@ loadSidebar("products");
 
 
 
-/* =========================
-   ELEMENTS
-========================= */
-
-
 const tileView =
     document.getElementById("tileView");
 
@@ -46,30 +41,27 @@ const listViewBtn =
 const productModal =
     document.getElementById("productModal");
 
+const productDetails =
+    document.getElementById("productDetails");
+
 const closeModal =
     document.getElementById("closeModal");
 
 const modalOverlay =
-    document.querySelector(".modal-overlay");
+    document.getElementById("modalOverlay");
 
-const productDetails =
-    document.getElementById("productDetails");
-
-
-
-/* =========================
-   STATE
-========================= */
 
 
 let products = [];
 
-let currentView = "tile";
+let currentView =
+    localStorage.getItem("productsView") ||
+    "tiles";
 
 
 
 /* =========================
-   HTML ESCAPE
+   HELPERS
 ========================= */
 
 
@@ -86,19 +78,19 @@ function escapeHtml(value){
 
 
     return String(value)
+
         .replaceAll("&","&amp;")
+
         .replaceAll("<","&lt;")
+
         .replaceAll(">","&gt;")
+
         .replaceAll('"',"&quot;")
+
         .replaceAll("'","&#039;");
 
 }
 
-
-
-/* =========================
-   MESSAGE
-========================= */
 
 
 function showMessage(
@@ -114,17 +106,15 @@ function showMessage(
 
 
 
-/* =========================
-   PRICE
-========================= */
-
-
 function formatPrice(product){
 
+    const value =
+        product.price;
+
     if(
-        product.price === undefined ||
-        product.price === null ||
-        product.price === ""
+        value === undefined ||
+        value === null ||
+        value === ""
     ){
 
         return "";
@@ -133,20 +123,19 @@ function formatPrice(product){
 
 
     const price =
-        Number(product.price);
+        Number(value);
 
 
     if(Number.isNaN(price)){
 
-        return escapeHtml(
-            product.price
-        );
+        return escapeHtml(value);
 
     }
 
 
     const currency =
-        product.currency || "INR";
+        product.currency ||
+        "INR";
 
 
     try{
@@ -162,7 +151,7 @@ function formatPrice(product){
     }
     catch{
 
-        return `${escapeHtml(currency)} ${price}`;
+        return `${currency} ${price}`;
 
     }
 
@@ -170,9 +159,87 @@ function formatPrice(product){
 
 
 
-/* =========================
-   IMAGE
-========================= */
+function formatValue(value){
+
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return "";
+
+    }
+
+
+    if(
+        typeof value === "object"
+    ){
+
+        try{
+
+            return JSON.stringify(
+                value,
+                null,
+                2
+            );
+
+        }
+        catch{
+
+            return String(value);
+
+        }
+
+    }
+
+
+    if(typeof value === "boolean"){
+
+        return value
+            ? "Yes"
+            : "No";
+
+    }
+
+
+    return String(value);
+
+}
+
+
+
+function formatDetailLabel(key){
+
+    return String(key)
+
+        .replaceAll("_"," ")
+
+        .replace(
+            /\b\w/g,
+            char => char.toUpperCase()
+        );
+
+}
+
+
+
+function isUrl(value){
+
+    if(
+        typeof value !== "string"
+    ){
+
+        return false;
+
+    }
+
+
+    return /^https?:\/\//i.test(
+        value.trim()
+    );
+
+}
+
 
 
 function getImageHtml(
@@ -185,20 +252,6 @@ function getImageHtml(
 
 
     if(!imageUrl){
-
-        if(
-            className ===
-            "product-card-image"
-        ){
-
-            return `
-                <div class="product-card-no-image">
-                    No image
-                </div>
-            `;
-
-        }
-
 
         return `
             <div class="no-image">
@@ -237,7 +290,7 @@ function renderTiles(items){
     if(!items.length){
 
         tileView.innerHTML = `
-            <div class="tile-empty">
+            <div class="empty-message">
                 Nothing to display
             </div>
         `;
@@ -257,15 +310,38 @@ function renderTiles(items){
             "product-card";
 
 
-        card.tabIndex = 0;
+        const imageUrl =
+            product.image_url || "";
+
+
+        const imageHtml =
+            imageUrl
+
+            ?
+
+            `
+            <img
+                class="product-card-image"
+                src="${escapeHtml(imageUrl)}"
+                alt="${escapeHtml(
+                    product.name || "Product"
+                )}"
+                loading="lazy"
+            >
+            `
+
+            :
+
+            `
+            <div class="product-card-no-image">
+                No image
+            </div>
+            `;
 
 
         card.innerHTML = `
 
-            ${getImageHtml(
-                product,
-                "product-card-image"
-            )}
+            ${imageHtml}
 
 
             <div class="product-card-body">
@@ -273,8 +349,7 @@ function renderTiles(items){
                 <div class="product-card-name">
 
                     ${escapeHtml(
-                        product.name ||
-                        "Unnamed Product"
+                        product.name || "Unnamed Product"
                     )}
 
                 </div>
@@ -283,8 +358,7 @@ function renderTiles(items){
                 <div class="product-card-description">
 
                     ${escapeHtml(
-                        product.description ||
-                        "No description available."
+                        product.description || ""
                     )}
 
                 </div>
@@ -299,14 +373,26 @@ function renderTiles(items){
                     </div>
 
 
-                    <div class="product-card-availability">
+                    ${
+                        product.availability
 
-                        ${escapeHtml(
-                            product.availability ||
-                            "Unknown"
-                        )}
+                        ?
 
-                    </div>
+                        `
+                        <div class="product-card-availability">
+
+                            ${escapeHtml(
+                                product.availability
+                            )}
+
+                        </div>
+                        `
+
+                        :
+
+                        ""
+
+                    }
 
                 </div>
 
@@ -318,25 +404,6 @@ function renderTiles(items){
         card.addEventListener(
             "click",
             () => openProductModal(product)
-        );
-
-
-        card.addEventListener(
-            "keydown",
-            event => {
-
-                if(
-                    event.key === "Enter" ||
-                    event.key === " "
-                ){
-
-                    event.preventDefault();
-
-                    openProductModal(product);
-
-                }
-
-            }
         );
 
 
@@ -360,25 +427,21 @@ function renderList(items){
 
     if(!items.length){
 
-        const row =
-            document.createElement("tr");
+        productList.innerHTML = `
 
+            <tr>
 
-        row.innerHTML = `
+                <td
+                    colspan="6"
+                    class="empty-message">
 
-            <td
-                colspan="6"
-                class="empty-message"
-            >
+                    Nothing to display
 
-                Nothing to display
+                </td>
 
-            </td>
+            </tr>
 
         `;
-
-
-        productList.appendChild(row);
 
         return;
 
@@ -498,7 +561,7 @@ function renderProducts(items){
 
 
 /* =========================
-   VIEW SWITCHING
+   VIEW SWITCH
 ========================= */
 
 
@@ -506,28 +569,13 @@ function setView(view){
 
     currentView = view;
 
-
-    if(view === "tile"){
-
-        tileView.classList.remove(
-            "hidden"
-        );
-
-        listView.classList.add(
-            "hidden"
-        );
+    localStorage.setItem(
+        "productsView",
+        view
+    );
 
 
-        tileViewBtn.classList.add(
-            "active"
-        );
-
-        listViewBtn.classList.remove(
-            "active"
-        );
-
-    }
-    else{
+    if(view === "list"){
 
         tileView.classList.add(
             "hidden"
@@ -536,7 +584,6 @@ function setView(view){
         listView.classList.remove(
             "hidden"
         );
-
 
         tileViewBtn.classList.remove(
             "active"
@@ -547,40 +594,45 @@ function setView(view){
         );
 
     }
+    else{
+
+        listView.classList.add(
+            "hidden"
+        );
+
+        tileView.classList.remove(
+            "hidden"
+        );
+
+        listViewBtn.classList.remove(
+            "active"
+        );
+
+        tileViewBtn.classList.add(
+            "active"
+        );
+
+    }
+
+}
 
 
-    localStorage.setItem(
-        "productsView",
-        view
-    );
+
+function initializeView(){
+
+    setView(currentView);
 
 }
 
 
 
 /* =========================
-   PRODUCT DETAILS
+   MODAL DETAILS
 ========================= */
 
 
-function formatDetailLabel(key){
-
-    return String(key)
-
-        .replaceAll("_"," ")
-
-        .replace(
-            /\b\w/g,
-            letter =>
-                letter.toUpperCase()
-        );
-
-}
-
-
-
-function formatDetailValue(
-    key,
+function createDetailItem(
+    label,
     value
 ){
 
@@ -590,63 +642,75 @@ function formatDetailValue(
         value === ""
     ){
 
-        return `
-            <span class="empty">
-                Not available
-            </span>
+        return "";
+
+    }
+
+
+    const formatted =
+        formatValue(value);
+
+
+    if(!formatted){
+
+        return "";
+
+    }
+
+
+    let displayValue;
+
+
+    if(isUrl(formatted)){
+
+        displayValue = `
+
+            <a
+                href="${escapeHtml(formatted)}"
+                target="_blank"
+                rel="noopener noreferrer">
+
+                ${escapeHtml(formatted)}
+
+            </a>
+
         `;
 
     }
+    else{
 
-
-    /*
-     * Objects / arrays returned by Meta
-     * are displayed as readable JSON.
-     */
-
-    if(
-        typeof value === "object"
-    ){
-
-        return escapeHtml(
-            JSON.stringify(
-                value,
-                null,
-                2
-            )
-        );
+        displayValue =
+            escapeHtml(formatted);
 
     }
 
 
-    if(
-        key === "price"
-    ){
+    return `
 
-        return formatPrice({
-            price:value,
-            currency:
-                currentModalProduct?.currency ||
-                "INR"
-        });
+        <div class="detail-item">
 
-    }
+            <span class="detail-label">
+
+                ${escapeHtml(label)}
+
+            </span>
 
 
-    return escapeHtml(value);
+            <span class="detail-value">
+
+                ${displayValue}
+
+            </span>
+
+        </div>
+
+    `;
 
 }
 
 
 
-let currentModalProduct = null;
-
-
-
 function openProductModal(product){
-
-    currentModalProduct = product;
-
 
     const imageUrl =
         product.image_url || "";
@@ -658,126 +722,49 @@ function openProductModal(product){
         ?
 
         `
-            <img
-                class="modal-product-image"
-                src="${escapeHtml(imageUrl)}"
-                alt="${escapeHtml(
-                    product.name ||
-                    "Product"
-                )}"
-            >
+        <img
+            class="modal-product-image"
+            src="${escapeHtml(imageUrl)}"
+            alt="${escapeHtml(
+                product.name || "Product"
+            )}"
+        >
         `
 
         :
 
         `
-            <div class="modal-product-no-image">
-                No image available
-            </div>
+        <div class="modal-product-no-image">
+
+            No image
+
+        </div>
         `;
 
 
 
-    /*
-     * Fields displayed at the top.
-     */
-
-    const topFields = [
-
-        "id",
-        "retailer_id",
-        "name",
-        "price",
-        "currency",
-        "availability"
-
-    ];
+    /* =========================
+       HEADER
+    ========================= */
 
 
-
-    /*
-     * Build all remaining fields
-     * returned by Meta.
-     */
-
-    const remainingFields =
-        Object.entries(product)
-            .filter(
-                ([key]) =>
-                    !topFields.includes(key) &&
-                    key !== "image_url"
-            );
-
-
-
-    let detailsHtml = "";
-
-
-
-    if(remainingFields.length){
-
-        detailsHtml = `
-
-            <h3 class="detail-section-title">
-                Product Details
-            </h3>
-
-
-            <div class="detail-grid">
-
-                ${remainingFields.map(
-                    ([key,value]) => `
-
-                    <div class="detail-item">
-
-                        <span class="detail-label">
-
-                            ${escapeHtml(
-                                formatDetailLabel(key)
-                            )}
-
-                        </span>
-
-
-                        <div class="detail-value">
-
-                            ${formatDetailValue(
-                                key,
-                                value
-                            )}
-
-                        </div>
-
-                    </div>
-
-                `
-                ).join("")}
-
-            </div>
-
-        `;
-
-    }
-
-
-
-    productDetails.innerHTML = `
+    const headerHtml = `
 
         <div class="modal-product-header">
 
-            <div>
+
+            <div class="modal-product-image-wrap">
 
                 ${imageHtml}
 
             </div>
 
 
-            <div>
+            <div class="modal-product-summary">
 
                 <h2
                     id="modalProductName"
-                    class="modal-product-title"
-                >
+                    class="modal-product-name">
 
                     ${escapeHtml(
                         product.name ||
@@ -787,111 +774,479 @@ function openProductModal(product){
                 </h2>
 
 
-                <div class="modal-product-price">
+                ${
+                    product.price !== undefined &&
+                    product.price !== null &&
+                    product.price !== ""
 
-                    ${formatPrice(product)}
+                    ?
 
-                </div>
+                    `
+                    <div class="modal-product-price">
+
+                        ${formatPrice(product)}
+
+                    </div>
+                    `
+
+                    :
+
+                    ""
+
+                }
 
 
-                <div class="modal-product-description">
+                ${
+                    product.availability
 
-                    ${escapeHtml(
-                        product.description ||
-                        "No description available."
-                    )}
+                    ?
 
-                </div>
+                    `
+                    <div class="modal-product-availability">
+
+                        ${escapeHtml(
+                            product.availability
+                        )}
+
+                    </div>
+                    `
+
+                    :
+
+                    ""
+
+                }
 
             </div>
+
 
         </div>
-
-
-
-        <h3 class="detail-section-title">
-            Basic Information
-        </h3>
-
-
-        <div class="detail-grid">
-
-            <div class="detail-item">
-
-                <span class="detail-label">
-                    Product ID
-                </span>
-
-                <div class="detail-value">
-
-                    ${escapeHtml(
-                        product.id || ""
-                    )}
-
-                </div>
-
-            </div>
-
-
-            <div class="detail-item">
-
-                <span class="detail-label">
-                    Retailer ID
-                </span>
-
-                <div class="detail-value">
-
-                    ${escapeHtml(
-                        product.retailer_id ||
-                        ""
-                    )}
-
-                </div>
-
-            </div>
-
-
-            <div class="detail-item">
-
-                <span class="detail-label">
-                    Currency
-                </span>
-
-                <div class="detail-value">
-
-                    ${escapeHtml(
-                        product.currency ||
-                        ""
-                    )}
-
-                </div>
-
-            </div>
-
-
-            <div class="detail-item">
-
-                <span class="detail-label">
-                    Availability
-                </span>
-
-                <div class="detail-value">
-
-                    ${escapeHtml(
-                        product.availability ||
-                        ""
-                    )}
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        ${detailsHtml}
 
     `;
+
+
+
+    /* =========================
+       BASIC INFORMATION
+    ========================= */
+
+
+    const basicFields = [
+
+        [
+            "Product ID",
+            product.id
+        ],
+
+        [
+            "Retailer ID",
+            product.retailer_id
+        ],
+
+        [
+            "Brand",
+            product.brand
+        ],
+
+        [
+            "Condition",
+            product.condition
+        ],
+
+        [
+            "Availability",
+            product.availability
+        ],
+
+        [
+            "Currency",
+            product.currency
+        ]
+
+    ];
+
+
+    const basicHtml =
+        basicFields
+
+            .map(
+                ([label,value]) =>
+                    createDetailItem(
+                        label,
+                        value
+                    )
+            )
+
+            .join("");
+
+
+
+    /* =========================
+       DESCRIPTION
+    ========================= */
+
+
+    const descriptionHtml =
+        product.description
+
+        ?
+
+        `
+
+        <div class="details-section">
+
+            <h3 class="details-section-title">
+
+                Description
+
+            </h3>
+
+
+            <p class="description-text">
+
+                ${escapeHtml(
+                    product.description
+                )}
+
+            </p>
+
+        </div>
+
+        `
+
+        :
+
+        "";
+
+
+
+    /* =========================
+       BASIC INFO SECTION
+    ========================= */
+
+
+    const basicSection =
+
+        basicHtml
+
+        ?
+
+        `
+
+        <div class="details-section">
+
+            <h3 class="details-section-title">
+
+                Basic Information
+
+            </h3>
+
+
+            <div class="details-grid">
+
+                ${basicHtml}
+
+            </div>
+
+        </div>
+
+        `
+
+        :
+
+        "";
+
+
+
+    /* =========================
+       PRICING
+    ========================= */
+
+
+    const pricingFields = [
+
+        [
+            "Price",
+            product.price !== undefined &&
+            product.price !== null &&
+            product.price !== ""
+
+                ?
+
+                formatPrice(product)
+
+                :
+
+                null
+        ],
+
+        [
+            "Currency",
+            product.currency
+        ],
+
+        [
+            "Sale Price",
+            product.sale_price !== undefined &&
+            product.sale_price !== null &&
+            product.sale_price !== ""
+
+                ?
+
+                formatSalePrice(product)
+
+                :
+
+                null
+        ],
+
+        [
+            "Sale Price Effective Date",
+            product.sale_price_effective_date
+        ]
+
+    ];
+
+
+    const pricingHtml =
+        pricingFields
+
+            .map(
+                ([label,value]) =>
+                    createDetailItem(
+                        label,
+                        value
+                    )
+            )
+
+            .join("");
+
+
+
+    const pricingSection =
+
+        pricingHtml
+
+        ?
+
+        `
+
+        <div class="details-section">
+
+            <h3 class="details-section-title">
+
+                Pricing
+
+            </h3>
+
+
+            <div class="details-grid">
+
+                ${pricingHtml}
+
+            </div>
+
+        </div>
+
+        `
+
+        :
+
+        "";
+
+
+
+    /* =========================
+       LINKS
+    ========================= */
+
+
+    const linksHtml =
+        createDetailItem(
+            "Product URL",
+            product.url
+        );
+
+
+    const linksSection =
+
+        linksHtml
+
+        ?
+
+        `
+
+        <div class="details-section">
+
+            <h3 class="details-section-title">
+
+                Product Link
+
+            </h3>
+
+
+            <div class="details-grid">
+
+                ${linksHtml}
+
+            </div>
+
+        </div>
+
+        `
+
+        :
+
+        "";
+
+
+
+    /* =========================
+       EXTRA FIELDS
+    ========================= */
+
+
+    const knownFields = new Set([
+
+        "id",
+
+        "retailer_id",
+
+        "name",
+
+        "description",
+
+        "price",
+
+        "currency",
+
+        "image_url",
+
+        "availability",
+
+        "brand",
+
+        "condition",
+
+        "url",
+
+        "sale_price",
+
+        "sale_price_effective_date"
+
+    ]);
+
+
+    const extraFields =
+        Object.entries(product)
+
+            .filter(
+                ([key,value]) => {
+
+                    if(
+                        knownFields.has(key)
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    if(
+                        value === null ||
+                        value === undefined ||
+                        value === ""
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    return true;
+
+                }
+            );
+
+
+
+    let extraSection = "";
+
+
+    if(extraFields.length){
+
+        const extraHtml =
+            extraFields
+
+                .map(
+                    ([key,value]) => `
+
+                        <div class="extra-field">
+
+                            <div class="extra-field-label">
+
+                                ${escapeHtml(
+                                    formatDetailLabel(key)
+                                )}
+
+                            </div>
+
+
+                            <div class="extra-field-value">
+
+                                ${escapeHtml(
+                                    formatValue(value)
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    `
+                )
+
+                .join("");
+
+
+        extraSection = `
+
+            <div class="details-section">
+
+                <h3 class="details-section-title">
+
+                    Additional Catalog Information
+
+                </h3>
+
+
+                <div class="extra-fields-grid">
+
+                    ${extraHtml}
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+
+    productDetails.innerHTML =
+
+        headerHtml +
+
+        descriptionHtml +
+
+        basicSection +
+
+        pricingSection +
+
+        linksSection +
+
+        extraSection;
+
 
 
     productModal.classList.remove(
@@ -901,6 +1256,65 @@ function openProductModal(product){
 
     document.body.style.overflow =
         "hidden";
+
+}
+
+
+
+/* =========================
+   SALE PRICE
+========================= */
+
+
+function formatSalePrice(product){
+
+    const value =
+        product.sale_price;
+
+
+    if(
+        value === undefined ||
+        value === null ||
+        value === ""
+    ){
+
+        return "";
+
+    }
+
+
+    const price =
+        Number(value);
+
+
+    if(Number.isNaN(price)){
+
+        return String(value);
+
+    }
+
+
+    const currency =
+        product.currency ||
+        "INR";
+
+
+    try{
+
+        return new Intl.NumberFormat(
+            "en-IN",
+            {
+                style:"currency",
+                currency
+            }
+        ).format(price);
+
+    }
+    catch{
+
+        return `${currency} ${price}`;
+
+    }
 
 }
 
@@ -921,10 +1335,246 @@ function closeProductModal(){
     document.body.style.overflow =
         "";
 
+}
 
-    currentModalProduct = null;
+
+
+/* =========================
+   LOAD PRODUCTS
+========================= */
+
+
+async function loadProducts(){
+
+    showMessage(
+        "Loading catalog products...",
+        "loading-message"
+    );
+
+
+    tileView.innerHTML = "";
+
+    productList.innerHTML = "";
+
+
+    try{
+
+        const data =
+            await apiFetch(
+                "/products"
+            );
+
+
+        if(
+            !data ||
+            !data.success
+        ){
+
+            showMessage(
+                data?.message ||
+                "Unable to load catalog products.",
+                "error-message"
+            );
+
+            return;
+
+        }
+
+
+        products =
+            Array.isArray(data.products)
+
+            ?
+
+            data.products
+
+            :
+
+            [];
+
+
+        showMessage(
+            `${products.length} catalog product(s)`
+        );
+
+
+        renderProducts(products);
+
+    }
+    catch(error){
+
+        console.error(
+            "Catalog products error:",
+            error
+        );
+
+
+        showMessage(
+            "Unable to load catalog products.",
+            "error-message"
+        );
+
+    }
 
 }
+
+
+
+/* =========================
+   SEARCH
+========================= */
+
+
+function valueMatchesSearch(
+    value,
+    search
+){
+
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return false;
+
+    }
+
+
+    if(
+        typeof value === "object"
+    ){
+
+        try{
+
+            return JSON.stringify(
+                value
+            )
+            .toLowerCase()
+            .includes(search);
+
+        }
+        catch{
+
+            return false;
+
+        }
+
+    }
+
+
+    return String(value)
+        .toLowerCase()
+        .includes(search);
+
+}
+
+
+
+function searchProducts(){
+
+    const search =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    if(!search){
+
+        renderProducts(products);
+
+        showMessage(
+            `${products.length} catalog product(s)`
+        );
+
+        return;
+
+    }
+
+
+    const filtered =
+        products.filter(product => {
+
+            return Object.values(
+                product
+            ).some(
+                value =>
+                    valueMatchesSearch(
+                        value,
+                        search
+                    )
+            );
+
+        });
+
+
+    renderProducts(filtered);
+
+
+    showMessage(
+        `${filtered.length} product(s) found`
+    );
+
+}
+
+
+
+/* =========================
+   EVENTS
+========================= */
+
+
+searchBtn.addEventListener(
+    "click",
+    searchProducts
+);
+
+
+searchInput.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key === "Enter"
+        ){
+
+            searchProducts();
+
+        }
+
+    }
+);
+
+
+searchInput.addEventListener(
+    "input",
+    () => {
+
+        if(
+            searchInput.value.trim() === ""
+        ){
+
+            renderProducts(products);
+
+            showMessage(
+                `${products.length} catalog product(s)`
+            );
+
+        }
+
+    }
+);
+
+
+tileViewBtn.addEventListener(
+    "click",
+    () => setView("tiles")
+);
+
+
+listViewBtn.addEventListener(
+    "click",
+    () => setView("list")
+);
 
 
 closeModal.addEventListener(
@@ -960,248 +1610,10 @@ document.addEventListener(
 
 
 /* =========================
-   LOAD PRODUCTS
-========================= */
-
-
-async function loadProducts(){
-
-    showMessage(
-        "Loading catalog products...",
-        "loading-message"
-    );
-
-
-    tileView.innerHTML = "";
-
-    productList.innerHTML = "";
-
-
-    try{
-
-        const data =
-            await apiFetch("/products");
-
-
-        if(
-            !data ||
-            !data.success
-        ){
-
-            showMessage(
-                data?.message ||
-                "Unable to load catalog products.",
-                "error-message"
-            );
-
-            return;
-
-        }
-
-
-        products =
-            Array.isArray(data.products)
-            ?
-            data.products
-            :
-            [];
-
-
-        showMessage(
-            `${products.length} catalog product(s)`
-        );
-
-
-        renderProducts(products);
-
-
-        /*
-         * Restore user's previous view.
-         */
-
-        const savedView =
-            localStorage.getItem(
-                "productsView"
-            );
-
-
-        if(
-            savedView === "list" ||
-            savedView === "tile"
-        ){
-
-            setView(savedView);
-
-        }
-        else{
-
-            setView("tile");
-
-        }
-
-    }
-    catch(error){
-
-        console.error(
-            "Catalog products error:",
-            error
-        );
-
-
-        showMessage(
-            "Unable to load catalog products.",
-            "error-message"
-        );
-
-    }
-
-}
-
-
-
-/* =========================
-   SEARCH
-========================= */
-
-
-function searchProducts(){
-
-    const search =
-        searchInput.value
-            .trim()
-            .toLowerCase();
-
-
-    if(!search){
-
-        renderProducts(products);
-
-
-        showMessage(
-            `${products.length} catalog product(s)`
-        );
-
-
-        return;
-
-    }
-
-
-    const filtered =
-        products.filter(product => {
-
-            /*
-             * Search all primitive fields returned
-             * by Meta, not just name/description/id.
-             */
-
-            return Object.values(product)
-                .some(value => {
-
-                    if(
-                        value === null ||
-                        value === undefined
-                    ){
-
-                        return false;
-
-                    }
-
-
-                    if(
-                        typeof value === "object"
-                    ){
-
-                        return JSON.stringify(
-                            value
-                        )
-                        .toLowerCase()
-                        .includes(search);
-
-                    }
-
-
-                    return String(value)
-                        .toLowerCase()
-                        .includes(search);
-
-                });
-
-        });
-
-
-    renderProducts(filtered);
-
-
-    showMessage(
-        `${filtered.length} product(s) found`
-    );
-
-}
-
-
-
-/* =========================
-   EVENTS
-========================= */
-
-
-searchBtn.addEventListener(
-    "click",
-    searchProducts
-);
-
-
-searchInput.addEventListener(
-    "keydown",
-    event => {
-
-        if(event.key === "Enter"){
-
-            searchProducts();
-
-        }
-
-    }
-);
-
-
-searchInput.addEventListener(
-    "input",
-    () => {
-
-        if(
-            searchInput.value.trim() === ""
-        ){
-
-            renderProducts(products);
-
-            showMessage(
-                `${products.length} catalog product(s)`
-            );
-
-        }
-
-    }
-);
-
-
-tileViewBtn.addEventListener(
-    "click",
-    () => setView("tile")
-);
-
-
-listViewBtn.addEventListener(
-    "click",
-    () => setView("list")
-);
-
-
-
-/* =========================
    START
 ========================= */
 
+
+initializeView();
 
 loadProducts();
