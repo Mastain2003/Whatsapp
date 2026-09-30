@@ -3,24 +3,30 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-<title>
-Products
-</title>
+    <title>Products</title>
 
-<link rel="stylesheet" href="../css/sidebar.css">
+    <link
+        rel="stylesheet"
+        href="../css/sidebar.css"
+    >
 
-<link rel="stylesheet"
-href="../css/page_products.css">
+    <link
+        rel="stylesheet"
+        href="../css/page_products.css"
+    >
 
 </head>
 
 
 <body>
+
 
 <div id="sidebarContainer">
 
@@ -35,59 +41,55 @@ href="../css/page_products.css">
 
         <nav>
 
-            <a href="dashboard.html"
-               data-page="dashboard">
-
+            <a
+                href="dashboard.html"
+                data-page="dashboard"
+            >
                 🏠 Dashboard
-
             </a>
 
 
-            <a href="customers.html"
-               data-page="customers">
-
+            <a
+                href="customers.html"
+                data-page="customers"
+            >
                 👥 Customers
-
             </a>
 
 
-            <a href="products.html"
-               data-page="products">
-
+            <a
+                href="products.html"
+                data-page="products"
+            >
                 📦 Products
-
             </a>
 
 
-            <a href="broadcast.html"
-               data-page="broadcast">
-
+            <a
+                href="broadcast.html"
+                data-page="broadcast"
+            >
                 Broadcast
-
             </a>
 
 
-            <a href="templates.html"
-               data-page="templates">
-
+            <a
+                href="templates.html"
+                data-page="templates"
+            >
                 Templates
-
             </a>
 
 
             <a href="#">
-
                 📊 Reports
-
             </a>
 
         </nav>
 
 
         <button id="sidebarLogout">
-
             Logout
-
         </button>
 
     </div>
@@ -95,10 +97,13 @@ href="../css/page_products.css">
 </div>
 
 
+
 <div class="page-content">
 
     <div class="page-container">
 
+
+        <!-- HEADER -->
 
         <div class="header">
 
@@ -114,29 +119,79 @@ href="../css/page_products.css">
 
             </div>
 
+
+            <!-- VIEW TOGGLE -->
+
+            <div class="view-toggle">
+
+                <button
+                    id="tileViewBtn"
+                    class="view-btn active"
+                    type="button"
+                    title="Tile view"
+                >
+                    ▦ Tiles
+                </button>
+
+
+                <button
+                    id="listViewBtn"
+                    class="view-btn"
+                    type="button"
+                    title="List view"
+                >
+                    ☰ List
+                </button>
+
+            </div>
+
         </div>
 
+
+
+        <!-- SEARCH -->
 
         <div class="search-box">
 
             <input
                 id="search"
                 type="text"
-                placeholder="Search catalog products">
+                placeholder="Search catalog products"
+            >
 
-            <button id="searchBtn">
 
+            <button
+                id="searchBtn"
+                type="button"
+            >
                 Search
-
             </button>
 
         </div>
 
 
+
+        <!-- MESSAGE -->
+
         <div id="message"></div>
 
 
-        <div class="table-wrapper">
+
+        <!-- TILE VIEW -->
+
+        <div
+            id="tileView"
+            class="product-grid"
+        ></div>
+
+
+
+        <!-- LIST VIEW -->
+
+        <div
+            id="listView"
+            class="table-wrapper hidden"
+        >
 
             <table>
 
@@ -187,10 +242,50 @@ href="../css/page_products.css">
 </div>
 
 
+
+<!-- PRODUCT DETAIL MODAL -->
+
+<div
+    id="productModal"
+    class="modal hidden"
+>
+
+    <div class="modal-overlay"></div>
+
+
+    <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalProductName"
+    >
+
+        <button
+            id="closeModal"
+            class="modal-close"
+            type="button"
+            aria-label="Close"
+        >
+            ×
+        </button>
+
+
+        <div id="productDetails">
+
+            <!-- Filled by JavaScript -->
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
 <script
-type="module"
-src="../js/page_products.js">
-</script>
+    type="module"
+    src="../js/page_products.js"
+></script>
 
 
 </body>
