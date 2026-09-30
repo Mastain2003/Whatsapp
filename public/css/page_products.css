@@ -1331,3 +1331,26 @@ th{
     }
 
 }
+
+.product-card-price {
+    margin-top: 10px;
+}
+
+.price-display {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sale-price {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.mrp-price {
+    font-size: 13px;
+    color: #888;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
