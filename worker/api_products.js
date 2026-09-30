@@ -117,10 +117,7 @@ async function getCatalogProducts(
 
 
     /*
-     * Fields returned by Meta.
-     *
-     * The frontend automatically displays
-     * additional fields in the product modal.
+     * Catalog fields
      */
 
     graphUrl.searchParams.set(
@@ -132,8 +129,8 @@ async function getCatalogProducts(
             "description",
             "price",
             "currency",
-            "availability",
             "image_url",
+            "availability",
             "brand",
             "condition",
             "url",
@@ -200,9 +197,13 @@ async function getCatalogProducts(
 
         const products =
             Array.isArray(data.data)
+
             ?
+
             data.data
+
             :
+
             [];
 
 
