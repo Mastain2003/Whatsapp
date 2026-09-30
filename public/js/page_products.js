@@ -13,7 +13,6 @@ requireLogin();
 loadSidebar("products");
 
 
-
 const tileView =
     document.getElementById("tileView");
 
@@ -51,18 +50,15 @@ const modalOverlay =
     document.getElementById("modalOverlay");
 
 
-
 let products = [];
 
 let currentView =
-    localStorage.getItem("productsView") ||
-    "tiles";
+    localStorage.getItem("productsView") || "tiles";
 
 
-
-/* =========================
+/* =========================================================
    HELPERS
-========================= */
+========================================================= */
 
 
 function escapeHtml(value){
@@ -76,21 +72,14 @@ function escapeHtml(value){
 
     }
 
-
     return String(value)
-
-        .replaceAll("&","&amp;")
-
-        .replaceAll("<","&lt;")
-
-        .replaceAll(">","&gt;")
-
-        .replaceAll('"',"&quot;")
-
-        .replaceAll("'","&#039;");
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
-
 
 
 function showMessage(
@@ -98,22 +87,21 @@ function showMessage(
     type = ""
 ){
 
-    message.innerText = text;
+    message.textContent = text;
 
     message.className = type;
 
 }
 
 
-
-function formatPrice(product){
-
-    const value =
-        product.price;
+function formatPrice(
+    value,
+    currency = "INR"
+){
 
     if(
-        value === undefined ||
         value === null ||
+        value === undefined ||
         value === ""
     ){
 
@@ -122,20 +110,15 @@ function formatPrice(product){
     }
 
 
-    const price =
+    const number =
         Number(value);
 
 
-    if(Number.isNaN(price)){
+    if(Number.isNaN(number)){
 
         return escapeHtml(value);
 
     }
-
-
-    const currency =
-        product.currency ||
-        "INR";
 
 
     try{
@@ -144,19 +127,57 @@ function formatPrice(product){
             "en-IN",
             {
                 style:"currency",
-                currency
+                currency:currency || "INR"
             }
-        ).format(price);
+        ).format(number);
 
     }
     catch{
 
-        return `${currency} ${price}`;
+        return `${currency || "INR"} ${number}`;
 
     }
 
 }
 
+
+function formatDate(value){
+
+    if(!value){
+
+        return "";
+
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if(Number.isNaN(date.getTime())){
+
+        return String(value);
+
+    }
+
+
+    return date.toLocaleString(
+        "en-IN"
+    );
+
+}
+
+
+function formatLabel(key){
+
+    return String(key)
+        .replaceAll("_", " ")
+        .replace(
+            /\b\w/g,
+            char => char.toUpperCase()
+        );
+
+}
 
 
 function formatValue(value){
@@ -207,54 +228,36 @@ function formatValue(value){
 }
 
 
-
-function formatDetailLabel(key){
-
-    return String(key)
-
-        .replaceAll("_"," ")
-
-        .replace(
-            /\b\w/g,
-            char => char.toUpperCase()
-        );
-
-}
-
-
-
 function isUrl(value){
 
-    if(
-        typeof value !== "string"
-    ){
-
-        return false;
-
-    }
-
-
-    return /^https?:\/\//i.test(
-        value.trim()
+    return (
+        typeof value === "string" &&
+        /^https?:\/\//i.test(
+            value.trim()
+        )
     );
 
 }
 
 
+/* =========================================================
+   IMAGE
+========================================================= */
 
-function getImageHtml(
+
+function productImage(
     product,
-    className = "product-image"
+    className
 ){
 
-    const imageUrl =
-        product.image_url || "";
+    const image =
+        product.image_url;
 
 
-    if(!imageUrl){
+    if(!image){
 
         return `
-            <div class="no-image">
+            <div class="${className}-no-image">
                 No image
             </div>
         `;
@@ -265,7 +268,7 @@ function getImageHtml(
     return `
         <img
             class="${className}"
-            src="${escapeHtml(imageUrl)}"
+            src="${escapeHtml(image)}"
             alt="${escapeHtml(
                 product.name || "Product"
             )}"
@@ -276,10 +279,9 @@ function getImageHtml(
 }
 
 
-
-/* =========================
+/* =========================================================
    TILE VIEW
-========================= */
+========================================================= */
 
 
 function renderTiles(items){
@@ -310,38 +312,16 @@ function renderTiles(items){
             "product-card";
 
 
-        const imageUrl =
-            product.image_url || "";
-
-
-        const imageHtml =
-            imageUrl
-
-            ?
-
-            `
-            <img
-                class="product-card-image"
-                src="${escapeHtml(imageUrl)}"
-                alt="${escapeHtml(
-                    product.name || "Product"
-                )}"
-                loading="lazy"
-            >
-            `
-
-            :
-
-            `
-            <div class="product-card-no-image">
-                No image
-            </div>
-            `;
+        const image =
+            productImage(
+                product,
+                "product-card-image"
+            );
 
 
         card.innerHTML = `
 
-            ${imageHtml}
+            ${image}
 
 
             <div class="product-card-body">
@@ -349,7 +329,8 @@ function renderTiles(items){
                 <div class="product-card-name">
 
                     ${escapeHtml(
-                        product.name || "Unnamed Product"
+                        product.name ||
+                        "Unnamed Product"
                     )}
 
                 </div>
@@ -368,7 +349,22 @@ function renderTiles(items){
 
                     <div class="product-card-price">
 
-                        ${formatPrice(product)}
+                        ${
+                            product.price !== undefined &&
+                            product.price !== null &&
+                            product.price !== ""
+
+                            ?
+
+                            formatPrice(
+                                product.price,
+                                product.currency
+                            )
+
+                            :
+
+                            ""
+                        }
 
                     </div>
 
@@ -414,10 +410,9 @@ function renderTiles(items){
 }
 
 
-
-/* =========================
+/* =========================================================
    LIST VIEW
-========================= */
+========================================================= */
 
 
 function renderList(items){
@@ -458,7 +453,7 @@ function renderList(items){
 
             <td>
 
-                ${getImageHtml(
+                ${productImage(
                     product,
                     "product-image"
                 )}
@@ -484,7 +479,8 @@ function renderList(items){
                 <div class="product-name">
 
                     ${escapeHtml(
-                        product.name || ""
+                        product.name ||
+                        "Unnamed Product"
                     )}
 
                 </div>
@@ -509,7 +505,22 @@ function renderList(items){
 
                 <div class="price">
 
-                    ${formatPrice(product)}
+                    ${
+                        product.price !== undefined &&
+                        product.price !== null &&
+                        product.price !== ""
+
+                        ?
+
+                        formatPrice(
+                            product.price,
+                            product.currency
+                        )
+
+                        :
+
+                        ""
+                    }
 
                 </div>
 
@@ -544,10 +555,9 @@ function renderList(items){
 }
 
 
-
-/* =========================
-   RENDER BOTH VIEWS
-========================= */
+/* =========================================================
+   RENDER
+========================================================= */
 
 
 function renderProducts(items){
@@ -559,10 +569,9 @@ function renderProducts(items){
 }
 
 
-
-/* =========================
+/* =========================================================
    VIEW SWITCH
-========================= */
+========================================================= */
 
 
 function setView(view){
@@ -577,61 +586,36 @@ function setView(view){
 
     if(view === "list"){
 
-        tileView.classList.add(
-            "hidden"
-        );
+        tileView.classList.add("hidden");
 
-        listView.classList.remove(
-            "hidden"
-        );
+        listView.classList.remove("hidden");
 
-        tileViewBtn.classList.remove(
-            "active"
-        );
+        tileViewBtn.classList.remove("active");
 
-        listViewBtn.classList.add(
-            "active"
-        );
+        listViewBtn.classList.add("active");
 
     }
     else{
 
-        listView.classList.add(
-            "hidden"
-        );
+        listView.classList.add("hidden");
 
-        tileView.classList.remove(
-            "hidden"
-        );
+        tileView.classList.remove("hidden");
 
-        listViewBtn.classList.remove(
-            "active"
-        );
+        listViewBtn.classList.remove("active");
 
-        tileViewBtn.classList.add(
-            "active"
-        );
+        tileViewBtn.classList.add("active");
 
     }
 
 }
 
 
-
-function initializeView(){
-
-    setView(currentView);
-
-}
+/* =========================================================
+   MODAL
+========================================================= */
 
 
-
-/* =========================
-   MODAL DETAILS
-========================= */
-
-
-function createDetailItem(
+function detailItem(
     label,
     value
 ){
@@ -647,30 +631,19 @@ function createDetailItem(
     }
 
 
-    const formatted =
-        formatValue(value);
+    let display;
 
 
-    if(!formatted){
+    if(isUrl(value)){
 
-        return "";
-
-    }
-
-
-    let displayValue;
-
-
-    if(isUrl(formatted)){
-
-        displayValue = `
+        display = `
 
             <a
-                href="${escapeHtml(formatted)}"
+                href="${escapeHtml(value)}"
                 target="_blank"
                 rel="noopener noreferrer">
 
-                ${escapeHtml(formatted)}
+                ${escapeHtml(value)}
 
             </a>
 
@@ -679,8 +652,10 @@ function createDetailItem(
     }
     else{
 
-        displayValue =
-            escapeHtml(formatted);
+        display =
+            escapeHtml(
+                formatValue(value)
+            );
 
     }
 
@@ -698,7 +673,7 @@ function createDetailItem(
 
             <span class="detail-value">
 
-                ${displayValue}
+                ${display}
 
             </span>
 
@@ -709,53 +684,26 @@ function createDetailItem(
 }
 
 
-
 function openProductModal(product){
 
-    const imageUrl =
-        product.image_url || "";
+    const image =
+        productImage(
+            product,
+            "modal-product-image"
+        );
 
 
-    const imageHtml =
-        imageUrl
+    /*
+     * Header
+     */
 
-        ?
-
-        `
-        <img
-            class="modal-product-image"
-            src="${escapeHtml(imageUrl)}"
-            alt="${escapeHtml(
-                product.name || "Product"
-            )}"
-        >
-        `
-
-        :
-
-        `
-        <div class="modal-product-no-image">
-
-            No image
-
-        </div>
-        `;
-
-
-
-    /* =========================
-       HEADER
-    ========================= */
-
-
-    const headerHtml = `
+    const header = `
 
         <div class="modal-product-header">
 
-
             <div class="modal-product-image-wrap">
 
-                ${imageHtml}
+                ${image}
 
             </div>
 
@@ -784,7 +732,10 @@ function openProductModal(product){
                     `
                     <div class="modal-product-price">
 
-                        ${formatPrice(product)}
+                        ${formatPrice(
+                            product.price,
+                            product.currency
+                        )}
 
                     </div>
                     `
@@ -819,74 +770,84 @@ function openProductModal(product){
 
             </div>
 
-
         </div>
 
     `;
 
 
+    /*
+     * Basic information
+     */
 
-    /* =========================
-       BASIC INFORMATION
-    ========================= */
+    const basic = [
 
-
-    const basicFields = [
-
-        [
+        detailItem(
             "Product ID",
             product.id
-        ],
+        ),
 
-        [
+        detailItem(
             "Retailer ID",
             product.retailer_id
-        ],
+        ),
 
-        [
+        detailItem(
             "Brand",
             product.brand
-        ],
+        ),
 
-        [
+        detailItem(
             "Condition",
             product.condition
-        ],
+        ),
 
-        [
+        detailItem(
             "Availability",
             product.availability
-        ],
+        ),
 
-        [
+        detailItem(
             "Currency",
             product.currency
-        ]
+        )
 
-    ];
-
-
-    const basicHtml =
-        basicFields
-
-            .map(
-                ([label,value]) =>
-                    createDetailItem(
-                        label,
-                        value
-                    )
-            )
-
-            .join("");
+    ].join("");
 
 
+    const basicSection = basic
+        ?
 
-    /* =========================
-       DESCRIPTION
-    ========================= */
+        `
+
+        <div class="details-section">
+
+            <h3 class="details-section-title">
+
+                Basic Information
+
+            </h3>
 
 
-    const descriptionHtml =
+            <div class="details-grid">
+
+                ${basic}
+
+            </div>
+
+        </div>
+
+        `
+
+        :
+
+        "";
+
+
+    /*
+     * Description
+     */
+
+    const descriptionSection =
         product.description
 
         ?
@@ -919,53 +880,13 @@ function openProductModal(product){
         "";
 
 
+    /*
+     * Pricing
+     */
 
-    /* =========================
-       BASIC INFO SECTION
-    ========================= */
+    const pricing = [
 
-
-    const basicSection =
-
-        basicHtml
-
-        ?
-
-        `
-
-        <div class="details-section">
-
-            <h3 class="details-section-title">
-
-                Basic Information
-
-            </h3>
-
-
-            <div class="details-grid">
-
-                ${basicHtml}
-
-            </div>
-
-        </div>
-
-        `
-
-        :
-
-        "";
-
-
-
-    /* =========================
-       PRICING
-    ========================= */
-
-
-    const pricingFields = [
-
-        [
+        detailItem(
             "Price",
             product.price !== undefined &&
             product.price !== null &&
@@ -973,19 +894,22 @@ function openProductModal(product){
 
                 ?
 
-                formatPrice(product)
+                formatPrice(
+                    product.price,
+                    product.currency
+                )
 
                 :
 
-                null
-        ],
+                ""
+        ),
 
-        [
+        detailItem(
             "Currency",
             product.currency
-        ],
+        ),
 
-        [
+        detailItem(
             "Sale Price",
             product.sale_price !== undefined &&
             product.sale_price !== null &&
@@ -993,40 +917,27 @@ function openProductModal(product){
 
                 ?
 
-                formatSalePrice(product)
+                formatPrice(
+                    product.sale_price,
+                    product.currency
+                )
 
                 :
 
-                null
-        ],
+                ""
+        ),
 
-        [
+        detailItem(
             "Sale Price Effective Date",
-            product.sale_price_effective_date
-        ]
-
-    ];
-
-
-    const pricingHtml =
-        pricingFields
-
-            .map(
-                ([label,value]) =>
-                    createDetailItem(
-                        label,
-                        value
-                    )
+            formatDate(
+                product.sale_price_effective_date
             )
+        )
 
-            .join("");
+    ].join("");
 
 
-
-    const pricingSection =
-
-        pricingHtml
-
+    const pricingSection = pricing
         ?
 
         `
@@ -1042,7 +953,7 @@ function openProductModal(product){
 
             <div class="details-grid">
 
-                ${pricingHtml}
+                ${pricing}
 
             </div>
 
@@ -1055,22 +966,12 @@ function openProductModal(product){
         "";
 
 
+    /*
+     * URL
+     */
 
-    /* =========================
-       LINKS
-    ========================= */
-
-
-    const linksHtml =
-        createDetailItem(
-            "Product URL",
-            product.url
-        );
-
-
-    const linksSection =
-
-        linksHtml
+    const urlSection =
+        product.url
 
         ?
 
@@ -1087,7 +988,10 @@ function openProductModal(product){
 
             <div class="details-grid">
 
-                ${linksHtml}
+                ${detailItem(
+                    "Product URL",
+                    product.url
+                )}
 
             </div>
 
@@ -1100,74 +1004,56 @@ function openProductModal(product){
         "";
 
 
+    /*
+     * Extra fields returned by Meta
+     */
 
-    /* =========================
-       EXTRA FIELDS
-    ========================= */
-
-
-    const knownFields = new Set([
+    const knownFields = [
 
         "id",
-
         "retailer_id",
-
         "name",
-
         "description",
-
         "price",
-
         "currency",
-
         "image_url",
-
         "availability",
-
         "brand",
-
         "condition",
-
         "url",
-
         "sale_price",
-
         "sale_price_effective_date"
 
-    ]);
+    ];
 
 
     const extraFields =
         Object.entries(product)
+            .filter(([key, value]) => {
 
-            .filter(
-                ([key,value]) => {
+                if(
+                    knownFields.includes(key)
+                ){
 
-                    if(
-                        knownFields.has(key)
-                    ){
-
-                        return false;
-
-                    }
-
-
-                    if(
-                        value === null ||
-                        value === undefined ||
-                        value === ""
-                    ){
-
-                        return false;
-
-                    }
-
-
-                    return true;
+                    return false;
 
                 }
-            );
 
+
+                if(
+                    value === null ||
+                    value === undefined ||
+                    value === ""
+                ){
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            });
 
 
     let extraSection = "";
@@ -1177,16 +1063,16 @@ function openProductModal(product){
 
         const extraHtml =
             extraFields
+                .map(([key, value]) => {
 
-                .map(
-                    ([key,value]) => `
+                    return `
 
                         <div class="extra-field">
 
                             <div class="extra-field-label">
 
                                 ${escapeHtml(
-                                    formatDetailLabel(key)
+                                    formatLabel(key)
                                 )}
 
                             </div>
@@ -1202,9 +1088,9 @@ function openProductModal(product){
 
                         </div>
 
-                    `
-                )
+                    `;
 
+                })
                 .join("");
 
 
@@ -1232,21 +1118,23 @@ function openProductModal(product){
     }
 
 
+    /*
+     * Put everything into modal
+     */
 
     productDetails.innerHTML =
 
-        headerHtml +
+        header +
 
-        descriptionHtml +
+        descriptionSection +
 
         basicSection +
 
         pricingSection +
 
-        linksSection +
+        urlSection +
 
         extraSection;
-
 
 
     productModal.classList.remove(
@@ -1258,71 +1146,6 @@ function openProductModal(product){
         "hidden";
 
 }
-
-
-
-/* =========================
-   SALE PRICE
-========================= */
-
-
-function formatSalePrice(product){
-
-    const value =
-        product.sale_price;
-
-
-    if(
-        value === undefined ||
-        value === null ||
-        value === ""
-    ){
-
-        return "";
-
-    }
-
-
-    const price =
-        Number(value);
-
-
-    if(Number.isNaN(price)){
-
-        return String(value);
-
-    }
-
-
-    const currency =
-        product.currency ||
-        "INR";
-
-
-    try{
-
-        return new Intl.NumberFormat(
-            "en-IN",
-            {
-                style:"currency",
-                currency
-            }
-        ).format(price);
-
-    }
-    catch{
-
-        return `${currency} ${price}`;
-
-    }
-
-}
-
-
-
-/* =========================
-   CLOSE MODAL
-========================= */
 
 
 function closeProductModal(){
@@ -1338,136 +1161,58 @@ function closeProductModal(){
 }
 
 
-
-/* =========================
-   LOAD PRODUCTS
-========================= */
-
-
-async function loadProducts(){
-
-    showMessage(
-        "Loading catalog products...",
-        "loading-message"
-    );
-
-
-    tileView.innerHTML = "";
-
-    productList.innerHTML = "";
-
-
-    try{
-
-        const data =
-            await apiFetch(
-                "/products"
-            );
-
-
-        if(
-            !data ||
-            !data.success
-        ){
-
-            showMessage(
-                data?.message ||
-                "Unable to load catalog products.",
-                "error-message"
-            );
-
-            return;
-
-        }
-
-
-        products =
-            Array.isArray(data.products)
-
-            ?
-
-            data.products
-
-            :
-
-            [];
-
-
-        showMessage(
-            `${products.length} catalog product(s)`
-        );
-
-
-        renderProducts(products);
-
-    }
-    catch(error){
-
-        console.error(
-            "Catalog products error:",
-            error
-        );
-
-
-        showMessage(
-            "Unable to load catalog products.",
-            "error-message"
-        );
-
-    }
-
-}
-
-
-
-/* =========================
+/* =========================================================
    SEARCH
-========================= */
+========================================================= */
 
 
-function valueMatchesSearch(
-    value,
+function matchesSearch(
+    product,
     search
 ){
 
-    if(
-        value === null ||
-        value === undefined
-    ){
+    return Object.values(product)
+        .some(value => {
 
-        return false;
+            if(
+                value === null ||
+                value === undefined
+            ){
 
-    }
+                return false;
 
-
-    if(
-        typeof value === "object"
-    ){
-
-        try{
-
-            return JSON.stringify(
-                value
-            )
-            .toLowerCase()
-            .includes(search);
-
-        }
-        catch{
-
-            return false;
-
-        }
-
-    }
+            }
 
 
-    return String(value)
-        .toLowerCase()
-        .includes(search);
+            if(
+                typeof value === "object"
+            ){
+
+                try{
+
+                    return JSON.stringify(
+                        value
+                    )
+                    .toLowerCase()
+                    .includes(search);
+
+                }
+                catch{
+
+                    return false;
+
+                }
+
+            }
+
+
+            return String(value)
+                .toLowerCase()
+                .includes(search);
+
+        });
 
 }
-
 
 
 function searchProducts(){
@@ -1492,19 +1237,13 @@ function searchProducts(){
 
 
     const filtered =
-        products.filter(product => {
-
-            return Object.values(
-                product
-            ).some(
-                value =>
-                    valueMatchesSearch(
-                        value,
-                        search
-                    )
-            );
-
-        });
+        products.filter(
+            product =>
+                matchesSearch(
+                    product,
+                    search
+                )
+        );
 
 
     renderProducts(filtered);
@@ -1517,10 +1256,89 @@ function searchProducts(){
 }
 
 
+/* =========================================================
+   LOAD PRODUCTS
+========================================================= */
 
-/* =========================
+
+async function loadProducts(){
+
+    showMessage(
+        "Loading catalog products...",
+        "loading-message"
+    );
+
+
+    tileView.innerHTML = "";
+
+    productList.innerHTML = "";
+
+
+    try{
+
+        const data =
+            await apiFetch(
+                "/products"
+            );
+
+
+        console.log(
+            "Products API response:",
+            data
+        );
+
+
+        if(
+            !data ||
+            !data.success
+        ){
+
+            showMessage(
+                data?.message ||
+                "Unable to load catalog products.",
+                "error-message"
+            );
+
+            return;
+
+        }
+
+
+        products =
+            Array.isArray(data.products)
+                ? data.products
+                : [];
+
+
+        renderProducts(products);
+
+
+        showMessage(
+            `${products.length} catalog product(s)`
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Catalog products error:",
+            error
+        );
+
+
+        showMessage(
+            "Unable to load catalog products.",
+            "error-message"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
    EVENTS
-========================= */
+========================================================= */
 
 
 searchBtn.addEventListener(
@@ -1533,9 +1351,7 @@ searchInput.addEventListener(
     "keydown",
     event => {
 
-        if(
-            event.key === "Enter"
-        ){
+        if(event.key === "Enter"){
 
             searchProducts();
 
@@ -1608,12 +1424,11 @@ document.addEventListener(
 );
 
 
-
-/* =========================
+/* =========================================================
    START
-========================= */
+========================================================= */
 
 
-initializeView();
+setView(currentView);
 
 loadProducts();
