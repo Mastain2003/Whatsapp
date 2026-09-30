@@ -1,5 +1,10 @@
-import { jsonResponse } from "./cors_helper.js";
-import { checkAuth } from "./auth_service.js";
+import {
+    jsonResponse
+} from "./cors_helper.js";
+
+import {
+    checkAuth
+} from "./auth_service.js";
 
 
 export async function handleProducts(
@@ -116,15 +121,12 @@ async function getCatalogProducts(
         );
 
 
-    /*
-     * Catalog fields
-     */
-
     graphUrl.searchParams.set(
         "fields",
         [
             "id",
             "retailer_id",
+            "retailer_product_group_id",
             "name",
             "description",
             "price",
@@ -135,8 +137,7 @@ async function getCatalogProducts(
             "condition",
             "url",
             "sale_price",
-            "sale_price_effective_date",
-            "retailer_product_group_id"
+            "sale_price_effective_date"
         ].join(",")
     );
 
@@ -156,6 +157,10 @@ async function getCatalogProducts(
 
     }
 
+
+    /*
+     * Access token stays server-side.
+     */
 
     graphUrl.searchParams.set(
         "access_token",
@@ -198,15 +203,21 @@ async function getCatalogProducts(
 
         const products =
             Array.isArray(data.data)
-
             ?
-
             data.data
-
             :
-
             [];
 
+
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT return data.paging.next
+         * because Meta puts the access token
+         * inside that URL.
+         *
+         * Return only the cursor instead.
+         */
 
         return jsonResponse({
 
@@ -216,9 +227,10 @@ async function getCatalogProducts(
 
             paging:{
 
-                next:
-                    data.paging?.next ||
-                    null,
+                has_next:
+                    Boolean(
+                        data.paging?.cursors?.after
+                    ),
 
                 cursors:{
 
