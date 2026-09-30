@@ -32,7 +32,8 @@ export async function handleProducts(
         return jsonResponse(
             {
                 success:false,
-                message:"Only GET is allowed for catalog products"
+                message:
+                    "Only GET is allowed for catalog products"
             },
             405
         );
@@ -59,7 +60,8 @@ async function getCatalogProducts(
         return jsonResponse(
             {
                 success:false,
-                message:"META_ACCESS_TOKEN is not configured"
+                message:
+                    "META_ACCESS_TOKEN is not configured"
             },
             500
         );
@@ -72,7 +74,8 @@ async function getCatalogProducts(
         return jsonResponse(
             {
                 success:false,
-                message:"META_CATALOG_ID is not configured"
+                message:
+                    "META_CATALOG_ID is not configured"
             },
             500
         );
@@ -113,17 +116,29 @@ async function getCatalogProducts(
         );
 
 
+    /*
+     * Fields returned by Meta.
+     *
+     * The frontend automatically displays
+     * additional fields in the product modal.
+     */
+
     graphUrl.searchParams.set(
         "fields",
         [
             "id",
+            "retailer_id",
             "name",
             "description",
             "price",
             "currency",
-            "image_url",
             "availability",
-            "retailer_id"
+            "image_url",
+            "brand",
+            "condition",
+            "url",
+            "sale_price",
+            "sale_price_effective_date"
         ].join(",")
     );
 
