@@ -238,9 +238,6 @@ function productPriceHtml(product){
 
     /*
      * SALE PRICE + MRP
-     *
-     * MRP = strike-through
-     * Sale Price = normal price
      */
 
     if(
@@ -259,10 +256,7 @@ function productPriceHtml(product){
                     )}
                 </span>
 
-                <span
-                    class="mrp-price"
-                    style="text-decoration: line-through;"
-                >
+                <span class="mrp-price">
                     ${formatPrice(
                         mrp,
                         product.currency
@@ -277,7 +271,7 @@ function productPriceHtml(product){
 
 
     /*
-     * ONLY MRP / NORMAL PRICE
+     * ONLY NORMAL PRICE / MRP
      */
 
     if(hasMrp){
@@ -289,30 +283,6 @@ function productPriceHtml(product){
                 <span class="sale-price">
                     ${formatPrice(
                         mrp,
-                        product.currency
-                    )}
-                </span>
-
-            </div>
-
-        `;
-
-    }
-
-
-    /*
-     * ONLY SALE PRICE
-     */
-
-    if(hasSalePrice){
-
-        return `
-
-            <div class="price-display">
-
-                <span class="sale-price">
-                    ${formatPrice(
-                        salePrice,
                         product.currency
                     )}
                 </span>
