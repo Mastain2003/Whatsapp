@@ -599,7 +599,8 @@ function renderTiles(items){
 
                     <div class="product-card-price">
 
-                        ${displayPrice}
+                        ${displayPrice} <span style ="text-decoration: line-through;
+">${price}</span>
 
                     </div>
 
