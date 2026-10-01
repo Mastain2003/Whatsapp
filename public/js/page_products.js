@@ -681,8 +681,13 @@ function renderTiles(items){
 
                     <div class="product-card-price">
 
-                        ${displayPrice} <span style ="text-decoration: line-through;
-">${price}</span>
+                        
+
+                            ${productPriceHtml(
+                                product
+                            )}
+
+                        
 
                     </div>
 
@@ -881,7 +886,13 @@ function renderList(items){
 
                 <div class="price">
 
-                    ${displayPrice}
+                    
+
+                            ${productPriceHtml(
+                                product
+                            )}
+
+                        
 
                 </div>
 
@@ -1195,7 +1206,13 @@ function renderVariantSection(
                                 variant-option-price
                             ">
 
-                                ${price}
+                                
+
+                            ${productPriceHtml(
+                                product
+                            )}
+
+                        
 
                             </div>
 
@@ -1340,7 +1357,13 @@ function openProductModal(
                         modal-product-price
                     ">
 
-                        ${displayPrice}
+                        
+
+                            ${productPriceHtml(
+                                product
+                            )}
+
+                        
 
                     </div>
                     `
