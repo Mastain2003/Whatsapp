@@ -1209,7 +1209,7 @@ function renderVariantSection(
                                 
 
                             ${productPriceHtml(
-                                product
+                                selected
                             )}
 
                         
