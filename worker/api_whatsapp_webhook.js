@@ -1,519 +1,206 @@
-import { jsonResponse } from "./cors_helper.js";
+import { getCorsHeaders } from './cors_helper.js';
 
+export async function handleWhatsAppWebhook(request, env) {
+    if (request.method === 'GET') {
+        // Webhook verification challenge
+        const url = new URL(request.url);
+        const mode = url.searchParams.get('hub.mode');
+        const token = url.searchParams.get('hub.verify_token');
+        const challenge = url.searchParams.get('hub.challenge');
 
-
-export async function handleWhatsAppWebhook(
-    request,
-    env
-){
-
-
-    const url =
-    new URL(request.url);
-
-
-
-    // Meta webhook verification
-
-    if(
-        request.method === "GET"
-    ){
-
-        const mode =
-        url.searchParams.get(
-            "hub.mode"
-        );
-
-
-        const token =
-        url.searchParams.get(
-            "hub.verify_token"
-        );
-
-
-        const challenge =
-        url.searchParams.get(
-            "hub.challenge"
-        );
-
-        console.log("MODE:", mode);
-console.log("TOKEN RECEIVED:", token);
-console.log(
-    "VERIFY TOKEN EXISTS:",
-    !!env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
-);
-
-        if(
-            mode === "subscribe"
-            &&
-            token === env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
-        ){
-
-            return new Response(
-                challenge
-            );
-
+        if (mode === 'subscribe' && token === env.WHATSAPP_VERIFY_TOKEN) {
+            return new Response(challenge, { status: 200 });
         }
-
-
-
-        return new Response(
-            "Verification failed",
-            {
-                status:403
-            }
-        );
-
+        return new Response('Forbidden', { status: 403 });
     }
 
-
-
-
-
-    // Meta events
-
-    if(
-        request.method === "POST"
-    ){
-
-        const body =
-        await request.json();
-
-
-
-        console.log(
-            JSON.stringify(body)
-        );
-
-
-
-        await processWebhook(
-            body,
-            env
-        );
-
-
-
-        return jsonResponse({
-            success:true
-        });
-
+    if (request.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405 });
     }
 
+    const payload = await request.json();
 
+    // Process incoming message entry
+    const entry = payload.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const value = changes?.value;
 
-    return jsonResponse(
-    {
-        success:false,
-        message:"Method not allowed"
-    },
-    405
-    );
-
-}
-
-
-
-
-
-
-
-async function processWebhook(
-    body,
-    env
-){
-
-
-    const entry =
-    body.entry?.[0];
-
-
-    const change =
-    entry?.changes?.[0];
-
-
-    const value =
-    change?.value;
-
-
-
-    if(!value){
-
-        return;
-
+    if (!value) {
+        return new Response('OK', { status: 200 });
     }
 
+    // 1. Process WhatsApp Message Status Updates (SENT, DELIVERED, READ, FAILED)
+    if (value.statuses && value.statuses.length > 0) {
+        const statusObj = value.statuses[0];
+        const waMsgId = statusObj.id;
+        const status = statusObj.status; // sent, delivered, read, failed
 
+        await env.DB.prepare(`
+            UPDATE messages_v2 
+            SET status = ?, 
+                delivered_at = CASE WHEN ? = 'delivered' THEN CURRENT_TIMESTAMP ELSE delivered_at END,
+                read_at = CASE WHEN ? = 'read' THEN CURRENT_TIMESTAMP ELSE read_at END,
+                failed_at = CASE WHEN ? = 'failed' THEN CURRENT_TIMESTAMP ELSE failed_at END
+            WHERE whatsapp_message_id = ?
+        `).bind(status.toUpperCase(), status, status, status, waMsgId).run();
 
-    // Message status update
+        return new Response('OK', { status: 200 });
+    }
 
-    if(
-        value.statuses
-    ){
+    // 2. Process Incoming Messages
+    const message = value.messages?.[0];
+    const contact = value.contacts?.[0];
 
-        for(
-            const status of value.statuses
-        ){
+    if (!message || !contact) {
+        return new Response('OK', { status: 200 });
+    }
 
-            await updateStatus(
-                status,
-                env
-            );
+    const waPhone = contact.wa_id;
+    const waName = contact.profile?.name || 'Customer';
+    const waMsgId = message.id;
 
+    // Fetch or create customer profile
+    let customer = await env.DB.prepare(`SELECT * FROM customers WHERE phone = ?`).bind(waPhone).first();
+    if (!customer) {
+        const res = await env.DB.prepare(`
+            INSERT INTO customers (name, phone, whatsapp_language, marketing_opt_in, status)
+            VALUES (?, ?, 'en', 1, 'active')
+            RETURNING *
+        `).bind(waName, waPhone).first();
+        customer = res;
+    }
+
+    // Update 24-hour customer service window
+    await env.DB.prepare(`
+        INSERT INTO whatsapp_sessions (customer_id, last_customer_message, window_active, updated_at)
+        VALUES (?, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)
+        ON CONFLICT(customer_id) DO UPDATE SET 
+            last_customer_message = CURRENT_TIMESTAMP,
+            window_active = 1,
+            updated_at = CURRENT_TIMESTAMP
+    `).bind(customer.id).run();
+
+    // Extract message content
+    let rawText = '';
+    let buttonId = null;
+    let messageType = message.type.toUpperCase();
+
+    if (message.type === 'text') {
+        rawText = message.text?.body?.trim() || '';
+    } else if (message.type === 'interactive') {
+        if (message.interactive.type === 'button_reply') {
+            buttonId = message.interactive.button_reply.id;
+            rawText = message.interactive.button_reply.title;
+        } else if (message.interactive.type === 'list_reply') {
+            buttonId = message.interactive.list_reply.id;
+            rawText = message.interactive.list_reply.title;
         }
-
+    } else if (message.type === 'order') {
+        // Native WhatsApp Cart Submission
+        return await handleCartSubmission(customer, message, env);
     }
 
+    // Record Inbound Message in messages_v2
+    await env.DB.prepare(`
+        INSERT INTO messages_v2 (
+            customer_id, whatsapp_message_id, direction, sender_type, 
+            message_type, message_text, button_id, status
+        ) VALUES (?, ?, 'INBOUND', 'CUSTOMER', ?, ?, ?, 'READ')
+    `).bind(customer.id, waMsgId, messageType, rawText, buttonId).run();
 
+    // 3. GLOBAL COMMAND ENGINE (Exact matches only - No AI / NLP)
+    const upperCmd = rawText.toUpperCase();
 
-    // Customer reply
+    if (upperCmd === 'UNSUBSCRIBE') {
+        await env.DB.prepare(`UPDATE customers SET marketing_opt_in = 0 WHERE id = ?`).bind(customer.id).run();
+        await sendTextMessage(env, customer.phone, "You have been unsubscribed from promotional messages.\n\n[ MENU - Main Menu ]");
+        return new Response('OK', { status: 200 });
+    }
 
-    if(
-        value.messages
-    ){
+    if (upperCmd === 'STOP') {
+        await sendTextMessage(env, customer.phone, "Current session paused.\n\nType MENU to view options.");
+        return new Response('OK', { status: 200 });
+    }
 
-        for(
-            const message of value.messages
-        ){
+    if (upperCmd === 'CANCEL') {
+        // Check if pending order request exists
+        const pendingOrder = await env.DB.prepare(`
+            SELECT id FROM orders WHERE customer_id = ? AND status = 'PENDING_CONFIRMATION'
+        `).bind(customer.id).first();
 
-            await handleIncomingMessage(
-                message,
-                env
-            );
-
+        if (pendingOrder) {
+            await env.DB.prepare(`
+                UPDATE orders 
+                SET status = 'CANCELLED', cancelled_at = CURRENT_TIMESTAMP, cancellation_reason = 'Customer CANCEL command' 
+                WHERE id = ?
+            `).bind(pendingOrder.id).run();
+            await sendTextMessage(env, customer.phone, "Your active order request has been cancelled.");
+        } else {
+            await sendTextMessage(env, customer.phone, "There is no active order request to cancel.");
         }
-
+        return new Response('OK', { status: 200 });
     }
 
+    if (upperCmd === 'MENU' || buttonId === 'MAIN_MENU') {
+        await sendMainMenu(env, customer.phone);
+        return new Response('OK', { status: 200 });
+    }
+
+    if (upperCmd === 'HELP' || buttonId === 'HELP') {
+        const helpText = "Available options:\n\nMENU — Main menu\nHELP — Show help\nLANGUAGE — Change language\nCANCEL — Cancel current order request\nSTOP — Stop current flow\nUNSUBSCRIBE — Stop promotional messages";
+        await sendTextMessage(env, customer.phone, helpText);
+        return new Response('OK', { status: 200 });
+    }
+
+    if (upperCmd === 'LANGUAGE' || upperCmd === 'LANG' || buttonId === 'LANGUAGE') {
+        await sendLanguageMenu(env, customer.phone);
+        return new Response('OK', { status: 200 });
+    }
+
+    // Default Fallback Response for Unsupported / Random Text
+    await sendTextMessage(env, customer.phone, "Please select an option below or type MENU.\n\n[ MENU - Main Menu ]");
+    return new Response('OK', { status: 200 });
 }
 
+// Helper: Process Cart Submissions
+async function handleCartSubmission(customer, message, env) {
+    const cartItems = message.order?.product_items || [];
+    
+    // Create Order Request in PENDING_CONFIRMATION status
+    const orderResult = await env.DB.prepare(`
+        INSERT INTO orders (customer_id, phone, status, created_at)
+        VALUES (?, ?, 'PENDING_CONFIRMATION', CURRENT_TIMESTAMP)
+        RETURNING id
+    `).bind(customer.id, customer.phone).first();
 
-
-
-
-
-
-async function updateStatus(
-    status,
-    env
-){
-
-    let column = null;
-
-
-    if(
-        status.status === "delivered"
-    ){
-
-        column =
-        "delivered_at";
-
+    for (const item of cartItems) {
+        await env.DB.prepare(`
+            INSERT INTO order_items (order_id, product_id, quantity, price)
+            VALUES (?, ?, ?, ?)
+        `).bind(orderResult.id, item.product_retailer_id, item.quantity, item.item_price).run();
     }
 
+    // Acknowledge receipt without confirming sale
+    const ackMessage = "Thank you. Your order request has been received.\n\nOur team will contact you by phone or discuss it with you personally for final confirmation.";
+    await sendTextMessage(env, customer.phone, ackMessage);
 
-    if(
-        status.status === "read"
-    ){
-
-        column =
-        "read_at";
-
-    }
-
-
-
-    if(!column){
-
-        return;
-
-    }
-
-
-
-    await env.DB
-    .prepare(
-    `
-    UPDATE whatsapp_messages
-    SET
-        status = ?,
-        ${column}=CURRENT_TIMESTAMP
-    WHERE whatsapp_message_id = ?
-    `
-    )
-    .bind(
-
-        status.status,
-
-        status.id
-
-    )
-    .run();
-
+    return new Response('OK', { status: 200 });
 }
 
-
-
-
-
-
-
-async function handleIncomingMessage(
-    message,
-    env
-){
-
-    const phone =
-    message.from.slice(2);
-
-
-    let messageText = "";
-
-    let buttonId = "";
-
-
-
-    if(
-        message.type === "text"
-    ){
-
-        messageText =
-        message.text.body;
-
-    }
-
-
-
-    if(
-        message.type === "button"
-    ){
-
-        buttonId =
-        message.button.payload
-        ||
-        message.button.text;
-
-    }
-
- //   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
-//  console.log(`\n\nWebhook received ${timestamp}\n`);
-//  console.log(JSON.stringify(message, null, 2));
- // res.status(200).end();
-
-
-    const customer =
-    await env.DB
-    .prepare(
-    `
-    SELECT id
-    FROM customers
-    WHERE phone = ?
-    `
-    )
-    .bind(phone)
-    .first();
-
-
-
-    if(!customer){
-
-        return;
-
-    }
-
-
-
-    await env.DB
-    .prepare(
-    `
-    INSERT INTO whatsapp_incoming_messages
-    (
-        customer_id,
-        whatsapp_message_id,
-        message_type,
-        message_text,
-        button_id
-    )
-    VALUES
-    (
-        ?,
-        ?,
-        ?,
-        ?,
-        ?
-    )
-    `
-    )
-    .bind(
-
-        customer.id,
-
-        message.id,
-
-        message.type,
-
-        messageText,
-
-        buttonId
-
-    )
-    .run();
-
-
-
-
-
-    await env.DB
-    .prepare(
-    `
-    INSERT INTO whatsapp_sessions
-    (
-        customer_id,
-        last_customer_message,
-        window_active
-    )
-    VALUES
-    (
-        ?,
-        CURRENT_TIMESTAMP,
-        1
-    )
-
-    ON CONFLICT(customer_id)
-    DO UPDATE SET
-
-    last_customer_message =
-    CURRENT_TIMESTAMP,
-
-    window_active = 1
-
-    `
-    )
-    .bind(
-        customer.id
-    )
-    .run();
-if(buttonId){
-
-    await processQuickReply(
-        customer.id,
-        buttonId,
-        env
-    );
-
-}
-
-}
-
-async function processQuickReply(
-    customerId,
-    buttonId,
-    env
-){
-
-    const customer =
-    await env.DB
-    .prepare(
-    `
-    SELECT
-        phone,
-        whatsapp_language
-    FROM customers
-    WHERE id = ?
-    `
-    )
-    .bind(customerId)
-    .first();
-
-
-
-    if(!customer){
-
-        return;
-
-    }
-
-
-
-    const reply =
-    await env.DB
-    .prepare(
-    `
-    SELECT reply_message
-    FROM whatsapp_quick_replies
-    WHERE button_id = ?
-    AND language = ?
-    `
-    )
-    .bind(
-        buttonId,
-        customer.whatsapp_language || "en"
-    )
-    .first();
-
-
-
-    if(!reply){
-
-        return;
-
-    }
-
-
-
-    await sendNormalMessage(
-        customer.phone,
-        reply.reply_message,
-        env
-    );
-
-}
-
-
-
-
-
-async function sendNormalMessage(
-    phone,
-    message,
-    env
-){
-
-    await fetch(
-    `https://graph.facebook.com/v21.0/${env.PHONE_NUMBER_ID}/messages`,
-    {
-
-        method:"POST",
-
-        headers:{
-
-            "Authorization":
-            `Bearer ${env.WHATSAPP_TOKEN}`,
-
-            "Content-Type":
-            "application/json"
-
+// WhatsApp API Outbound Helper
+async function sendTextMessage(env, recipientPhone, text) {
+    const url = `https://graph.facebook.com/v18.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${env.WHATSAPP_API_TOKEN}`,
+            'Content-Type': 'application/json'
         },
-
-        body:JSON.stringify({
-
-            messaging_product:
-            "whatsapp",
-
-            to:
-            phone,
-
-            type:
-            "text",
-
-            text:{
-
-                body:
-                message
-
-            }
-
+        body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: recipientPhone,
+            type: "text",
+            text: { body: text }
         })
-
     });
-
 }
