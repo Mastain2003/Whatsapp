@@ -219,7 +219,7 @@ export async function handleCustomers(
             );
         }
 
-        const id = insert.meta.last_row_id;
+       /* const id = insert.meta.last_row_id;
        /* const code = generateCustomerCode(id);
 
         await env.DB
@@ -238,9 +238,9 @@ export async function handleCustomers(
 
         return jsonResponse({
             success: true,
-            message: "Customer added",
-            customer_code: id,
-            id: id
+            message: "Customer added"
+          /*  customer_code: id,
+            id: id*/
         });
     }
 
