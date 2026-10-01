@@ -1,5 +1,3 @@
-// worker/api_customers.js
-
 import {
     jsonResponse
 } from "./cors_helper.js";
@@ -8,76 +6,45 @@ import {
     checkAuth
 } from "./auth_service.js";
 
-
 function generateCustomerCode(id) {
-
-    return "CUS" +
-        String(id)
-        .padStart(6, "0");
-
+    return "CUS" + String(id).padStart(6, "0");
 }
-
 
 export async function handleCustomers(
     request,
     env
 ) {
-
-    const user =
-    await checkAuth(
+    const user = await checkAuth(
         request,
         env
     );
 
-
     if(!user){
-
         return jsonResponse(
             {
-                success:false,
-                message:"Unauthorized"
+                success: false,
+                message: "Unauthorized"
             },
             401
         );
-
     }
 
+    const url = new URL(request.url);
+    const method = request.method;
 
-    const url =
-    new URL(request.url);
+    const pathParts = url.pathname
+        .split("/")
+        .filter(Boolean);
 
+    const lastPart = pathParts[pathParts.length - 1];
 
-    const method =
-    request.method;
-
-
-    /*
-     * CUSTOMER ID
-     *
-     * /customers/123
-     */
-
-    const pathParts =
-    url.pathname
-    .split("/")
-    .filter(Boolean);
-
-
-    const lastPart =
-    pathParts[pathParts.length - 1];
-
-
-    const customerId =
-    (
+    const customerId = (
         lastPart &&
         lastPart !== "customers" &&
         !isNaN(lastPart)
     )
-    ?
-    Number(lastPart)
-    :
-    null;
-
+    ? Number(lastPart)
+    : null;
 
     /* =========================
        GET CUSTOMERS
@@ -88,197 +55,106 @@ export async function handleCustomers(
         /*
          * GET /customers/123
          */
-
         if(customerId !== null){
-
-            const result =
-            await env.DB
-            .prepare(
-                `
-                SELECT *
-                FROM customers
-                WHERE id = ?
-                `
-            )
-            .bind(
-                customerId
-            )
-            .first();
-
+            const result = await env.DB
+                .prepare(
+                    `
+                    SELECT 
+                        c.*,
+                        s.last_customer_message,
+                        COALESCE(s.window_active, 0) AS window_active
+                    FROM customers c
+                    LEFT JOIN whatsapp_sessions s ON c.id = s.customer_id
+                    WHERE c.id = ?
+                    `
+                )
+                .bind(customerId)
+                .first();
 
             if(!result){
-
                 return jsonResponse(
                     {
-                        success:false,
-                        message:"Customer not found"
+                        success: false,
+                        message: "Customer not found"
                     },
                     404
                 );
-
             }
 
-
             return jsonResponse({
-
-                success:true,
-
-                customer:result
-
+                success: true,
+                customer: result
             });
-
         }
-
 
         /*
          * GET /customers
          */
-
-        let query =
-        `
-        SELECT *
-        FROM customers
+        let query = `
+            SELECT 
+                c.*,
+                s.last_customer_message,
+                COALESCE(s.window_active, 0) AS window_active
+            FROM customers c
+            LEFT JOIN whatsapp_sessions s ON c.id = s.customer_id
         `;
 
-
         const conditions = [];
-
         const values = [];
 
-
-        const name =
-        url.searchParams.get("name");
-
-
-        const designation =
-        url.searchParams.get("designation");
-
-
-        const department =
-        url.searchParams.get("department");
-
-
-        const city =
-        url.searchParams.get("city");
-
-
-        const block =
-        url.searchParams.get("block");
-
-
-        const phone =
-        url.searchParams.get("phone");
-
+        const name = url.searchParams.get("name");
+        const designation = url.searchParams.get("designation");
+        const department = url.searchParams.get("department");
+        const city = url.searchParams.get("city");
+        const block = url.searchParams.get("block");
+        const phone = url.searchParams.get("phone");
 
         if(name){
-
-            conditions.push(
-                "name LIKE ?"
-            );
-
-            values.push(
-                `%${name}%`
-            );
-
+            conditions.push("c.name LIKE ?");
+            values.push(`%${name}%`);
         }
-
 
         if(designation){
-
-            conditions.push(
-                "designation LIKE ?"
-            );
-
-            values.push(
-                `%${designation}%`
-            );
-
+            conditions.push("c.designation LIKE ?");
+            values.push(`%${designation}%`);
         }
-
 
         if(department){
-
-            conditions.push(
-                "department LIKE ?"
-            );
-
-            values.push(
-                `%${department}%`
-            );
-
+            conditions.push("c.department LIKE ?");
+            values.push(`%${department}%`);
         }
-
 
         if(city){
-
-            conditions.push(
-                "city LIKE ?"
-            );
-
-            values.push(
-                `%${city}%`
-            );
-
+            conditions.push("c.city LIKE ?");
+            values.push(`%${city}%`);
         }
-
 
         if(block){
-
-            conditions.push(
-                "block LIKE ?"
-            );
-
-            values.push(
-                `%${block}%`
-            );
-
+            conditions.push("c.block LIKE ?");
+            values.push(`%${block}%`);
         }
-
 
         if(phone){
-
-            conditions.push(
-                "phone LIKE ?"
-            );
-
-            values.push(
-                `%${phone}%`
-            );
-
+            conditions.push("c.phone LIKE ?");
+            values.push(`%${phone}%`);
         }
-
 
         if(conditions.length > 0){
-
-            query +=
-            " WHERE " +
-            conditions.join(" AND ");
-
+            query += " WHERE " + conditions.join(" AND ");
         }
 
+        query += " ORDER BY c.id DESC";
 
-        query +=
-        " ORDER BY id DESC";
-
-
-        const result =
-        await env.DB
-        .prepare(query)
-        .bind(...values)
-        .all();
-
+        const result = await env.DB
+            .prepare(query)
+            .bind(...values)
+            .all();
 
         return jsonResponse({
-
-            success:true,
-
-            customers:
-            result.results
-
+            success: true,
+            customers: result.results
         });
-
     }
-
 
     /* =========================
        ADD CUSTOMER
@@ -288,116 +164,85 @@ export async function handleCustomers(
         method === "POST" &&
         customerId === null
     ){
-
-        const body =
-        await request.json();
-
+        const body = await request.json();
 
         if(
             !body.name ||
             !body.phone
         ){
-
             return jsonResponse(
                 {
-                    success:false,
-                    message:
-                    "Name and phone are required"
+                    success: false,
+                    message: "Name and phone are required"
                 },
                 400
             );
-
         }
 
-
-        const insert =
-        await env.DB
-        .prepare(
-            `
-            INSERT OR IGNORE INTO customers(
-                name,
-                designation,
-                department,
-                city,
-                block,
-                phone
+        const insert = await env.DB
+            .prepare(
+                `
+                INSERT OR IGNORE INTO customers(
+                    name,
+                    designation,
+                    department,
+                    city,
+                    block,
+                    phone,
+                    whatsapp_language,
+                    marketing_opt_in
+                )
+                VALUES(
+                    ?, ?, ?, ?, ?, ?, ?, ?
+                )
+                `
             )
-            VALUES(
-                ?,?,?,?,?,?
+            .bind(
+                body.name,
+                body.designation || "",
+                body.department || "",
+                body.city || "",
+                body.block || "",
+                body.phone,
+                body.whatsapp_language || "en",
+                body.marketing_opt_in !== undefined ? body.marketing_opt_in : 1
             )
-            `
-        )
-        .bind(
-            body.name,
-            body.designation || "",
-            body.department || "",
-            body.city || "",
-            body.block || "",
-            body.phone
-        )
-        .run();
+            .run();
 
-
-        /*
-         * If INSERT OR IGNORE skipped
-         * the record.
-         */
-
-        if(
-            !insert.meta.changes
-        ){
-
+        if(!insert.meta.changes){
             return jsonResponse(
                 {
-                    success:false,
-                    message:
-                    "Customer already exists"
+                    success: false,
+                    message: "Customer already exists"
                 },
                 409
             );
-
         }
 
-
-        const id =
-        insert.meta.last_row_id;
-
-
-        const code =
-        generateCustomerCode(id);
-
+        const id = insert.meta.last_row_id;
+        const code = generateCustomerCode(id);
 
         await env.DB
-        .prepare(
-            `
-            UPDATE customers
-            SET customer_code = ?
-            WHERE id = ?
-            `
-        )
-        .bind(
-            code,
-            id
-        )
-        .run();
-
+            .prepare(
+                `
+                UPDATE customers
+                SET customer_code = ?
+                WHERE id = ?
+                `
+            )
+            .bind(
+                code,
+                id
+            )
+            .run();
 
         return jsonResponse({
-
-            success:true,
-
-            message:
-            "Customer added",
-
-            customer_code:
-            code,
-
-            id:id
-
+            success: true,
+            message: "Customer added",
+            customer_code: code,
+            id: id
         });
-
     }
-
 
     /* =========================
        EDIT CUSTOMER
@@ -407,92 +252,65 @@ export async function handleCustomers(
         method === "PUT" &&
         customerId !== null
     ){
-
-        const body =
-        await request.json();
-
+        const body = await request.json();
 
         if(
             !body.name ||
             !body.phone
         ){
-
             return jsonResponse(
                 {
-                    success:false,
-                    message:
-                    "Name and phone are required"
+                    success: false,
+                    message: "Name and phone are required"
                 },
                 400
             );
-
         }
 
+        const result = await env.DB
+            .prepare(
+                `
+                UPDATE customers
+                SET
+                    name = ?,
+                    designation = ?,
+                    department = ?,
+                    city = ?,
+                    block = ?,
+                    phone = ?,
+                    whatsapp_language = COALESCE(?, whatsapp_language),
+                    marketing_opt_in = COALESCE(?, marketing_opt_in)
+                WHERE id = ?
+                `
+            )
+            .bind(
+                body.name,
+                body.designation || "",
+                body.department || "",
+                body.city || "",
+                body.block || "",
+                body.phone,
+                body.whatsapp_language || null,
+                body.marketing_opt_in !== undefined ? body.marketing_opt_in : null,
+                customerId
+            )
+            .run();
 
-        const result =
-        await env.DB
-        .prepare(
-            `
-            UPDATE customers
-
-            SET
-                name = ?,
-                designation = ?,
-                department = ?,
-                city = ?,
-                block = ?,
-                phone = ?
-
-            WHERE id = ?
-            `
-        )
-        .bind(
-
-            body.name,
-
-            body.designation || "",
-
-            body.department || "",
-
-            body.city || "",
-
-            body.block || "",
-
-            body.phone,
-
-            customerId
-
-        )
-        .run();
-
-
-        if(
-            !result.meta.changes
-        ){
-
+        if(!result.meta.changes){
             return jsonResponse(
                 {
-                    success:false,
-                    message:
-                    "Customer not found"
+                    success: false,
+                    message: "Customer not found"
                 },
                 404
             );
-
         }
 
-
         return jsonResponse({
-
-            success:true,
-
-            message:
-            "Customer updated"
-
+            success: true,
+            message: "Customer updated"
         });
-
     }
-
 
     /* =========================
        DELETE CUSTOMER
@@ -502,56 +320,37 @@ export async function handleCustomers(
         method === "DELETE" &&
         customerId !== null
     ){
+        const result = await env.DB
+            .prepare(
+                `
+                DELETE FROM customers
+                WHERE id = ?
+                `
+            )
+            .bind(customerId)
+            .run();
 
-        const result =
-        await env.DB
-        .prepare(
-            `
-            DELETE FROM customers
-            WHERE id = ?
-            `
-        )
-        .bind(
-            customerId
-        )
-        .run();
-
-
-        if(
-            !result.meta.changes
-        ){
-
+        if(!result.meta.changes){
             return jsonResponse(
                 {
-                    success:false,
-                    message:
-                    "Customer not found"
+                    success: false,
+                    message: "Customer not found"
                 },
                 404
             );
-
         }
 
-
         return jsonResponse({
-
-            success:true,
-
-            message:
-            "Customer deleted"
-
+            success: true,
+            message: "Customer deleted"
         });
-
     }
-
 
     return jsonResponse(
         {
-            success:false,
-            message:
-            "Method not allowed"
+            success: false,
+            message: "Method not allowed"
         },
         405
     );
-
 }
