@@ -465,6 +465,88 @@ function hasVariants(product){
 
 }
 
+function productPriceHtml(product){
+
+    const mrp =
+        product?.price;
+
+    const salePrice =
+        product?.sale_price;
+
+
+    const hasMrp =
+        mrp !== undefined &&
+        mrp !== null &&
+        String(mrp).trim() !== "";
+
+
+    const hasSalePrice =
+        salePrice !== undefined &&
+        salePrice !== null &&
+        String(salePrice).trim() !== "";
+
+
+    /*
+     * SALE PRICE + MRP
+     */
+
+    if(
+        hasSalePrice &&
+        hasMrp
+    ){
+
+        return `
+
+            <div class="price-display">
+
+                <span class="sale-price">
+                    ${formatPrice(
+                        salePrice,
+                        product.currency
+                    )}
+                </span>
+
+                <span class="mrp-price">
+                    ${formatPrice(
+                        mrp,
+                        product.currency
+                    )}
+                </span>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+     * ONLY NORMAL PRICE / MRP
+     */
+
+    if(hasMrp){
+
+        return `
+
+            <div class="price-display">
+
+                <span class="sale-price">
+                    ${formatPrice(
+                        mrp,
+                        product.currency
+                    )}
+                </span>
+
+            </div>
+
+        `;
+
+    }
+
+
+    return "";
+
+}
 
 
 /* =========================================
