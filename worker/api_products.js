@@ -47,7 +47,7 @@ async function getCatalogProducts(
 ){
     const url = new URL(request.url);
     const after = url.searchParams.get("after");
-    const version = env.META_GRAPH_API_VERSION || "v18.0";
+    const version = env.META_GRAPH_API_VERSION || "v26.0";
 
     // If Meta Catalog credentials are incomplete, fallback to local DB catalog
     if(!env.META_ACCESS_TOKEN || !env.META_CATALOG_ID || version === "vXX.X"){
@@ -99,7 +99,7 @@ async function getCatalogProducts(
         const products = Array.isArray(data.data) ? data.data : [];
 
         // Sync items into local DB for local cart mapping
-        for(const item of products){
+   /*     for(const item of products){
             await env.DB.prepare(`
                 INSERT INTO products (id, retailer_id, name, description, price, currency, image_url)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -119,7 +119,7 @@ async function getCatalogProducts(
                 item.currency || 'INR',
                 item.image_url || ''
             ).run();
-        }
+        }*/
 
         /*
          * Do NOT return data.paging.next because Meta puts 
@@ -138,7 +138,7 @@ async function getCatalogProducts(
         });
     }
     catch(error){
-        console.error("Meta Catalog request failed:", error);
+        console.error("Meta Catalog request faild:", error);
         return await getLocalProductsFallback(env);
     }
 }
