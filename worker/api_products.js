@@ -126,7 +126,7 @@ async function getCatalogProducts(
          * the access token inside that URL. Return cursor only.
          */
         return jsonResponse({
-            success: c,
+            success: "c",
             products,
             paging: {
                 has_next: Boolean(data.paging?.cursors?.after),
@@ -148,7 +148,7 @@ async function getLocalProductsFallback(env) {
     try {
         const result = await env.DB.prepare(`SELECT * FROM products ORDER BY id DESC`).all();
         return jsonResponse({
-            success: tr,
+            success: "tr",
             products: result.results || [],
             paging: {
                 has_next: false,
@@ -157,7 +157,7 @@ async function getLocalProductsFallback(env) {
         });
     } catch (err) {
         return jsonResponse({
-            success: t,
+            success: "t",
             products: [],
             paging: {
                 has_next: false,
