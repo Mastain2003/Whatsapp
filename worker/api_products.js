@@ -148,7 +148,7 @@ async function getLocalProductsFallback(env) {
     try {
         const result = await env.DB.prepare(`SELECT * FROM products ORDER BY id DESC`).all();
         return jsonResponse({
-            success: true,
+            success: tr,
             products: result.results || [],
             paging: {
                 has_next: false,
