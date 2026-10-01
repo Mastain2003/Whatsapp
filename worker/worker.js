@@ -1,49 +1,15 @@
 // worker/worker.js 
 
-import {
- handleWhatsAppDashboard
-}
-from "./api_whatsapp_dashboard.js";
-
-import {
-    handleProducts
-} from "./api_products.js";
-
-import {
-    importCustomers
-} from "./excel_import.js";
-
-import {
-    handleOptions,
-    jsonResponse
-} from "./cors_helper.js";
-
-
-import {
-    handleLogin,
- logout
-} from "./auth_service.js";
-
-
-import {
-    handleCustomers
-} from "./api_customers.js";
-
-import {
-    handleBroadcast
-} from "./api_broadcast.js";
-
+import { handleWhatsAppDashboard } from "./api_whatsapp_dashboard.js";
+import { handleProducts } from "./api_products.js";
+import { importCustomers } from "./excel_import.js";
+import { handleOptions, jsonResponse } from "./cors_helper.js";
+import { handleLogin, logout } from "./auth_service.js";
+import { handleCustomers } from "./api_customers.js";
+import { handleBroadcast } from "./api_broadcast.js";
 import { handleWhatsApp } from "./api_whatsapp.js";
-
-import {
- handleWhatsAppWebhook
-}
-from "./api_whatsapp_webhook.js";
-
-import {
-    handleTemplates,
-    handleSendTemplate
-} from "./api_templates.js";
+import { handleWhatsAppWebhook } from "./api_whatsapp_webhook.js";
+import { handleTemplates, handleSendTemplate} from "./api_templates.js";
 
 
 
