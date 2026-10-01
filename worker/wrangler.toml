@@ -5,7 +5,7 @@ compatibility_date = "2026-07-23"
 [[d1_databases]]
 binding = "DB"
 database_name = "whatsapp-db"
-database_id = "665b2e9f-5dcf-4050-8995-cdeb678a409c"
+database_id = "938a7654-f89d-48c5-b3ee-0e8df809638a"
 
 [assets]
 directory = "../public"
