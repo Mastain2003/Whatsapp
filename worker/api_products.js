@@ -99,27 +99,58 @@ async function getCatalogProducts(
         const products = Array.isArray(data.data) ? data.data : [];
 
         // Sync items into local DB for local cart mapping
-   /*     for(const item of products){
+      for(const item of products){
             await env.DB.prepare(`
-                INSERT INTO products (id, retailer_id, name, description, price, currency, image_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(id) DO UPDATE SET
-                    retailer_id = excluded.retailer_id,
-                    name = excluded.name,
-                    description = excluded.description,
-                    price = excluded.price,
-                    currency = excluded.currency,
-                    image_url = excluded.image_url
-            `).bind(
-                item.id,
-                item.retailer_id || item.id,
-                item.name || 'Product',
-                item.description || '',
-                item.price || '0',
-                item.currency || 'INR',
-                item.image_url || ''
-            ).run();
-        }*/
+              INSERT INTO products (
+        id,
+        retailer_id,
+        retailer_product_group_id,
+        name,
+        description,
+        price,
+        currency,
+        image_url,
+        availability,
+        brand,
+        condition,
+        url,
+        sale_price,
+        sale_price_effective_date
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+        retailer_id = excluded.retailer_id,
+        retailer_product_group_id = excluded.retailer_product_group_id,
+        name = excluded.name,
+        description = excluded.description,
+        price = excluded.price,
+        currency = excluded.currency,
+        image_url = excluded.image_url,
+        availability = excluded.availability,
+        brand = excluded.brand,
+        condition = excluded.condition,
+        url = excluded.url,
+        sale_price = excluded.sale_price,
+        sale_price_effective_date = excluded.sale_price_effective_date,
+        updated_at = CURRENT_TIMESTAMP
+`).bind(
+    item.id,
+    item.retailer_id || item.id,
+    item.retailer_product_group_id || null,
+    item.name || 'Product',
+    item.description || '',
+    item.price || 0,
+    item.currency || 'INR',
+    item.image_url || '',
+    item.availability || 'in stock',
+    item.brand || '',
+    item.condition || 'new',
+    item.url || '',
+    item.sale_price || null,
+    item.sale_price_effective_date || null
+).run();
+
+        }
 
         /*
          * Do NOT return data.paging.next because Meta puts 
