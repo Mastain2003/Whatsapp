@@ -1,241 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Broadcast</title>
 
-<meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>
-WhatsApp Broadcast
-</title>
-
-
-<link rel="stylesheet"
-href="../css/sidebar.css">
-
-<link rel="stylesheet"
-href="../css/page_broadcast.css">
-
+    <link rel="stylesheet" href="../css/sidebar.css">
+    <link rel="stylesheet" href="../css/page_broadcast.css">
 </head>
-
 
 <body>
 
+    <div id="sidebarContainer">
+        <div class="sidebar">
+            <div class="logo">
+                <h2>WhatsApp CRM</h2>
+            </div>
 
-<div id="sidebarContainer">
-  <div class="sidebar">
+            <nav>
+                <a href="dashboard.html" data-page="dashboard">🏠 Dashboard</a>
+                <a href="customers.html" data-page="customers">👥 Customers</a>
+                <a href="products.html" data-page="products">📦 Products</a>
+                <a href="broadcast.html" data-page="broadcast" class="active">📢 Broadcast</a>
+                <a href="templates.html" data-page="templates">📜 Templates</a>
+                <a href="#">📊 Reports</a>
+            </nav>
 
-    <div class="logo">
-
-        <h2>WhatsApp CRM</h2>
-
+            <button id="sidebarLogout">Logout</button>
+        </div>
     </div>
 
-
-    <nav>
-
-        <a href="dashboard.html"
-           data-page="dashboard">
-
-            🏠 Dashboard
-
-        </a>
-
-
-        <a href="customers.html"
-           data-page="customers">
-
-            👥 Customers
-
-        </a>
-
-
-        <a href="products.html"
-           data-page="products">
-
-            📦 Products
-
-        </a>
-
-
-        <a href="broadcast.html" data-page="broadcast">
-    Broadcast
-        </a>
-        <a href="templates.html" data-page="templates">
-    Templates
-        </a>
-
-        
-
-
-        <a href="#">
-
-            📊 Reports
-
-        </a>
-
-    </nav>
-
-
-    <button id="sidebarLogout">
-
-        Logout
-
-    </button>
-
-  </div>
-</div>
-
-
-
-<div class="page-content">
-
-
-<h2>
-WhatsApp Broadcast
-</h2>
-
-
-
-<div class="broadcast-box">
-
-
-<h3>
-Customer Filter
-</h3>
-
-
-
-<div class="filters">
-
-
-<input
-type="text"
-id="searchCustomer"
-placeholder="Search name or phone">
-
-
-
-<select id="cityFilter">
-
-<option value="">
-All Cities
-</option>
-
-</select>
-
-
-
-
-<select id="departmentFilter">
-
-<option value="">
-All Departments
-</option>
-
-</select>
-
-
-
-</div>
-
-
-
-
-<div class="customer-actions">
-
-
-<button id="selectAll">
-
-Select All
-
-</button>
-
-
-
-<button id="clearAll">
-
-Clear
-
-</button>
-
-
-</div>
-
-
-
-
-<div id="selectedCount">
-
-Selected: 0
-
-</div>
-
-
-
-<div id="customerList">
-
-Loading customers...
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-<div class="broadcast-box">
-
-
-<h3>
-Message
-</h3>
-
-
-
-<textarea
-id="message"
-placeholder="Type your WhatsApp message">
-</textarea>
-
-
-
-
-<button id="sendBroadcast">
-
-Send Broadcast
-
-</button>
-
-
-
-<div id="result">
-
-</div>
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-<script
-type="module"
-src="../js/page_broadcast.js">
-</script>
-
-
+    <div class="page-content">
+        <h2>WhatsApp Broadcast</h2>
+
+        <div class="broadcast-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+            <!-- Left Column: Filter & Customer Selection -->
+            <div class="broadcast-box">
+                <h3>Customer Filter</h3>
+
+                <div class="filters">
+                    <input type="text" id="searchCustomer" placeholder="Search name or phone">
+
+                    <select id="cityFilter">
+                        <option value="">All Cities</option>
+                    </select>
+
+                    <select id="departmentFilter">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+
+                <div class="customer-actions" style="margin-top: 10px; margin-bottom: 10px;">
+                    <button id="selectAll">Select All</button>
+                    <button id="clearAll">Clear</button>
+                </div>
+
+                <div id="selectedCount" style="font-weight: bold; margin-bottom: 10px;">
+                    Selected: 0
+                </div>
+
+                <div id="customerList" style="max-height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                    Loading customers...
+                </div>
+            </div>
+
+            <!-- Right Column: Message Composer & Live Preview -->
+            <div class="broadcast-box">
+                <h3>Message Composer</h3>
+
+                <!-- Variable Pills -->
+                <div class="variable-pills" style="margin-bottom: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 13px; font-weight: bold; align-self: center;">Insert Variable:</span>
+                    <button type="button" class="var-btn" data-var="{{name}}" style="padding: 4px 8px; cursor: pointer;">{{name}}</button>
+                    <button type="button" class="var-btn" data-var="{{post}}" style="padding: 4px 8px; cursor: pointer;">{{post}}</button>
+                    <button type="button" class="var-btn" data-var="{{department}}" style="padding: 4px 8px; cursor: pointer;">{{department}}</button>
+                    <button type="button" class="var-btn" data-var="{{city}}" style="padding: 4px 8px; cursor: pointer;">{{city}}</button>
+                </div>
+
+                <textarea id="message" rows="6" style="width: 100%; border-radius: 4px; padding: 10px;" placeholder="Type your WhatsApp broadcast message here..."></textarea>
+
+                <br><br>
+
+                <!-- Live WhatsApp Preview Card -->
+                <div class="preview-container" style="background: #e5ddd5; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                    <h4 style="margin-top: 0; color: #075e54;">Live WhatsApp Preview</h4>
+                    <div class="preview-bubble" style="background: #ffffff; padding: 12px; border-radius: 8px; position: relative; max-width: 90%; font-family: sans-serif; box-shadow: 0 1px 2px rgba(0,0,0,0.15);">
+                        <div id="previewHeader" style="margin-bottom: 8px;">
+                            <img id="previewImage" src="https://whatsapp.mastain.in/img/1784960031243.png" style="width: 100%; border-radius: 6px; display: block;" alt="Header Preview">
+                        </div>
+                        <div id="previewText" style="white-space: pre-wrap; font-size: 14px; color: #303030;">
+                            Type a message to see live preview...
+                        </div>
+                        <div style="text-align: right; font-size: 10px; color: #8696a0; margin-top: 5px;">
+                            16:00 ✓✓
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <button id="sendBroadcast" style="background: #25d366; color: white; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">
+                    Send Broadcast
+                </button>
+
+                <div id="result" style="margin-top: 15px; font-weight: bold;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module" src="../js/page_broadcast.js"></script>
 </body>
 
 </html>
