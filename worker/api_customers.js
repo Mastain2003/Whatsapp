@@ -159,12 +159,26 @@ export async function handleCustomers(
     /* =========================
        ADD CUSTOMER
     ========================= */
+        /* =========================
+       ADD CUSTOMER
+    ========================= */
 
     if(
         method === "POST" &&
         customerId === null
     ){
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (e) {
+            return jsonResponse(
+                {
+                    success: false,
+                    message: "Invalid JSON body"
+                },
+                400
+            );
+        }
 
         if(
             !body.name ||
@@ -178,6 +192,11 @@ export async function handleCustomers(
                 400
             );
         }
+
+        // Standardize marketing_opt_in to 1 or 0 integer values for D1
+        const optInValue = body.marketing_opt_in !== undefined 
+            ? (body.marketing_opt_in ? 1 : 0) 
+            : 1;
 
         const insert = await env.DB
             .prepare(
@@ -205,7 +224,7 @@ export async function handleCustomers(
                 body.block || "",
                 body.phone,
                 body.whatsapp_language || "en",
-                body.marketing_opt_in !== undefined ? body.marketing_opt_in : 1
+                optInValue
             )
             .run();
 
@@ -220,21 +239,6 @@ export async function handleCustomers(
         }
 
         const id = insert.meta.last_row_id;
-       /* const code = generateCustomerCode(id);
-
-        await env.DB
-            .prepare(
-                `
-                UPDATE customers
-                SET customer_code = ?
-                WHERE id = ?
-                `
-            )
-            .bind(
-                code,
-                id
-            )
-            .run();*/
 
         return jsonResponse({
             success: true,
@@ -243,6 +247,7 @@ export async function handleCustomers(
             id: id
         });
     }
+
 
     /* =========================
        EDIT CUSTOMER
