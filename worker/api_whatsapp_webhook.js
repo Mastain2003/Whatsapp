@@ -113,12 +113,12 @@ export async function handleWhatsAppWebhook(request, env) {
 
     if (upperCmd === 'UNSUBSCRIBE') {
         await env.DB.prepare(`UPDATE customers SET marketing_opt_in = 0 WHERE id = ?`).bind(customer.id).run();
-        await sendTextMessage(env, customer.phone, "You have been unsubscribed from promotional messages.\n\n[ MENU - Main Menu ]");
+        await sendTextMessage(env, customer.id, customer.phone, "You have been unsubscribed from promotional messages.\n\n[ MENU - Main Menu ]");
         return new Response('OK', { status: 200 });
     }
 
     if (upperCmd === 'STOP') {
-        await sendTextMessage(env, customer.phone, "Current session paused.\n\nType MENU to view options.");
+        await sendTextMessage(env, customer.id, customer.phone, "Current session paused.\n\nType MENU to view options.");
         return new Response('OK', { status: 200 });
     }
 
@@ -134,31 +134,31 @@ export async function handleWhatsAppWebhook(request, env) {
                 SET status = 'CANCELLED', cancelled_at = CURRENT_TIMESTAMP, cancellation_reason = 'Customer CANCEL command' 
                 WHERE id = ?
             `).bind(pendingOrder.id).run();
-            await sendTextMessage(env, customer.phone, "Your active order request has been cancelled.");
+            await sendTextMessage(env, customer.id, customer.phone, "Your active order request has been cancelled.");
         } else {
-            await sendTextMessage(env, customer.phone, "There is no active order request to cancel.");
+            await sendTextMessage(env, customer.id, customer.phone, "There is no active order request to cancel.");
         }
         return new Response('OK', { status: 200 });
     }
 
     if (upperCmd === 'MENU' || buttonId === 'MAIN_MENU') {
-        await sendMainMenu(env, customer.phone);
+        await sendMainMenu(env, customer.id, customer.phone);
         return new Response('OK', { status: 200 });
     }
 
     if (upperCmd === 'HELP' || buttonId === 'HELP') {
         const helpText = "Available options:\n\nMENU — Main menu\nHELP — Show help\nLANGUAGE — Change language\nCANCEL — Cancel current order request\nSTOP — Stop current flow\nUNSUBSCRIBE — Stop promotional messages";
-        await sendTextMessage(env, customer.phone, helpText);
+        await sendTextMessage(env, customer.id, customer.phone, helpText);
         return new Response('OK', { status: 200 });
     }
 
     if (upperCmd === 'LANGUAGE' || upperCmd === 'LANG' || buttonId === 'LANGUAGE') {
-        await sendLanguageMenu(env, customer.phone);
+        await sendLanguageMenu(env, customer.id, customer.phone);
         return new Response('OK', { status: 200 });
     }
 
     // Default Fallback Response for Unsupported / Random Text
-    await sendTextMessage(env, customer.phone, "Please select an option below or type MENU.\n\n[ MENU - Main Menu ]");
+    await sendTextMessage(env, customer.id, customer.phone, "Please select an option below or type MENU.\n\n[ MENU - Main Menu ]");
     return new Response('OK', { status: 200 });
 }
 
@@ -182,25 +182,89 @@ async function handleCartSubmission(customer, message, env) {
 
     // Acknowledge receipt without confirming sale
     const ackMessage = "Thank you. Your order request has been received.\n\nOur team will contact you by phone or discuss it with you personally for final confirmation.";
-    await sendTextMessage(env, customer.phone, ackMessage);
+    await sendTextMessage(env, customer.id, customer.phone, ackMessage);
 
     return new Response('OK', { status: 200 });
 }
 
-// WhatsApp API Outbound Helper
-async function sendTextMessage(env, recipientPhone, text) {
+// Interactive Helper: Send Main Menu
+async function sendMainMenu(env, customerId, recipientPhone) {
+    const payload = {
+        messaging_product: "whatsapp",
+        to: recipientPhone,
+        type: "interactive",
+        interactive: {
+            type: "button",
+            body: { text: "Welcome!\n\nPlease select an option:" },
+            action: {
+                buttons: [
+                    { type: "reply", reply: { id: "HELP", title: "Help" } },
+                    { type: "reply", reply: { id: "LANGUAGE", title: "Language" } }
+                ]
+            }
+        }
+    };
+    await sendWhatsAppPayload(env, customerId, payload, "MAIN_MENU");
+}
+
+// Interactive Helper: Send Language Menu
+async function sendLanguageMenu(env, customerId, recipientPhone) {
+    const payload = {
+        messaging_product: "whatsapp",
+        to: recipientPhone,
+        type: "interactive",
+        interactive: {
+            type: "button",
+            body: { text: "Please select your preferred language:" },
+            action: {
+                buttons: [
+                    { type: "reply", reply: { id: "LANG_EN", title: "English" } },
+                    { type: "reply", reply: { id: "LANG_HI", title: "हिन्दी" } }
+                ]
+            }
+        }
+    };
+    await sendWhatsAppPayload(env, customerId, payload, "LANGUAGE");
+}
+
+// Outbound Text Helper
+async function sendTextMessage(env, customerId, recipientPhone, text) {
+    const payload = {
+        messaging_product: "whatsapp",
+        to: recipientPhone,
+        type: "text",
+        text: { body: text }
+    };
+    await sendWhatsAppPayload(env, customerId, payload, null, text);
+}
+
+// Shared Outbound WhatsApp API Invoker & DB Logger
+async function sendWhatsAppPayload(env, customerId, payload, buttonId = null, text = null) {
     const url = `https://graph.facebook.com/v18.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
-    await fetch(url, {
+    const res = await fetch(url, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${env.WHATSAPP_API_TOKEN}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: recipientPhone,
-            type: "text",
-            text: { body: text }
-        })
+        body: JSON.stringify(payload)
     });
+
+    const data = await res.json();
+    const waMsgId = data.messages?.[0]?.id || null;
+
+    // Record Outbound System Message in messages_v2
+    await env.DB.prepare(`
+        INSERT INTO messages_v2 (
+            customer_id, whatsapp_message_id, direction, sender_type, 
+            message_type, message_text, button_id, status
+        ) VALUES (?, ?, 'OUTBOUND', 'SYSTEM', ?, ?, ?, ?)
+    `).bind(
+        customerId, 
+        waMsgId, 
+        payload.type.toUpperCase(), 
+        text || payload.interactive?.body?.text || '', 
+        buttonId, 
+        res.ok ? 'SENT' : 'FAILED'
+    ).run();
 }
