@@ -363,7 +363,7 @@ export async function handleCustomers(
         insert.meta.last_row_id;
 
 
-        const code =
+        /*const code =
         generateCustomerCode(id);
 
 
@@ -379,7 +379,7 @@ export async function handleCustomers(
             code,
             id
         )
-        .run();
+        .run();*/
 
 
         return jsonResponse({
@@ -390,7 +390,7 @@ export async function handleCustomers(
             "Customer added",
 
             customer_code:
-            code,
+            id,
 
             id:id
 
