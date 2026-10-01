@@ -220,7 +220,7 @@ export async function handleCustomers(
         }
 
         const id = insert.meta.last_row_id;
-        const code = generateCustomerCode(id);
+       /* const code = generateCustomerCode(id);
 
         await env.DB
             .prepare(
@@ -234,12 +234,12 @@ export async function handleCustomers(
                 code,
                 id
             )
-            .run();
+            .run();*/
 
         return jsonResponse({
             success: true,
             message: "Customer added",
-            customer_code: code,
+            customer_code: id,
             id: id
         });
     }
