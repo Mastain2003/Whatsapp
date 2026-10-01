@@ -10,3 +10,8 @@ database_id = "665b2e9f-5dcf-4050-8995-cdeb678a409c"
 [assets]
 directory = "../public"
 binding = "ASSETS"
+
+
+[triggers]
+crons = ["30 10 * * *"] # Daily at 10:30 UTC / 4:00 PM IST
+
