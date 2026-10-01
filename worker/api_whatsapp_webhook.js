@@ -1,4 +1,4 @@
-import { getCorsHeaders } from './cors_helper.js';
+import { corsHeaders } from './cors_helper.js';
 
 export async function handleWhatsAppWebhook(request, env) {
     if (request.method === 'GET') {
