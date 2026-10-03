@@ -8,129 +8,6 @@
 
     <link rel="stylesheet" href="../css/sidebar.css">
     <link rel="stylesheet" href="../css/page_broadcast.css">
-    <style>
-        .broadcast-container {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 20px;
-            margin-top: 15px;
-        }
-
-        .filter-section, .composer-section {
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 13px;
-            color: #333;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .type-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .type-btn {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #25d366;
-            background: #fff;
-            color: #25d366;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .type-btn.active {
-            background: #25d366;
-            color: #fff;
-        }
-
-        /* WhatsApp Live Preview Styles */
-        .phone-mockup {
-            background: #efeae2;
-            border-radius: 12px;
-            padding: 15px;
-            border: 1px solid #d1d7db;
-            margin-top: 15px;
-        }
-
-        .wa-bubble {
-            background: #ffffff;
-            border-radius: 8px 8px 8px 0px;
-            padding: 10px 12px;
-            max-width: 85%;
-            box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            color: #111b21;
-            position: relative;
-        }
-
-        .wa-header-img {
-            width: 100%;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            display: none;
-        }
-
-        .wa-buttons-container {
-            margin-top: 8px;
-            border-top: 1px solid #e9edef;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .wa-action-btn {
-            padding: 8px;
-            text-align: center;
-            color: #00a884;
-            font-weight: 600;
-            font-size: 13px;
-            border-bottom: 1px solid #e9edef;
-            cursor: pointer;
-        }
-
-        .wa-action-btn:last-child {
-            border-bottom: none;
-        }
-
-        .button-input-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-    </style>
 </head>
 
 <body>
@@ -140,52 +17,55 @@
             <div class="logo">
                 <h2>WhatsApp CRM</h2>
             </div>
+
             <nav>
                 <a href="dashboard.html" data-page="dashboard">🏠 Dashboard</a>
                 <a href="customers.html" data-page="customers">👥 Customers</a>
                 <a href="products.html" data-page="products">📦 Products</a>
-                <a href="broadcast.html" data-page="broadcast" class="active">📢 Broadcast Studio</a>
+                <a href="broadcast.html" data-page="broadcast" class="active">📢 Broadcast</a>
                 <a href="templates.html" data-page="templates">📜 Templates</a>
+                <a href="#">📊 Reports</a>
             </nav>
+
             <button id="sidebarLogout">Logout</button>
         </div>
     </div>
 
     <div class="page-content">
-        <h2>WhatsApp Broadcast Studio</h2>
+        <h2>WhatsApp Broadcast</h2>
 
-        <div class="broadcast-container">
+        <div class="broadcast-layout">
 
-            <!-- LEFT PANEL: Granular Targeting & Audience Filter -->
-            <div class="filter-section">
-                <h3>1. Target Audience Filters</h3>
+            <!-- LEFT COLUMN: Audience Targeting & Activity Filters -->
+            <div class="broadcast-box">
+                <h3>Customer Activity Filters</h3>
 
-                <div class="grid-2">
+                <div class="filter-grid">
                     <div class="form-group">
                         <label for="windowFilter">24-Hour Session Window</label>
                         <select id="windowFilter" class="form-control">
-                            <option value="">All Customers</option>
-                            <option value="active">Active (Free Session Window Open)</option>
-                            <option value="expired">Expired (Requires Approved Template)</option>
+                            <option value="">All Windows</option>
+                            <option value="active">Active (Free Session Open)</option>
+                            <option value="expired">Expired (Template Required)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="activityFilter">Activity Status</label>
                         <select id="activityFilter" class="form-control">
-                            <option value="">All Activity Levels</option>
-                            <option value="recent">Active in Last 7 Days</option>
-                            <option value="inactive_30">Inactive > 30 Days</option>
-                            <option value="never">Never Responded</option>
+                            <option value="">All Activity Tiers</option>
+                            <option value="recent">Active (Last 7 Days)</option>
+                            <option value="inactive_30">Inactive (> 30 Days)</option>
+                            <option value="never">Never Engaged</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid-2">
+                <div class="filter-grid">
                     <div class="form-group">
-                        <label for="orderFilter">Order History</label>
+                        <label for="orderFilter">Order Activity</label>
                         <select id="orderFilter" class="form-control">
-                            <option value="">All Order Statuses</option>
+                            <option value="">All Orders Statuses</option>
                             <option value="has_orders">Has Placed Orders</option>
                             <option value="no_orders">No Orders Yet</option>
                             <option value="abandoned_cart">Abandoned Cart</option>
@@ -202,100 +82,99 @@
 
                 <div class="form-group">
                     <label for="searchCustomer">Search Customer</label>
-                    <input type="text" id="searchCustomer" class="form-control" placeholder="Search by name, phone, or department...">
+                    <input type="text" id="searchCustomer" class="form-control" placeholder="Search name, phone, or department...">
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div id="selectedCount" style="font-weight: bold; color: #007bff;">
+                <div class="customer-actions">
+                    <div id="selectedCount" class="selected-badge">
                         Selected: 0 Recipients
                     </div>
-                    <div>
-                        <button id="selectAll" style="padding: 4px 10px; cursor: pointer;">Select All Filtered</button>
-                        <button id="clearAll" style="padding: 4px 10px; cursor: pointer;">Deselect All</button>
+                    <div class="action-buttons">
+                        <button id="selectAll" class="btn-secondary">Select All</button>
+                        <button id="clearAll" class="btn-secondary">Clear</button>
                     </div>
                 </div>
 
-                <div id="customerList" style="max-height: 280px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 10px; border-radius: 6px; background: #fafafa;">
+                <div id="customerList" class="customer-list-box">
                     Loading audience list...
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: Interactive Composer & Live Preview -->
-            <div class="composer-section">
-                <h3>2. Message Composer</h3>
+            <!-- RIGHT COLUMN: Message Composer & Live Preview -->
+            <div class="broadcast-box">
+                <h3>Message Composer</h3>
 
-                <!-- Message Type Toggle -->
+                <!-- Message Type Selector -->
                 <div class="type-selector">
                     <button type="button" class="type-btn active" data-type="INTERACTIVE">Interactive Msg</button>
                     <button type="button" class="type-btn" data-type="MEDIA">Media Msg</button>
                     <button type="button" class="type-btn" data-type="TEMPLATE">Approved Template</button>
                 </div>
 
-                <!-- Template Selector Dropdown (Shown when TEMPLATE selected) -->
-                <div id="templateSelectionGroup" class="form-group" style="display: none;">
+                <!-- Template Selector (Shown when TEMPLATE selected) -->
+                <div id="templateSelectionGroup" class="form-group is-hidden">
                     <label for="templateSelect">Select HSM Approved Template</label>
                     <select id="templateSelect" class="form-control">
-                        <option value="">-- Choose Template --</option>
+                        <option value="">-- Select Template --</option>
                     </select>
                 </div>
 
-                <!-- Header Media Input (Shown when MEDIA selected) -->
-                <div id="mediaGroup" class="form-group" style="display: none;">
-                    <label for="mediaUrl">Header Image / Banner URL</label>
+                <!-- Media Input (Shown when MEDIA selected) -->
+                <div id="mediaGroup" class="form-group is-hidden">
+                    <label for="mediaUrl">Header Banner / Media URL</label>
                     <input type="url" id="mediaUrl" class="form-control" placeholder="https://example.com/banner.jpg">
                 </div>
 
                 <!-- Variable Insertion Pills -->
                 <div class="form-group">
-                    <label>Insert Personalization Variables</label>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="var-btn" data-var="{{name}}" style="padding: 3px 8px; cursor: pointer;">{{name}}</button>
-                        <button type="button" class="var-btn" data-var="{{city}}" style="padding: 3px 8px; cursor: pointer;">{{city}}</button>
-                        <button type="button" class="var-btn" data-var="{{department}}" style="padding: 3px 8px; cursor: pointer;">{{department}}</button>
+                    <label>Insert Personalization Variable:</label>
+                    <div class="variable-pills">
+                        <button type="button" class="var-btn" data-var="{{name}}">{{name}}</button>
+                        <button type="button" class="var-btn" data-var="{{city}}">{{city}}</button>
+                        <button type="button" class="var-btn" data-var="{{department}}">{{department}}</button>
                     </div>
                 </div>
 
-                <!-- Text Body Composer -->
+                <!-- Message Body -->
                 <div class="form-group">
                     <label for="messageBody">Message Content</label>
                     <textarea id="messageBody" rows="4" class="form-control" placeholder="Type your WhatsApp broadcast message here..."></textarea>
                 </div>
 
-                <!-- Quick Reply Interactive Buttons (Customizable except for templates) -->
+                <!-- Quick Reply Auto-Response Configurator -->
                 <div id="buttonsGroup" class="form-group">
-                    <label>Quick Reply Buttons (Max 3)</label>
+                    <label>Quick Reply Auto-Response Buttons (Max 3)</label>
                     <div id="buttonsContainer">
                         <div class="button-input-row">
-                            <input type="text" class="form-control reply-btn-input" placeholder="Button 1 (e.g., View Catalog)" value="View Catalog">
+                            <input type="text" class="form-control reply-btn-input" placeholder="Button 1" value="View Catalog">
                         </div>
                         <div class="button-input-row">
-                            <input type="text" class="form-control reply-btn-input" placeholder="Button 2 (e.g., Speak to Agent)" value="Talk to Agent">
+                            <input type="text" class="form-control reply-btn-input" placeholder="Button 2" value="Talk to Agent">
                         </div>
                     </div>
-                    <button type="button" id="addButtonRow" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">+ Add Button</button>
+                    <button type="button" id="addButtonRow" class="btn-add-button">+ Add Button</button>
                 </div>
 
-                <!-- Real-time WhatsApp Phone Mockup Preview -->
+                <!-- WhatsApp Phone Live Preview -->
                 <div class="phone-mockup">
-                    <div style="font-size: 11px; font-weight: bold; color: #667781; text-transform: uppercase; margin-bottom: 6px;">WhatsApp Live Preview</div>
-                    
+                    <h4 class="preview-title">Live WhatsApp Preview</h4>
                     <div class="wa-bubble">
                         <img id="previewMedia" class="wa-header-img" src="" alt="Media Header">
-                        <div id="previewText" style="white-space: pre-wrap; font-size: 13.5px; line-height: 1.4;">Type a message to preview...</div>
+                        <div id="previewText" class="wa-body-text">Type a message to preview...</div>
                         
                         <div id="previewButtons" class="wa-buttons-container">
-                            <!-- Live buttons populated dynamically -->
+                            <!-- Buttons rendered dynamically via JS -->
                         </div>
                         
-                        <div style="text-align: right; font-size: 10px; color: #667781; margin-top: 4px;">16:00 ✓✓</div>
+                        <div class="wa-timestamp">16:00 ✓✓</div>
                     </div>
                 </div>
 
-                <br>
-                <button id="sendBroadcast" style="background: #25d366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 15px; width: 100%; cursor: pointer;">
-                    🚀 Send Broadcast Message
+                <button id="sendBroadcast" class="btn-dispatch">
+                    Send Broadcast
                 </button>
-                <div id="result" style="margin-top: 12px; font-weight: bold; text-align: center;"></div>
+
+                <div id="result" class="result-status"></div>
             </div>
 
         </div>
