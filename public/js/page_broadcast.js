@@ -1,395 +1,363 @@
-import { fetchAuth } from "./auth_helper.js";
+import { apiFetch } from "./core.js";
+import { loadSidebar } from "./sidebar.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-    // DOM Elements - Selection & Filters
-    const windowFilter = document.getElementById("windowFilter");
-    const activityFilter = document.getElementById("activityFilter");
-    const orderFilter = document.getElementById("orderFilter");
-    const cityFilter = document.getElementById("cityFilter");
-    const searchCustomer = document.getElementById("searchCustomer");
-    const customerList = document.getElementById("customerList");
-    const selectedCount = document.getElementById("selectedCount");
-    const selectAllBtn = document.getElementById("selectAll");
-    const clearAllBtn = document.getElementById("clearAll");
+// Load layout sidebar
+loadSidebar("broadcast");
 
-    // DOM Elements - Message Form
-    const typeBtns = document.querySelectorAll(".type-btn");
-    const templateSelectionGroup = document.getElementById("templateSelectionGroup");
-    const templateSelect = document.getElementById("templateSelect");
-    const mediaGroup = document.getElementById("mediaGroup");
-    const mediaUrlInput = document.getElementById("mediaUrl");
-    const messageBody = document.getElementById("messageBody");
-    const buttonsGroup = document.getElementById("buttonsGroup");
-    const buttonsContainer = document.getElementById("buttonsContainer");
-    const addButtonRow = document.getElementById("addButtonRow");
-    const sendBroadcastBtn = document.getElementById("sendBroadcast");
-    const resultDiv = document.getElementById("result");
+// Audience & Selection Elements
+const customerList = document.getElementById("customerList");
+const searchCustomer = document.getElementById("searchCustomer");
+const cityFilter = document.getElementById("cityFilter");
+const departmentFilter = document.getElementById("departmentFilter");
+const windowFilter = document.getElementById("windowFilter");
+const activityFilter = document.getElementById("activityFilter");
+const orderFilter = document.getElementById("orderFilter");
+const selectedCount = document.getElementById("selectedCount");
+const selectAllBtn = document.getElementById("selectAll");
+const clearAllBtn = document.getElementById("clearAll");
 
-    // DOM Elements - Live WhatsApp Preview
-    const previewMedia = document.getElementById("previewMedia");
-    const previewText = document.getElementById("previewText");
-    const previewButtons = document.getElementById("previewButtons");
+// Message Composer Elements
+const typeBtns = document.querySelectorAll(".type-btn");
+const templateSelectionGroup = document.getElementById("templateSelectionGroup");
+const templateSelect = document.getElementById("templateSelect");
+const mediaGroup = document.getElementById("mediaGroup");
+const mediaUrlInput = document.getElementById("mediaUrl");
+const messageBody = document.getElementById("messageBody") || document.getElementById("message");
+const buttonsGroup = document.getElementById("buttonsGroup");
+const buttonsContainer = document.getElementById("buttonsContainer");
+const addButtonRow = document.getElementById("addButtonRow");
+const sendBroadcastBtn = document.getElementById("sendBroadcast");
+const resultDiv = document.getElementById("result");
 
-    // State Variables
-    let allCustomers = [];
-    let filteredCustomers = [];
-    let selectedCustomerIds = new Set();
-    let currentMessageType = "INTERACTIVE"; // INTERACTIVE, MEDIA, or TEMPLATE
+// Preview Elements
+const previewMedia = document.getElementById("previewMedia");
+const previewText = document.getElementById("previewText");
+const previewButtons = document.getElementById("previewButtons");
 
-    // Initialize Page
-    init();
+// State
+let customers = [];
+let filteredCustomers = [];
+let messageType = "INTERACTIVE"; // INTERACTIVE, MEDIA, TEMPLATE
 
-    async function init() {
-        bindEvents();
-        await loadCustomers();
-        await loadTemplates();
-        updatePreview();
-    }
+// Initialize
+init();
 
-    /* ==========================================================================
-       1. DATA FETCHING & FILTERING LOGIC
-       ========================================================================== */
+async function init() {
+    bindEvents();
+    await loadCustomers();
+    await loadTemplates();
+    updatePreview();
+}
 
-    async function loadCustomers() {
-        try {
-            const res = await fetchAuth("/api/customers");
-            const data = await res.json();
+// Fetch Customers using apiFetch
+async function loadCustomers() {
+    const response = await apiFetch("/customers");
 
-            if (data.success && Array.isArray(data.customers)) {
-                allCustomers = data.customers;
-                populateCityDropdown(allCustomers);
-                applyFilters();
-            } else {
-                customerList.innerHTML = `<div style="color: #ef4444;">Failed to load customers.</div>`;
-            }
-        } catch (err) {
-            console.error("Error loading customers:", err);
-            customerList.innerHTML = `<div style="color: #ef4444;">Error fetching customer data.</div>`;
+    if (!response || !response.success || !Array.isArray(response.customers)) {
+        if (customerList) {
+            customerList.innerHTML = `<div style="color: red; padding: 10px;">Unable to load customers</div>`;
         }
+        return;
     }
 
-    function populateCityDropdown(customers) {
+    customers = response.customers;
+    filteredCustomers = [...customers];
+
+    populateFilters();
+    renderCustomers();
+}
+
+// Populate Filter Options
+function populateFilters() {
+    if (cityFilter) {
         const cities = [...new Set(customers.map(c => c.city).filter(Boolean))].sort();
         cityFilter.innerHTML = `<option value="">All Cities</option>`;
         cities.forEach(city => {
-            const option = document.createElement("option");
-            option.value = city;
-            option.textContent = city;
-            cityFilter.appendChild(option);
+            cityFilter.innerHTML += `<option value="${city}">${city}</option>`;
         });
     }
 
-    function applyFilters() {
-        const winVal = windowFilter.value;
-        const actVal = activityFilter.value;
-        const ordVal = orderFilter.value;
-        const cityVal = cityFilter.value.toLowerCase();
-        const searchVal = searchCustomer.value.toLowerCase().trim();
-
-        const now = new Date();
-
-        filteredCustomers = allCustomers.filter(c => {
-            // Filter: 24h Window
-            if (winVal === "active" && !c.window_active) return false;
-            if (winVal === "expired" && c.window_active) return false;
-
-            // Filter: Activity Status
-            if (actVal) {
-                const lastActive = c.last_interaction ? new Date(c.last_interaction) : null;
-                const daysDiff = lastActive ? (now - lastActive) / (1000 * 3600 * 24) : 999;
-
-                if (actVal === "recent" && (daysDiff > 7 || !lastActive)) return false;
-                if (actVal === "inactive_30" && daysDiff <= 30) return false;
-                if (actVal === "never" && lastActive) return false;
-            }
-
-            // Filter: Order Activity
-            if (ordVal === "has_orders" && (!c.order_count || c.order_count === 0)) return false;
-            if (ordVal === "no_orders" && c.order_count > 0) return false;
-            if (ordVal === "abandoned_cart" && !c.has_abandoned_cart) return false;
-
-            // Filter: City
-            if (cityVal && (c.city || "").toLowerCase() !== cityVal) return false;
-
-            // Filter: Freeform Search Term
-            if (searchVal) {
-                const name = (c.name || "").toLowerCase();
-                const phone = (c.phone || "").toLowerCase();
-                const dept = (c.department || "").toLowerCase();
-                if (!name.includes(searchVal) && !phone.includes(searchVal) && !dept.includes(searchVal)) {
-                    return false;
-                }
-            }
-
-            return true;
+    if (departmentFilter) {
+        const departments = [...new Set(customers.map(c => c.department).filter(Boolean))].sort();
+        departmentFilter.innerHTML = `<option value="">All Departments</option>`;
+        departments.forEach(dept => {
+            departmentFilter.innerHTML += `<option value="${dept}">${dept}</option>`;
         });
+    }
+}
 
-        renderCustomerList();
+// Render Customer List
+function renderCustomers() {
+    if (!customerList) return;
+
+    if (filteredCustomers.length === 0) {
+        customerList.innerHTML = `<div style="text-align: center; color: #666; padding: 10px;">No customers found.</div>`;
+        updateCount();
+        return;
     }
 
-    function renderCustomerList() {
-        if (filteredCustomers.length === 0) {
-            customerList.innerHTML = `<div style="color: #64748b; text-align: center; padding: 10px;">No matching customers found.</div>`;
-            return;
-        }
+    customerList.innerHTML = filteredCustomers.map(c => {
+        const statusTag = c.window_active 
+            ? `<span style="background: #e8fadf; color: #075e54; font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-left: 4px;">24h Active</span>` 
+            : `<span style="background: #eee; color: #777; font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-left: 4px;">Expired</span>`;
 
-        customerList.innerHTML = filteredCustomers.map(c => {
-            const isChecked = selectedCustomerIds.has(c.id) ? "checked" : "";
-            const windowBadge = c.window_active 
-                ? `<span style="background: #dcfce7; color: #15803d; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">24h Active</span>` 
-                : `<span style="background: #f1f5f9; color: #64748b; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">Expired</span>`;
-
-            return `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; width: 100%;">
-                        <input type="checkbox" class="customer-checkbox" data-id="${c.id}" ${isChecked}>
-                        <div>
-                            <strong>${escapeHtml(c.name || "Unknown")}</strong> (${escapeHtml(c.phone)}) ${windowBadge}
-                            <div style="font-size: 11px; color: #64748b;">${escapeHtml(c.city || "No City")} | ${escapeHtml(c.department || "General")}</div>
+        return `
+            <div class="customer-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; width: 100%;">
+                    <input type="checkbox" class="customer-check" value="${c.id}">
+                    <div>
+                        <div class="customer-name"><strong>${c.name || "Customer"}</strong> ${statusTag}</div>
+                        <div class="customer-details" style="font-size: 11px; color: #666;">
+                            ${c.phone || ""} ${c.city ? "| " + c.city : ""} ${c.department ? "| " + c.department : ""}
                         </div>
-                    </label>
-                </div>
-            `;
-        }).join("");
+                    </div>
+                </label>
+            </div>
+        `;
+    }).join("");
 
-        bindCheckboxEvents();
-    }
+    updateCount();
+}
 
-    function bindCheckboxEvents() {
-        customerList.querySelectorAll(".customer-checkbox").forEach(chk => {
-            chk.addEventListener("change", (e) => {
-                const id = parseInt(e.target.dataset.id, 10);
-                if (e.target.checked) {
-                    selectedCustomerIds.add(id);
-                } else {
-                    selectedCustomerIds.delete(id);
-                }
-                updateSelectedCounter();
-            });
-        });
-    }
+// Apply Filters
+function applyFilter() {
+    const search = searchCustomer ? searchCustomer.value.toLowerCase().trim() : "";
+    const city = cityFilter ? cityFilter.value : "";
+    const department = departmentFilter ? departmentFilter.value : "";
+    const win = windowFilter ? windowFilter.value : "";
+    const act = activityFilter ? activityFilter.value : "";
+    const ord = orderFilter ? orderFilter.value : "";
 
-    function updateSelectedCounter() {
-        selectedCount.textContent = `Selected: ${selectedCustomerIds.size} Recipients`;
-    }
+    const now = new Date();
 
-    async function loadTemplates() {
-        try {
-            const res = await fetchAuth("/api/templates");
-            const data = await res.json();
+    filteredCustomers = customers.filter(c => {
+        // Search Filter
+        const matchesSearch = !search || 
+            (c.name || "").toLowerCase().includes(search) || 
+            (c.phone || "").includes(search);
 
-            if (data.success && Array.isArray(data.templates)) {
-                templateSelect.innerHTML = `<option value="">-- Select Template --</option>`;
-                data.templates.forEach(t => {
-                    const opt = document.createElement("option");
-                    opt.value = t.name;
-                    opt.textContent = `${t.name} (${t.category || "APPROVED"})`;
-                    templateSelect.appendChild(opt);
-                });
-            }
-        } catch (err) {
-            console.error("Error loading templates:", err);
+        // City & Dept Filter
+        const matchesCity = !city || c.city === city;
+        const matchesDept = !department || c.department === department;
+
+        // 24h Window
+        if (win === "active" && !c.window_active) return false;
+        if (win === "expired" && c.window_active) return false;
+
+        // Activity Tiers
+        if (act) {
+            const lastActive = c.last_interaction ? new Date(c.last_interaction) : null;
+            const daysDiff = lastActive ? (now - lastActive) / (1000 * 3600 * 24) : 999;
+
+            if (act === "recent" && (daysDiff > 7 || !lastActive)) return false;
+            if (act === "inactive_30" && daysDiff <= 30) return false;
+            if (act === "never" && lastActive) return false;
         }
+
+        // Orders
+        if (ord === "has_orders" && (!c.order_count || c.order_count === 0)) return false;
+        if (ord === "no_orders" && c.order_count > 0) return false;
+
+        return matchesSearch && matchesCity && matchesDept;
+    });
+
+    renderCustomers();
+}
+
+// Update Selected Counter
+function updateCount() {
+    if (!selectedCount) return;
+    const selected = document.querySelectorAll(".customer-check:checked").length;
+    selectedCount.innerHTML = `Selected: ${selected}`;
+}
+
+// Load WhatsApp Templates
+async function loadTemplates() {
+    if (!templateSelect) return;
+    try {
+        const response = await apiFetch("/templates");
+        if (response && response.success && Array.isArray(response.templates)) {
+            templateSelect.innerHTML = `<option value="">-- Select Template --</option>`;
+            response.templates.forEach(t => {
+                templateSelect.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+            });
+        }
+    } catch (err) {
+        console.error("Error loading templates:", err);
+    }
+}
+
+// Event Bindings
+function bindEvents() {
+    if (searchCustomer) searchCustomer.addEventListener("input", applyFilter);
+    if (cityFilter) cityFilter.addEventListener("change", applyFilter);
+    if (departmentFilter) departmentFilter.addEventListener("change", applyFilter);
+    if (windowFilter) windowFilter.addEventListener("change", applyFilter);
+    if (activityFilter) activityFilter.addEventListener("change", applyFilter);
+    if (orderFilter) orderFilter.addEventListener("change", applyFilter);
+
+    // Dynamic checkbox counter handler
+    document.addEventListener("change", function(event) {
+        if (event.target.classList.contains("customer-check")) {
+            updateCount();
+        }
+    });
+
+    if (selectAllBtn) {
+        selectAllBtn.onclick = function() {
+            document.querySelectorAll(".customer-check").forEach(chk => chk.checked = true);
+            updateCount();
+        };
     }
 
-    /* ==========================================================================
-       2. EVENT BINDING & UI TOGGLES
-       ========================================================================== */
+    if (clearAllBtn) {
+        clearAllBtn.onclick = function() {
+            document.querySelectorAll(".customer-check").forEach(chk => chk.checked = false);
+            updateCount();
+        };
+    }
 
-    function bindEvents() {
-        // Target Filters
-        windowFilter.addEventListener("change", applyFilters);
-        activityFilter.addEventListener("change", applyFilters);
-        orderFilter.addEventListener("change", applyFilters);
-        cityFilter.addEventListener("change", applyFilters);
-        searchCustomer.addEventListener("input", applyFilters);
+    // Toggle Message Type Tabs
+    typeBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            typeBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            messageType = btn.dataset.type;
 
-        // Selection Handlers
-        selectAllBtn.addEventListener("click", () => {
-            filteredCustomers.forEach(c => selectedCustomerIds.add(c.id));
-            renderCustomerList();
-            updateSelectedCounter();
+            if (buttonsGroup) buttonsGroup.classList.toggle("is-hidden", messageType !== "INTERACTIVE");
+            if (mediaGroup) mediaGroup.classList.toggle("is-hidden", messageType !== "MEDIA");
+            if (templateSelectionGroup) templateSelectionGroup.classList.toggle("is-hidden", messageType !== "TEMPLATE");
+
+            updatePreview();
         });
+    });
 
-        clearAllBtn.addEventListener("click", () => {
-            selectedCustomerIds.clear();
-            renderCustomerList();
-            updateSelectedCounter();
-        });
+    if (messageBody) messageBody.addEventListener("input", updatePreview);
+    if (mediaUrlInput) mediaUrlInput.addEventListener("input", updatePreview);
+    if (buttonsContainer) buttonsContainer.addEventListener("input", updatePreview);
 
-        // Message Type Toggles
-        typeBtns.forEach(btn => {
-            btn.addEventListener("click", () => {
-                typeBtns.forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                currentMessageType = btn.dataset.type;
-
-                // Toggle Form Sections
-                buttonsGroup.classList.toggle("is-hidden", currentMessageType !== "INTERACTIVE");
-                mediaGroup.classList.toggle("is-hidden", currentMessageType !== "MEDIA");
-                templateSelectionGroup.classList.toggle("is-hidden", currentMessageType !== "TEMPLATE");
-
-                updatePreview();
-            });
-        });
-
-        // Input Observers for WhatsApp Live Preview
-        messageBody.addEventListener("input", updatePreview);
-        mediaUrlInput.addEventListener("input", updatePreview);
-        buttonsContainer.addEventListener("input", updatePreview);
-
-        // Add Quick Reply Button Input
+    // Add Interactive Button Row
+    if (addButtonRow && buttonsContainer) {
         addButtonRow.addEventListener("click", () => {
             const currentInputs = buttonsContainer.querySelectorAll(".reply-btn-input");
             if (currentInputs.length >= 3) {
-                alert("WhatsApp limits interactive messages to a maximum of 3 quick reply buttons.");
+                alert("Maximum 3 quick reply buttons allowed.");
                 return;
             }
 
-            const row = document.createElement("div");
-            row.className = "button-input-row";
-            row.innerHTML = `<input type="text" class="form-control reply-btn-input" placeholder="Button ${currentInputs.length + 1}" value="Option ${currentInputs.length + 1}">`;
-            buttonsContainer.appendChild(row);
+            const div = document.createElement("div");
+            div.className = "button-input-row";
+            div.innerHTML = `<input type="text" class="form-control reply-btn-input" placeholder="Button ${currentInputs.length + 1}" value="Option ${currentInputs.length + 1}">`;
+            buttonsContainer.appendChild(div);
 
-            row.querySelector("input").addEventListener("input", updatePreview);
+            div.querySelector("input").addEventListener("input", updatePreview);
             updatePreview();
         });
-
-        // Variable Insertion Pills
-        document.querySelectorAll(".var-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const tag = btn.dataset.var;
-                const start = messageBody.selectionStart;
-                const end = messageBody.selectionEnd;
-                const text = messageBody.value;
-
-                messageBody.value = text.substring(0, start) + tag + text.substring(end);
-                messageBody.focus();
-                messageBody.selectionStart = messageBody.selectionEnd = start + tag.length;
-
-                updatePreview();
-            });
-        });
-
-        // Dispatch Broadcast Action
-        sendBroadcastBtn.addEventListener("click", handleBroadcastDispatch);
     }
 
-    /* ==========================================================================
-       3. LIVE WHATSAPP PHONE PREVIEW
-       ========================================================================== */
+    // Personalization Insert Tags
+    document.querySelectorAll(".var-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (!messageBody) return;
+            const tag = btn.dataset.var;
+            const start = messageBody.selectionStart || 0;
+            const end = messageBody.selectionEnd || 0;
+            const val = messageBody.value;
 
-    function updatePreview() {
-        // Text Content Update
-        const bodyVal = messageBody.value.trim();
-        previewText.textContent = bodyVal || "Type a message to preview...";
+            messageBody.value = val.substring(0, start) + tag + val.substring(end);
+            messageBody.focus();
+            messageBody.selectionStart = messageBody.selectionEnd = start + tag.length;
 
-        // Media Header Update
-        if (currentMessageType === "MEDIA" && mediaUrlInput.value.trim()) {
+            updatePreview();
+        });
+    });
+
+    if (sendBroadcastBtn) sendBroadcastBtn.onclick = sendBroadcast;
+}
+
+// Live Phone Preview Renderer
+function updatePreview() {
+    if (previewText && messageBody) {
+        previewText.textContent = messageBody.value.trim() || "Type a message to preview...";
+    }
+
+    if (previewMedia && mediaUrlInput) {
+        if (messageType === "MEDIA" && mediaUrlInput.value.trim()) {
             previewMedia.src = mediaUrlInput.value.trim();
             previewMedia.style.display = "block";
         } else {
             previewMedia.style.display = "none";
             previewMedia.src = "";
         }
+    }
 
-        // Quick Reply Buttons Update
-        if (currentMessageType === "INTERACTIVE") {
-            const buttonInputs = buttonsContainer.querySelectorAll(".reply-btn-input");
+    if (previewButtons && buttonsContainer) {
+        if (messageType === "INTERACTIVE") {
+            const inputs = buttonsContainer.querySelectorAll(".reply-btn-input");
             previewButtons.innerHTML = "";
-            let hasButtons = false;
+            let count = 0;
 
-            buttonInputs.forEach(input => {
-                const btnVal = input.value.trim();
-                if (btnVal) {
-                    hasButtons = true;
-                    const btnEl = document.createElement("div");
-                    btnEl.className = "wa-action-btn";
-                    btnEl.textContent = btnVal;
-                    previewButtons.appendChild(btnEl);
+            inputs.forEach(input => {
+                const text = input.value.trim();
+                if (text) {
+                    count++;
+                    const btn = document.createElement("div");
+                    btn.className = "wa-action-btn";
+                    btn.textContent = text;
+                    previewButtons.appendChild(btn);
                 }
             });
 
-            previewButtons.style.display = hasButtons ? "flex" : "none";
+            previewButtons.style.display = count > 0 ? "flex" : "none";
         } else {
             previewButtons.style.display = "none";
             previewButtons.innerHTML = "";
         }
     }
+}
 
-    /* ==========================================================================
-       4. BROADCAST DISPATCH CONTROLLER
-       ========================================================================== */
+// Send Broadcast Action
+async function sendBroadcast() {
+    const selected = Array.from(document.querySelectorAll(".customer-check:checked")).map(item => item.value);
+    const message = messageBody ? messageBody.value.trim() : "";
 
-    async function handleBroadcastDispatch() {
-        resultDiv.textContent = "";
-        resultDiv.style.color = "#333";
-
-        const recipientIds = Array.from(selectedCustomerIds);
-
-        if (recipientIds.length === 0) {
-            alert("Please select at least one customer from the list to send the broadcast.");
-            return;
-        }
-
-        if (currentMessageType !== "TEMPLATE" && !messageBody.value.trim()) {
-            alert("Please provide text content for your broadcast message.");
-            return;
-        }
-
-        // Collect configured quick reply buttons
-        const buttonLabels = [];
-        if (currentMessageType === "INTERACTIVE") {
-            buttonsContainer.querySelectorAll(".reply-btn-input").forEach(inp => {
-                if (inp.value.trim()) buttonLabels.push(inp.value.trim());
-            });
-        }
-
-        const payload = {
-            customers: recipientIds,
-            message_type: currentMessageType,
-            message: messageBody.value.trim(),
-            media_url: mediaUrlInput.value.trim() || null,
-            template_name: templateSelect.value || null,
-            buttons: buttonLabels
-        };
-
-        try {
-            sendBroadcastBtn.disabled = true;
-            sendBroadcastBtn.textContent = "Dispatching Broadcast...";
-            resultDiv.textContent = "Sending messages via WhatsApp Cloud API...";
-
-            const res = await fetchAuth("/api/broadcast", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                resultDiv.style.color = "#16a34a";
-                resultDiv.textContent = `✅ Broadcast completed! Sent: ${data.sent}, Failed: ${data.failed}`;
-            } else {
-                resultDiv.style.color = "#dc2626";
-                resultDiv.textContent = `❌ Error: ${data.message || "Broadcast failed"}`;
-            }
-        } catch (err) {
-            console.error("Broadcast dispatch error:", err);
-            resultDiv.style.color = "#dc2626";
-            resultDiv.textContent = "❌ Network or server failure while sending broadcast.";
-        } finally {
-            sendBroadcastBtn.disabled = false;
-            sendBroadcastBtn.textContent = "Send Broadcast";
-        }
+    if (selected.length === 0) {
+        if (resultDiv) resultDiv.innerHTML = "Select customers first";
+        return;
     }
 
-    // Helper: Utility to escape HTML to prevent XSS
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;");
+    if (messageType !== "TEMPLATE" && !message) {
+        if (resultDiv) resultDiv.innerHTML = "Enter message";
+        return;
     }
-});
+
+    const buttonLabels = [];
+    if (messageType === "INTERACTIVE" && buttonsContainer) {
+        buttonsContainer.querySelectorAll(".reply-btn-input").forEach(i => {
+            if (i.value.trim()) buttonLabels.push(i.value.trim());
+        });
+    }
+
+    const payload = {
+        customers: selected,
+        message_type: messageType,
+        message: message,
+        media_url: mediaUrlInput ? mediaUrlInput.value.trim() : null,
+        template_name: templateSelect ? templateSelect.value : null,
+        buttons: buttonLabels
+    };
+
+    if (resultDiv) resultDiv.innerHTML = "Sending broadcast...";
+
+    const response = await apiFetch("/broadcast", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (resultDiv) {
+        resultDiv.innerHTML = (response && response.message) ? response.message : "Broadcast processed";
+    }
+}
